@@ -12,24 +12,20 @@ describe('Pool', function () {
     }
 
     assert.equal(pool.workers.length, 0);
-    assert.equal(pool.available.length, 0);
 
     pool.run(add, [3, 4])
         .then(function (result) {
           assert.equal(result, 7);
           assert.equal(pool.workers.length, 1);
-          assert.equal(pool.available.length, 1);
 
           pool.clear();
 
           assert.equal(pool.workers.length, 0);
-          assert.equal(pool.available.length, 0);
 
           done();
         });
 
     assert.equal(pool.workers.length, 1);
-    assert.equal(pool.available.length, 0);
   });
 
   it('should offload functions to multiple workers', function (done) {
@@ -40,7 +36,6 @@ describe('Pool', function () {
     }
 
     assert.equal(pool.workers.length, 0);
-    assert.equal(pool.available.length, 0);
 
     Promise.all([
           pool.run(add, [3, 4]),
@@ -49,14 +44,12 @@ describe('Pool', function () {
         .then(function (results) {
           assert.deepEqual(results, [7, 5]);
           assert.equal(pool.workers.length, 2);
-          assert.equal(pool.available.length, 2);
 
           pool.clear();
           done();
         });
 
     assert.equal(pool.workers.length, 2);
-    assert.equal(pool.available.length, 0);
   });
 
   it('should put tasks in queue when all workers are busy', function (done) {
@@ -68,21 +61,18 @@ describe('Pool', function () {
 
     assert.equal(pool.tasks.length, 0);
     assert.equal(pool.workers.length, 0);
-    assert.equal(pool.available.length, 0);
 
     var task1 = pool.run(add, [3, 4]);
     var task2 = pool.run(add, [2, 3]);
 
     assert.equal(pool.tasks.length, 0);
     assert.equal(pool.workers.length, 2);
-    assert.equal(pool.available.length, 0);
 
     var task3 = pool.run(add, [5, 7]);
     var task4 = pool.run(add, [1, 1]);
 
     assert.equal(pool.tasks.length, 2);
     assert.equal(pool.workers.length, 2);
-    assert.equal(pool.available.length, 0);
 
     Promise.all([
         task1,
@@ -94,7 +84,6 @@ describe('Pool', function () {
           assert.deepEqual(results, [7, 5, 12, 2]);
           assert.equal(pool.tasks.length, 0);
           assert.equal(pool.workers.length, 2);
-          assert.equal(pool.available.length, 2);
 
           pool.clear();
           done();
@@ -117,16 +106,10 @@ describe('Pool', function () {
         });
   });
 
-  it.skip('should handle a crashing worker', function () {
-    // TODO
-  });
-
   it('should clear all workers', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
     assert.equal(pool.workers.length, 0);
-    assert.equal(pool.available.length, 0);
-    assert.equal(pool.terminate.length, 0);
 
     function test() {
       return 'ok';
@@ -137,29 +120,21 @@ describe('Pool', function () {
           assert.equal(result, 'ok');
 
           assert.equal(pool.workers.length, 1);
-          assert.equal(pool.available.length, 1);
-          assert.equal(pool.terminate.length, 0);
 
           pool.clear();
 
           assert.equal(pool.workers.length, 0);
-          assert.equal(pool.available.length, 0);
-          assert.equal(pool.terminate.length, 0);
 
           done();
         });
 
     assert.equal(pool.workers.length, 1);
-    assert.equal(pool.available.length, 0);
-    assert.equal(pool.terminate.length, 0);
   });
 
   it('should clear all workers after tasks are finished', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
     assert.equal(pool.workers.length, 0);
-    assert.equal(pool.available.length, 0);
-    assert.equal(pool.terminate.length, 0);
 
     function test() {
       return 'ok';
@@ -170,21 +145,15 @@ describe('Pool', function () {
           assert.equal(result, 'ok');
 
           assert.equal(pool.workers.length, 0);
-          assert.equal(pool.available.length, 0);
-          assert.equal(pool.terminate.length, 0);
 
           done();
         });
 
     assert.equal(pool.workers.length, 1);
-    assert.equal(pool.available.length, 0);
-    assert.equal(pool.terminate.length, 0);
 
     pool.clear();
 
     assert.equal(pool.workers.length, 0);
-    assert.equal(pool.available.length, 0);
-    assert.equal(pool.terminate.length, 1);
   });
 
 });

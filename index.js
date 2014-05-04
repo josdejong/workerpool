@@ -19,7 +19,7 @@ else {
     return new Pool(options);
   };
 
-  exports.worker = function worker() {
-
+  exports.worker = function worker(exports) {
+    // TODO: implement worker
   }
 }

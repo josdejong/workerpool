@@ -2,11 +2,11 @@ var assert = require('assert'),
     Promise = require('bluebird'),
     WorkerHandler = require('../lib/WorkerHandler');
 
-describe('WorkerHandler', function () {
+function add(a, b) {
+  return a + b;
+}
 
-  function add(a, b) {
-    return a + b;
-  }
+describe('WorkerHandler', function () {
 
   it('should handle a request', function (done) {
     var handler = new WorkerHandler();
@@ -105,6 +105,10 @@ describe('WorkerHandler', function () {
   });
 
   it.skip('create a worker handler with custom script', function () {
+    // TODO
+  });
+
+  it.skip('should handle a crashing worker', function () {
     // TODO
   });
 
