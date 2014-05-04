@@ -154,7 +154,7 @@ describe('Pool', function () {
     assert.equal(pool.terminate.length, 0);
   });
 
-  it('should clear all workers after tasks are finished', function () {
+  it('should clear all workers after tasks are finished', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
     assert.equal(pool.workers.length, 0);
