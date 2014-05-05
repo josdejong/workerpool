@@ -10,5 +10,5 @@ pool.run(add, [3, 4])
     .then(function (result) {
       console.log('result', result); // outputs 7
 
-      pool.clear(); // clear all workers
+      pool.clear(); // clear all workers when done
     });

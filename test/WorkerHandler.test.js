@@ -108,8 +108,83 @@ describe('WorkerHandler', function () {
     // TODO
   });
 
-  it.skip('should handle a crashing worker', function () {
-    // TODO
+  it('should handle errors thrown by a worker (1)', function (done) {
+    var handler = new WorkerHandler();
+
+    function test() {
+      throw new TypeError('Test error');
+    }
+
+    handler.exec('run', {
+          fn: test + ''
+        })
+        .catch(function (err) {
+          assert.equal(err.toString(), 'TypeError: Test error');
+
+          done();
+        });
+  });
+
+  it('should handle errors thrown by a worker (2)', function (done) {
+    var handler = new WorkerHandler();
+
+    function test() {
+      return test();
+    }
+
+    handler.exec('run', {
+          fn: test + ''
+        })
+        .catch(function (err) {
+          assert.equal(err.toString(), 'RangeError: Maximum call stack size exceeded');
+
+          done();
+        });
+  });
+
+  it('should handle crashing of a worker (1)', function (done) {
+    var handler = new WorkerHandler();
+
+    handler.exec('run', {
+          fn: add + '',
+          params: [2, 4]
+        })
+        .then(function () {
+          assert('Promise should not be resolved');
+        })
+        .catch(function (err) {
+          assert.equal(err.toString(), 'Error: Worker terminated unexpectedly');
+
+          done();
+        });
+
+    // to fake a problem with a worker, we disconnect it
+    handler.worker.disconnect();
+  });
+
+  it('should handle crashing of a worker (2)', function (done) {
+    var handler = new WorkerHandler();
+
+    handler.exec('run', {
+          fn: add + '',
+          params: [2, 4]
+        })
+        .then(function () {
+          assert('Promise should not be resolved');
+        })
+        .catch(function (err) {
+          assert.equal(err.toString(), 'Error: Worker terminated unexpectedly');
+
+          done();
+        });
+
+    // to fake a problem with a worker, we kill it
+    handler.worker.kill();
+
+  });
+
+  it.skip('should handle crashing of a worker (3)', function (done) {
+    // TODO: create a worker from a script, which really crashes itself
   });
 
 });

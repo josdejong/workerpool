@@ -2,6 +2,10 @@ var assert = require('assert'),
     Promise = require('bluebird'),
     Pool = require('../lib/Pool');
 
+function add(a, b) {
+  return a + b;
+}
+
 describe('Pool', function () {
 
   it('should offload a function to a worker', function (done) {
@@ -106,6 +110,91 @@ describe('Pool', function () {
         });
   });
 
+  it('should handle crashed workers (1)', function (done) {
+    var pool = new Pool({maxWorkers: 1});
+
+    pool.run(add)
+        .then(function () {
+          assert('Promise should not be resolved');
+        })
+        .catch(function (err) {
+          assert.equal(err.toString(), 'Error: Worker terminated unexpectedly');
+
+          assert.equal(pool.workers.length, 0);
+
+          // validate whether a new worker is spawned
+          pool.run(add, [2,3])
+              .then(function (result) {
+                assert.equal(result, 5);
+
+                assert.equal(pool.workers.length, 1);
+
+                pool.clear();
+                done();
+              });
+
+          assert.equal(pool.workers.length, 1);
+        });
+
+    assert.equal(pool.workers.length, 1);
+
+    // kill the worker so it will be terminated
+    pool.workers[0].worker.kill();
+
+    assert.equal(pool.workers.length, 1);
+  });
+
+  describe('options', function () {
+
+    it('should throw an error on invalid type or number of maxWorkers', function () {
+      assert.throws(function () {
+        new Pool({maxWorkers: 'a string'});
+      }, TypeError);
+
+      assert.throws(function () {
+        new Pool({maxWorkers: 2.5});
+      }, TypeError);
+
+      assert.throws(function () {
+        new Pool({maxWorkers: 0});
+      }, TypeError);
+
+      assert.throws(function () {
+        new Pool({maxWorkers: -1});
+      }, TypeError);
+    });
+
+    it('should limit to the configured number of max workers', function () {
+      var pool = new Pool({maxWorkers: 2});
+
+      pool.run(add, [1, 2]);
+      pool.run(add, [3, 4]);
+      pool.run(add, [5, 6]);
+      pool.run(add, [7, 8]);
+      pool.run(add, [9, 0]);
+
+      assert.equal(pool.maxWorkers, 2);
+      assert.equal(pool.workers.length, 2);
+      assert.equal(pool.tasks.length, 3);
+
+      pool.clear();
+    });
+
+    it('should take number of cpus minus one as default maxWorkers', function () {
+      var pool = new Pool();
+
+      var cpus = require('os').cpus();
+      assert.equal(pool.maxWorkers, cpus.length - 1);
+
+      pool.clear();
+    });
+
+  });
+
+  it.skip('should handle crashed workers (2)', function (done) {
+    // TODO: create a worker from a script, which really crashes itself
+  });
+
   it('should clear all workers', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
@@ -154,6 +243,13 @@ describe('Pool', function () {
     pool.clear();
 
     assert.equal(pool.workers.length, 0);
+  });
+
+  it('should throw an error in case of wrong type of arguments in function run', function () {
+    var pool = new Pool();
+    assert.throws(function () {pool.run()}, TypeError);
+    assert.throws(function () {pool.run('a string')}, TypeError);
+    assert.throws(function () {pool.run(add, {})}, TypeError);
   });
 
 });
