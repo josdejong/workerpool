@@ -104,6 +104,40 @@ describe('WorkerHandler', function () {
     assert.equal(handler.terminated, true);
   });
 
+  it('handle a promise based result', function (done) {
+    var handler = new WorkerHandler();
+
+    function asyncAdd(a, b) {
+      var Promise = require('bluebird');
+
+      return new Promise(function (resolve, reject) {
+        if (typeof a === 'number' && typeof b === 'number') {
+          resolve(a + b);
+        }
+        else {
+          reject(new TypeError('Invalid input, two numbers expected'))
+        }
+      });
+    }
+
+    handler.exec('run', {
+          fn: asyncAdd + '', // stringified function
+          args: [2, 4]
+        })
+        .then(function (result) {
+          assert.equal(result, 6);
+
+          handler.exec('run', {
+                fn: asyncAdd + '', // stringified function
+                args: [2, 'oops']
+              })
+              .catch(function (err) {
+                assert.equal(err, 'TypeError: Invalid input, two numbers expected');
+                done();
+              });
+        });
+  });
+
   it.skip('create a worker handler with custom script', function () {
     // TODO
   });
