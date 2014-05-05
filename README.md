@@ -1,32 +1,17 @@
 # workerpool
 
-Offload tasks to a pool of workers on node.js and in the browser.
-
-
-http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/
-
-A quote from [Jeremy Epstein](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
+JavaScript is based upon a single event loop which executes one event at a time. All I/O operations are evented, asynchronous, and non-blocking, while the execution of non-I/O code itself is executed sequentially. Jeremy Epstein explains this clearly in the blog [Node.js itself is blocking, only its I/O is non-blocking](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
 
 > In Node.js everything runs in parallel, except your code.
 > What this means is that all I/O code that you write in Node.js is non-blocking,
 > while (conversely) all non-I/O code that you write in Node.js is blocking.
 
-JavaScript is based upon a single event loop which executes one event at a time.
-All I/O operations are evented, asynchronous, and non-blocking,
-while the execution of non-I/O code itself is executed sequentially.
-
-This means that CPU heavy tasks will block other tasks from being executed.
-In case of a browser environment, the browser will not react to user events
-like a mouse click while executing a CPU intensive task (the browser "hangs").
-In case of a node.js server, the server will not respond to any requests while
-executing a single, heavy request.
+This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any requests while executing a single, heavy request.
 
 For front-end processes, this is not a desired situation.
-In this case, CPU heavy tasks should be offloaded to dedicated *workers*. We can use
-[Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) when in a browser environment,
-and [child processes](http://nodejs.org/api/child_process.html) when using node.js.
+CPU heavy tasks should be offloaded from the main event loop onto dedicated *workers*. We can use [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) when in a browser environment, and [child processes](http://nodejs.org/api/child_process.html) when using node.js. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
 
-TODO: more text here
+workerpool offers an easy way to use a pool of workers for both dynamically offloading computations, as well as managing a pool of dedicated workers. All logic to manage a pool of workers is hidden, whilst the workers can be accessed via a natural, promise based proxy, as if they are available locally.
 
 
 ## Features
@@ -46,16 +31,15 @@ workerpool offers:
 
 Install via npm:
 
-npm install workerpool
+    npm install workerpool
 
 
-### Offload calculations
+### Offload functions dynamically
 
-A simple example offloading a calculation to a worker:
+In the following example there is a function `add`, which is offloaded dynamically to a worker to be executed for a given set of arguments.
 
 ```js
 var workerpool = require('workerpool');
-
 var pool = workerpool.pool();
 
 function add(a, b) {
@@ -70,15 +54,14 @@ pool.run(add, [3, 4])
     });
 ```
 
-The offloaded function is stringified and send to the worker, together with
-any function arguments. The function is then executed on worker with provided
-arguments. Note that in case of large functions or function arguments, the
-overhead of sending the data to the worker can be significant.
+Note that both function and arguments must be static and stringifiable, as they need to be send to the worker in a serialized form. In case of large functions or function arguments, the overhead of sending the data to the worker can be significant.
 
 
-### Workers
+### Dedicated workers
 
 TODO
+
+
 
 ## API
 
