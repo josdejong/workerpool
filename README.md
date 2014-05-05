@@ -19,12 +19,10 @@ workerpool offers an easy way to use a pool of workers for both dynamically offl
 workerpool offers:
 
 - Extremely simple to use
-- Support for both server and node.js
+- Can be used in both browser and node.js environment
 - Dynamically offload functions to a worker
-- Invoke functions on a worker via an RPC interface
-- Running tasks can be killed
+- Workers are accessed via a proxy
 - Automatically restores crashed workers
-- Promise based API
 
 
 ## Usage
@@ -62,7 +60,61 @@ Note that both function and arguments must be static and stringifiable, as they 
 TODO
 
 
-
 ## API
 
 TODO: describe the API
+
+
+## Build
+
+First clone the project from github:
+
+    git clone git://github.com/josdejong/workerpool.git
+    cd workerpool
+
+Install the project dependencies:
+
+    npm install
+
+Then, the project can be build by executing the build script via npm:
+
+    npm run build
+
+This will build the library workerpool.js and workerpool.min.js from the source
+files and put them in the folder dist.
+
+
+## Test
+
+To execute tests for the library, install the project dependencies once:
+
+    npm install
+
+Then, the tests can be executed:
+
+    npm test
+
+To test code coverage of the tests:
+
+    npm run coverage
+
+To see the coverage results, open the generated report in your browser:
+
+    ./coverage/lcov-report/index.html
+
+
+## License
+
+Copyright (C) 2014 Jos de Jong <wjosdejong@gmail.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
