@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Worker pool in the browser</title>
+
+  <script src="../dist/workerpool.js"></script>
+</head>
+<body>
+
+<script>
+  var pool = workerpool.pool();
+
+  function add(a, b) {
+    return a + b;
+  }
+
+  pool.run(add, [3, 4])
+      .then(function (result) {
+        document.write('Result: ' + result); // outputs 7
+      })
+      .catch(function (err) {
+        document.write('Error: ' + err);
+      });
+
+</script>
+
+</body>
+</html>

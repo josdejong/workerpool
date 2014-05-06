@@ -13,15 +13,15 @@ CPU heavy tasks should be offloaded from the main event loop onto dedicated *wor
 
 workerpool offers an easy way to use a pool of workers for both dynamically offloading computations, as well as managing a pool of dedicated workers. All logic to manage a pool of workers is hidden, whilst the workers can be accessed via a natural, promise based proxy, as if they are available locally.
 
+workerpool runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
+
 
 ## Features
-
-workerpool offers:
 
 - Extremely simple to use
 - Can be used in both browser and node.js environment
 - Dynamically offload functions to a worker
-- Workers are accessed via a proxy
+- Workers are accessible via a proxy
 - Automatically restores crashed workers
 
 
