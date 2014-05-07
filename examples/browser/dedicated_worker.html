@@ -2,6 +2,12 @@
 <html>
 <head>
   <title>Worker pool in the browser</title>
+  <style>
+    body {
+      width: 600px;
+      font: 11pt arial;
+    }
+  </style>
 
   <script src="../../dist/workerpool.js"></script>
 </head>
@@ -11,11 +17,18 @@ Calculate fibonacci:
 <input type="text" id="input" value="10" />
 <input type="button" id="calculate" value="Calculate">
 
+<p>
+  Try entering values in the range of 10 to 50.
+  Verify that the browser stays responsive when working on a large calculation.
+  We have created 3 workers, so the worker pool will handle a maximum of three
+  tasks at a time. When exceeding this, tasks will be put in a queue.
+</p>
+
 <div id="results"></div>
 
 <script>
   // create a worker pool using an external worker script
-  var pool = workerpool.pool('../workers/crossWorker.js');
+  var pool = workerpool.pool('../workers/crossWorker.js', {maxWorkers: 3});
 
   var input = document.getElementById('input');
   var calculate = document.getElementById('calculate');
@@ -32,10 +45,9 @@ Calculate fibonacci:
           result.innerHTML = 'fibonacci(' + n + ') = ' + f;
         })
         .catch(function (error) {
-          result.innerHTML = 'An error occurred while calculating fibonacci(' + n + ')';
+          result.innerHTML = 'fibonacci(' + n + ') = ' + error;
         });
   };
-
 </script>
 
 </body>
