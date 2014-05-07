@@ -7,9 +7,9 @@ var pool = workerpool.pool(__dirname + '/workers/nodeWorker.js');
 pool.proxy()
     .then(function (proxy) {
       // execute a function via the proxy
-      proxy.multiply(2, 5)
+      proxy.fibonacci(10)
           .then(function (result) {
-            console.log('Result: ' + result); // outputs 10
+            console.log('Result: ' + result); // outputs 55
 
             pool.clear(); // clear all workers when done
           });

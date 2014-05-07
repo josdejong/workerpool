@@ -11,16 +11,13 @@ else {
   var workerpool = require('../../index');
 }
 
-// define some functions
-function add(a, b) {
-  return a + b;
-}
-function multiply(a, b) {
-  return a * b;
+// a deliberately inefficient implementation of the fibonacci sequence
+function fibonacci(n) {
+  if (n < 2) return n;
+  return fibonacci(n - 2) + fibonacci(n - 1);
 }
 
-// create a worker and register some functions
+// create a worker and register public functions
 workerpool.worker({
-  add: add,
-  multiply: multiply
+  fibonacci: fibonacci
 });

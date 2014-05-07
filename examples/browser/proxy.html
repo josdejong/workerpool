@@ -15,9 +15,9 @@
   pool.proxy()
       .then(function (proxy) {
         // execute a function via the proxy
-        proxy.multiply(2, 5)
+        proxy.fibonacci(10)
             .then(function (result) {
-              document.write('Result: ' + result + '<br>'); // outputs 10
+              document.write('Result: ' + result + '<br>'); // outputs 55
             });
       });
 

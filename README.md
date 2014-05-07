@@ -18,19 +18,42 @@ workerpool runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
 
 ## Features
 
-- Extremely simple to use
+- Simple to use
 - Can be used in both browser and node.js environment
 - Dynamically offload functions to a worker
 - Workers are accessible via a proxy
 - Automatically restores crashed workers
 
 
-## Usage
+## Install
 
 Install via npm:
 
     npm install workerpool
 
+
+## Load
+
+To load workerpool in a node.js application (both main application as well as workers):
+
+```js
+var workerpool = require('workerpool');
+```
+
+To load workerpool in the browser:
+
+```html
+<script src="workerpool.js"></script>
+```
+
+To load workerpool in a web worker in the browser:
+
+```js
+importScripts('workerpool.js');
+```
+
+
+## Use
 
 ### Offload functions dynamically
 
@@ -57,12 +80,145 @@ Note that both function and arguments must be static and stringifiable, as they 
 
 ### Dedicated workers
 
-TODO
+A dedicated worker can be created and used via a worker pool. The worker is written in a separate JavaScript file
+
+**myWorker.js**
+```js
+var workerpool = require('workerpool');
+
+// a deliberately inefficient implementation of the fibonacci sequence
+function fibonacci(n) {
+  if (n < 2) return n;
+  return fibonacci(n - 2) + fibonacci(n - 1);
+}
+
+// create a worker and register public functions
+workerpool.worker({
+  fibonacci: fibonacci
+});
+```
+
+This worker can be used by a worker pool:
+
+**myApp.js**
+```js
+var workerpool = require('workerpool');
+
+// create a worker pool using an external worker script
+var pool = workerpool.pool(__dirname + '/myWorker.js');
+
+// run functions on the worker via exec
+pool.exec('fibonacci', [10])
+    .then(function (result) {
+      console.log('Result: ' + result); // outputs 55
+
+      pool.clear(); // clear all workers when done
+    });
+```
+
+
+## Examples
+
+Examples are available in the examples directory:
+
+[https://github.com/josdejong/workerpool/tree/master/examples](https://github.com/josdejong/workerpool/tree/master/examples)
 
 
 ## API
 
-TODO: describe the API
+The API of workerpool consists of two parts: a function `workerpool.pool` to create a worker pool, and a function `workerpool.worker` to create a worker.
+
+### workerpool
+
+A workerpool can be created using the function `workerpool.pool`:
+
+`workerpool.pool([script: string] [, options: Object]) : Pool`
+
+When a `script` argument is provided, the provided script will be started as a dedicated worker.
+When no `script` argument is provided, a default worker is started which can be used to offload functions dynamically via `Pool.run`.
+
+The following options are available:
+- `maxWorkers: number`. The default number of workers on node.js is the number of CPU's minus one. The default number of workers in a browser environment is 3.
+
+A worker pool contains the following functions:
+
+- `Pool.exec(method: string, params: Array | null) : Promise.<*, Error>`<br>
+  Execute a function on a worker with given arguments.
+- `Pool.run(fn: Function, args: Array | null) : Promise.<*, Error>`<br>
+  Offload a function dynamically to a worker, execute it with given arguments, and return the result. The provided function `fn` is stringified and send to the worker, therefore this function must be static.
+- `Pool.proxy() : Promise.<Object, Error>`<br>
+  Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
+- `Pool.clear([force: boolean])`<br>
+  Clear all workers from the pool. If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks.
+
+Example usage:
+
+```js
+var workerpool = require('workerpool');
+
+function add(a, b) {
+  return a + b;
+}
+
+var pool1 = workerpool.pool();
+
+// offload a function to a worker
+pool1.run(add, [2, 4])
+    .then(function (result) {
+      console.log(result); // will output 6
+    });
+
+// create a dedicated worker
+var pool2 = workerpool.pool(__dirname + '/myWorker.js');
+
+// supposed myWorker.js contains a function 'fibonacci'
+pool2.exec('fibonacci', [10])
+    .then(function (result) {
+      console.log(result); // will output 55
+    });
+
+// create a proxy to myWorker.js
+pool2.proxy()
+    .then(function (myWorker) {
+      myWorker.fibonacci(10)
+          .then(function (result) {
+            console.log(result); // will output 55
+          });
+    });
+
+// create a pool with a specified maximum number of workers
+var pool3 = workerpool.pool({maxWorkers: 7});
+```
+
+
+### worker
+
+A worker is constructed as:
+
+`workerpool.worker([methods: Object.<String, Function>])`
+
+Argument `methods` is optional can can be an object with functions available in the worker. Registered functions will be available via the worker pool.
+
+Example usage:
+
+```js
+// file myWorker.js
+var workerpool = require('workerpool');
+
+function add(a, b) {
+  return a + b;
+}
+
+function multiply(a, b) {
+  return a * b;
+}
+
+// create a worker and register functions
+workerpool.worker({
+  add: add,
+  multiply: multiply
+});
+```
 
 
 ## Build

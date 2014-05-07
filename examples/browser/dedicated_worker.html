@@ -7,15 +7,34 @@
 </head>
 <body>
 
+Calculate fibonacci:
+<input type="text" id="input" value="10" />
+<input type="button" id="calculate" value="Calculate">
+
+<div id="results"></div>
+
 <script>
   // create a worker pool using an external worker script
   var pool = workerpool.pool('../workers/crossWorker.js');
 
-  // run functions on the worker via exec
-  pool.exec('multiply', [3, 4])
-      .then(function (result) {
-        document.write('Result: ' + result + '<br>'); // outputs 12
-      });
+  var input = document.getElementById('input');
+  var calculate = document.getElementById('calculate');
+  var results = document.getElementById('results');
+
+  calculate.onclick = function () {
+    var n = parseInt(input.value);
+    var result = document.createElement('div');
+    result.innerHTML = 'fibonacci(' + n + ') = ...';
+    results.appendChild(result);
+
+    pool.exec('fibonacci', [n])
+        .then(function (f) {
+          result.innerHTML = 'fibonacci(' + n + ') = ' + f;
+        })
+        .catch(function (error) {
+          result.innerHTML = 'An error occurred while calculating fibonacci(' + n + ')';
+        });
+  };
 
 </script>
 

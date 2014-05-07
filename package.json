@@ -22,7 +22,8 @@
     "coverage": "istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\""
   },
   "dependencies": {
-    "bluebird": "^1.2.4"
+    "bluebird": "^1.2.4",
+    "promiscuous": "^0.6.0"
   },
   "devDependencies": {
     "gulp": "^3.6.2",
