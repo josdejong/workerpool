@@ -11,6 +11,25 @@ exports.pool = function pool(options) {
   return new Pool(options);
 };
 
-exports.worker = function worker(exports) {
-  // TODO: implement worker
+/**
+ * Create a worker and optionally register a set of methods to the worker.
+ * @param {Object} [methods]
+ */
+exports.worker = function worker(methods) {
+  var environment = require('./lib/environment');
+  if (environment == 'browser') {
+    // worker is already loaded by requiring worker
+
+    // use embedded worker.js
+    var blob = new Blob([require('./lib/embeddedWorker')], {type: 'text/javascript'});
+    var url = window.URL.createObjectURL(blob);
+    importScripts(url);
+  }
+  else {
+    // node
+    // TODO: do not include worker in browserified library
+    var worker = require('./lib/worker');
+  }
+
+  worker.add(methods);
 };

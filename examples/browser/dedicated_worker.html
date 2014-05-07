@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Worker pool in the browser</title>
+
+  <script src="../../dist/workerpool.js"></script>
+</head>
+<body>
+
+<script>
+  // create a worker pool using an external worker script
+  var pool = workerpool.pool('../workers/crossWorker.js');
+
+  // run functions on the worker via exec
+  pool.exec('multiply', [3, 4])
+      .then(function (result) {
+        document.write('Result: ' + result + '<br>'); // outputs 12
+      });
+
+</script>
+
+</body>
+</html>

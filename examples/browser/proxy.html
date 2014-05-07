@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Worker pool in the browser</title>
+
+  <script src="../../dist/workerpool.js"></script>
+</head>
+<body>
+
+<script>
+  // create a worker pool
+  var pool = workerpool.pool('../workers/browserWorker.js');
+
+  // create a proxy
+  pool.proxy()
+      .then(function (proxy) {
+        // execute a function via the proxy
+        proxy.multiply(2, 5)
+            .then(function (result) {
+              document.write('Result: ' + result + '<br>'); // outputs 10
+            });
+      });
+
+</script>
+
+</body>
+</html>

@@ -11,12 +11,19 @@ describe('WorkerHandler', function () {
   it('should handle a request', function (done) {
     var handler = new WorkerHandler();
 
-    handler.exec('run', {
-          fn: add + '', // stringified function
-          args: [2, 4]
-        })
+    handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
           assert.equal(result, 6);
+          done();
+        })
+  });
+
+  it('should get all methods', function (done) {
+    var handler = new WorkerHandler();
+
+    handler.methods()
+        .then(function (methods) {
+          assert.deepEqual(methods.sort(), ['methods', 'run']);
           done();
         })
   });
@@ -24,8 +31,8 @@ describe('WorkerHandler', function () {
   it('should handle multiple requests at once', function (done) {
     var handler = new WorkerHandler();
 
-    var task1 = handler.exec('run', {fn: add + '', args: [2, 4]});
-    var task2 = handler.exec('run', {fn: add + '', args: [4, 7]});
+    var task1 = handler.exec('run', [add + '', [2, 4]]);
+    var task2 = handler.exec('run', [add + '', [4, 7]]);
 
     Promise.all([task1, task2])
         .then(function (results) {
@@ -39,10 +46,7 @@ describe('WorkerHandler', function () {
 
     assert.equal(handler.busy(), false);
 
-    handler.exec('run', {
-          fn: add + '', // stringified function
-          args: [2, 4]
-        })
+    handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
           assert.equal(result, 6);
           assert.equal(handler.busy(), false);
@@ -64,10 +68,7 @@ describe('WorkerHandler', function () {
   it('should terminate after finishing running requests', function (done) {
     var handler = new WorkerHandler();
 
-    handler.exec('run', {
-          fn: add + '', // stringified function
-          args: [2, 4]
-        })
+    handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
           assert.equal(result, 6);
 
@@ -86,10 +87,7 @@ describe('WorkerHandler', function () {
   it('should force termination without finishing running requests', function (done) {
     var handler = new WorkerHandler();
 
-    handler.exec('run', {
-          fn: add + '', // stringified function
-          args: [2, 4]
-        })
+    handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
           assert('Should not complete request');
         })
@@ -120,17 +118,11 @@ describe('WorkerHandler', function () {
       });
     }
 
-    handler.exec('run', {
-          fn: asyncAdd + '', // stringified function
-          args: [2, 4]
-        })
+    handler.exec('run', [String(asyncAdd), [2, 4]])
         .then(function (result) {
           assert.equal(result, 6);
 
-          handler.exec('run', {
-                fn: asyncAdd + '', // stringified function
-                args: [2, 'oops']
-              })
+          handler.exec('run', [String(asyncAdd), [2, 'oops']])
               .catch(function (err) {
                 assert.equal(err, 'TypeError: Invalid input, two numbers expected');
                 done();
@@ -138,8 +130,22 @@ describe('WorkerHandler', function () {
         });
   });
 
-  it.skip('create a worker handler with custom script', function () {
-    // TODO
+  it('create a worker handler with custom script', function (done) {
+    var handler = new WorkerHandler(__dirname + '/workers/simple.js');
+
+    // test build in function run
+    handler.exec('run', [String(add), [2, 4]])
+        .then(function (result) {
+          assert.equal(result, 6);
+
+          // test one of the functions defined in the simple.js worker
+          handler.exec('multiply', [2, 4])
+              .then(function (result) {
+                assert.equal(result, 8);
+
+                done();
+              });
+        });
   });
 
   it('should handle errors thrown by a worker (1)', function (done) {
@@ -149,9 +155,7 @@ describe('WorkerHandler', function () {
       throw new TypeError('Test error');
     }
 
-    handler.exec('run', {
-          fn: test + ''
-        })
+    handler.exec('run', [String(test)])
         .catch(function (err) {
           assert.equal(err.toString(), 'TypeError: Test error');
 
@@ -166,9 +170,7 @@ describe('WorkerHandler', function () {
       return test();
     }
 
-    handler.exec('run', {
-          fn: test + ''
-        })
+    handler.exec('run', [String(test)])
         .catch(function (err) {
           assert.equal(err.toString(), 'RangeError: Maximum call stack size exceeded');
 
@@ -179,10 +181,7 @@ describe('WorkerHandler', function () {
   it('should handle crashing of a worker (1)', function (done) {
     var handler = new WorkerHandler();
 
-    handler.exec('run', {
-          fn: add + '',
-          params: [2, 4]
-        })
+    handler.exec('run', [String(add), [2, 4]])
         .then(function () {
           assert('Promise should not be resolved');
         })
@@ -199,10 +198,7 @@ describe('WorkerHandler', function () {
   it('should handle crashing of a worker (2)', function (done) {
     var handler = new WorkerHandler();
 
-    handler.exec('run', {
-          fn: add + '',
-          params: [2, 4]
-        })
+    handler.exec('run', [String(add), [2, 4]])
         .then(function () {
           assert('Promise should not be resolved');
         })

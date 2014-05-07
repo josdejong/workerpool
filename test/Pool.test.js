@@ -94,6 +94,41 @@ describe('Pool', function () {
         });
   });
 
+  it('should create a proxy', function (done) {
+    var pool = new Pool();
+
+    pool.proxy().then(function (proxy) {
+      assert.deepEqual(Object.keys(proxy).sort(), ['methods', 'run']);
+
+      proxy.methods()
+          .then(function (methods) {
+            assert.deepEqual(methods.sort(), ['methods', 'run']);
+            done();
+          })
+          .catch(function (err) {
+            assert('Should not throw an error');
+          });
+    });
+  });
+
+  it('should create a proxy of a custom worker', function (done) {
+    var pool = new Pool(__dirname + '/workers/simple.js');
+
+    pool.proxy().then(function (proxy) {
+      assert.deepEqual(Object.keys(proxy).sort(), ['add','methods','multiply','run']);
+
+      proxy.multiply(4, 3)
+          .then(function (result) {
+            assert.equal(result, 12);
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+          });
+    });
+  });
+
   it('should handle errors thrown by a worker', function (done) {
     var pool = new Pool({maxWorkers: 10});
 

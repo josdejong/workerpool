@@ -3,23 +3,23 @@
 <head>
   <title>Worker pool in the browser</title>
 
-  <script src="../dist/workerpool.js"></script>
+  <script src="../../dist/workerpool.js"></script>
 </head>
 <body>
 
 <script>
+  // create a worker pool
   var pool = workerpool.pool();
 
+  // create a static function
   function add(a, b) {
     return a + b;
   }
 
+  // offload execution of a function to the worker pool
   pool.run(add, [3, 4])
       .then(function (result) {
         document.write('Result: ' + result); // outputs 7
-      })
-      .catch(function (err) {
-        document.write('Error: ' + err);
       });
 
 </script>

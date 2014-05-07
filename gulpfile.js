@@ -39,7 +39,9 @@ var webpackConfig = {
     path: DIST,
     filename: FILE
   },
-  plugins: [ bannerPlugin ],
+  plugins: [
+    bannerPlugin
+  ],
   cache: true
 };
 
