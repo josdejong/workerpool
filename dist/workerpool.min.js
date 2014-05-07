@@ -4,7 +4,7 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 0.0.1
+ * @version 0.1.0
  * @date    2014-05-07
  *
  * @license

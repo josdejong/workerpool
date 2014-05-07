@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet released, version 1.0.0
+## 2014-05-07, version 0.1.0
 
 - Implemented support for both node.js and the browser.
 - Implemented offloading functions.
