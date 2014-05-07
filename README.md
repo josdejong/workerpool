@@ -1,24 +1,24 @@
 # workerpool
 
-JavaScript is based upon a single event loop which executes one event at a time. All I/O operations are evented, asynchronous, and non-blocking, while the execution of non-I/O code itself is executed sequentially. Jeremy Epstein explains this clearly in the blog [Node.js itself is blocking, only its I/O is non-blocking](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
+JavaScript is based upon a single event loop which handles one event at a time. All I/O operations are evented, asynchronous, and non-blocking, while the execution of non-I/O code itself is executed sequentially. Jeremy Epstein explains this clearly in the blog [Node.js itself is blocking, only its I/O is non-blocking](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
 
 > In Node.js everything runs in parallel, except your code.
 > What this means is that all I/O code that you write in Node.js is non-blocking,
 > while (conversely) all non-I/O code that you write in Node.js is blocking.
 
-This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any requests while executing a single, heavy request.
+This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any new request while executing a single, heavy request.
 
 For front-end processes, this is not a desired situation.
-CPU heavy tasks should be offloaded from the main event loop onto dedicated *workers*. We can use [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) when in a browser environment, and [child processes](http://nodejs.org/api/child_process.html) when using node.js. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
+Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. We can use [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) when in a browser environment, and [child processes](http://nodejs.org/api/child_process.html) when using node.js. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
 
-workerpool offers an easy way to use a pool of workers for both dynamically offloading computations, as well as managing a pool of dedicated workers. All logic to manage a pool of workers is hidden, whilst the workers can be accessed via a natural, promise based proxy, as if they are available locally.
+**workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
-workerpool runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
+**workerpool** runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
 
 
 ## Features
 
-- Simple to use
+- Easy to use
 - Can be used in both browser and node.js environment
 - Dynamically offload functions to a worker
 - Workers are accessible via a proxy
@@ -59,6 +59,7 @@ importScripts('workerpool.js');
 
 In the following example there is a function `add`, which is offloaded dynamically to a worker to be executed for a given set of arguments.
 
+**myApp.js**
 ```js
 var workerpool = require('workerpool');
 var pool = workerpool.pool();
@@ -80,7 +81,7 @@ Note that both function and arguments must be static and stringifiable, as they 
 
 ### Dedicated workers
 
-A dedicated worker can be created and used via a worker pool. The worker is written in a separate JavaScript file
+A dedicated worker can be created and used via a worker pool. The worker is written in a separate JavaScript file.
 
 **myWorker.js**
 ```js
@@ -136,6 +137,7 @@ A workerpool can be created using the function `workerpool.pool`:
 
 When a `script` argument is provided, the provided script will be started as a dedicated worker.
 When no `script` argument is provided, a default worker is started which can be used to offload functions dynamically via `Pool.run`.
+Note that on node.js, `script` must be an absolute file path like `__dirname + '/myWorker.js'`.
 
 The following options are available:
 - `maxWorkers: number`. The default number of workers on node.js is the number of CPU's minus one. The default number of workers in a browser environment is 3.
