@@ -37,7 +37,7 @@ Calculate fibonacci:
   calculate.onclick = function () {
     var n = parseInt(input.value);
     var result = document.createElement('div');
-    result.innerHTML = 'fibonacci(' + n + ') = ...';
+    result.innerHTML = 'fibonacci(' + n + ') = ... ';
     results.appendChild(result);
 
     var promise = pool.exec('fibonacci', [n])

@@ -1,6 +1,6 @@
 # workerpool
 
-JavaScript is based upon a single event loop which handles one event at a time. All I/O operations are evented, asynchronous, and non-blocking, while the execution of non-I/O code itself is executed sequentially. Jeremy Epstein explains this clearly in the blog [Node.js itself is blocking, only its I/O is non-blocking](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
+JavaScript is based upon a single event loop which handles one event at a time. Jeremy Epstein [explains this clearly](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
 
 > In Node.js everything runs in parallel, except your code.
 > What this means is that all I/O code that you write in Node.js is non-blocking,
@@ -9,7 +9,7 @@ JavaScript is based upon a single event loop which handles one event at a time. 
 This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any new request while executing a single, heavy request.
 
 For front-end processes, this is not a desired situation.
-Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. We can use [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) when in a browser environment, and [child processes](http://nodejs.org/api/child_process.html) when using node.js. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
+Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](http://nodejs.org/api/child_process.html) are available. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
 
 **workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
@@ -19,10 +19,11 @@ Therefore, CPU intensive tasks should be offloaded from the main event loop onto
 ## Features
 
 - Easy to use
-- Can be used in both browser and node.js environment
+- Runs in the browser and on node.js
 - Dynamically offload functions to a worker
-- Workers are accessible via a proxy
-- Automatically restores crashed workers
+- Access workers via a proxy
+- Cancel running tasks
+- Handles crashed workers
 
 
 ## Install
@@ -129,7 +130,7 @@ Examples are available in the examples directory:
 
 The API of workerpool consists of two parts: a function `workerpool.pool` to create a worker pool, and a function `workerpool.worker` to create a worker.
 
-### workerpool
+### pool
 
 A workerpool can be created using the function `workerpool.pool`:
 
@@ -152,6 +153,16 @@ A worker pool contains the following functions:
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
 - `Pool.clear([force: boolean])`<br>
   Clear all workers from the pool. If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks.
+
+The functions `Pool.run`, `Pool.exec`, and the proxy functions all return a `Promise`. The promise has the following functions available:
+
+- `Promise.then(fn: Function.<result: *>)`<br>
+  Get the result of the promise once resolve.
+- `Promise.catch(fn: Function.<error: Error>)`<br>
+  Get the error of the promise when rejected.
+- `Promise.cancel()`<br>
+  A running task can be cancelled. The worker executing the task is enforced to terminate immediately.
+  The promise will be rejected with a `CancellationError`.
 
 Example usage:
 

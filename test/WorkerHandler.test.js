@@ -148,7 +148,7 @@ describe('WorkerHandler', function () {
         });
   });
 
-  it.skip('should cancel a task', function (done) {
+  it('should cancel a task', function (done) {
     var handler = new WorkerHandler();
 
     function forever() {

@@ -145,7 +145,7 @@ describe('Pool', function () {
         });
   });
 
-  it.skip('should cancel a task', function (done) {
+  it('should cancel a task', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
     function forever() {
@@ -169,6 +169,9 @@ describe('Pool', function () {
     // cancel the task
     promise.cancel();
   });
+
+  // TODO: test whether a task in the queue can be neatly cancelled
+
 
   it('should handle crashed workers (1)', function (done) {
     var pool = new Pool({maxWorkers: 1});
