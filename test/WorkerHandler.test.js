@@ -148,6 +148,32 @@ describe('WorkerHandler', function () {
         });
   });
 
+  it.skip('should cancel a task', function (done) {
+    var handler = new WorkerHandler();
+
+    function forever() {
+      new Promise(function () {
+        // never resolves...
+      });
+    }
+
+    var promise = handler.exec('run', [String(forever)])
+        .then(function (result) {
+          assert('promise should never resolve');
+        })
+        .catch(Promise.CancellationError, function (err) {
+          assert.equal(err.toString(), 'CancellationError: cancellation error');
+
+          assert.equal(handler.worker, null);
+          assert.equal(handler.terminated, true);
+
+          done();
+        });
+
+    // cancel the task
+    promise.cancel();
+  });
+
   it('should handle errors thrown by a worker (1)', function (done) {
     var handler = new WorkerHandler();
 

@@ -40,13 +40,21 @@ Calculate fibonacci:
     result.innerHTML = 'fibonacci(' + n + ') = ...';
     results.appendChild(result);
 
-    pool.exec('fibonacci', [n])
+    var promise = pool.exec('fibonacci', [n])
         .then(function (f) {
           result.innerHTML = 'fibonacci(' + n + ') = ' + f;
         })
         .catch(function (error) {
           result.innerHTML = 'fibonacci(' + n + ') = ' + error;
         });
+
+    var a = document.createElement('A');
+    a.innerHTML = 'cancel';
+    a.href = '#';
+    a.onclick = function () {
+      promise.cancel();
+    };
+    result.appendChild(a);
   };
 </script>
 

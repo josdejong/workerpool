@@ -145,6 +145,31 @@ describe('Pool', function () {
         });
   });
 
+  it.skip('should cancel a task', function (done) {
+    var pool = new Pool({maxWorkers: 10});
+
+    function forever() {
+      new Promise(function () {
+        // never resolves...
+      });
+    }
+
+    var promise = pool.run(forever)
+        .then(function (result) {
+          assert('promise should never resolve');
+        })
+        .catch(Promise.CancellationError, function (err) {
+          assert.equal(err.toString(), 'CancellationError: cancellation error');
+
+          assert.equal(pool.workers.length, 0);
+
+          done();
+        });
+
+    // cancel the task
+    promise.cancel();
+  });
+
   it('should handle crashed workers (1)', function (done) {
     var pool = new Pool({maxWorkers: 1});
 
