@@ -142,5 +142,5 @@ gulp.task('default', ['bundle', 'minify']);
 
 // The watch task (to automatically rebuild when the source code changes)
 gulp.task('watch', ['bundle', 'minify'], function () {
-  gulp.watch(['index.js', 'lib/**/*.js'], ['bundle', 'minify']);
+  gulp.watch(['index.js', 'lib/**/*.js', '!lib/generated/**'], ['bundle', 'minify']);
 });
