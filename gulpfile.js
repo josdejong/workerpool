@@ -32,11 +32,10 @@ var bannerPlugin = new webpack.BannerPlugin(createBanner(), {
 
 // TODO: webpack is quite compilicated to configure. Switch to browserify?
 
-var JsonpTemplatePlugin  = require('./node_modules/webpack/lib/JsonpTemplatePlugin');
-var FunctionModulePlugin = require('./node_modules/webpack/lib/FunctionModulePlugin');
-var NodeTargetPlugin     = require('./node_modules/webpack/lib/node/NodeTargetPlugin');
-var NodeTemplatePlugin   = require('./node_modules/webpack/lib/node/NodeTemplatePlugin');
-var LoaderTargetPlugin   = require('./node_modules/webpack/lib/LoaderTargetPlugin');
+var FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin');
+var NodeTargetPlugin     = require('webpack/lib/node/NodeTargetPlugin');
+var NodeTemplatePlugin   = require('webpack/lib/node/NodeTemplatePlugin');
+var LoaderTargetPlugin   = require('webpack/lib/LoaderTargetPlugin');
 
 var webpackOutput = {
   library: 'workerpool',
@@ -59,7 +58,6 @@ var webpackConfig = {
   entry: ENTRY,
   target: function(compiler) {
     compiler.apply(
-        new JsonpTemplatePlugin(webpackOutput),
         new FunctionModulePlugin(webpackOutput),
         new NodeTemplatePlugin(webpackOutput),
         new NodeTargetPlugin(webpackNode),
