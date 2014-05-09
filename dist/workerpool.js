@@ -5,7 +5,7 @@
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
  * @version 0.1.0
- * @date    2014-05-07
+ * @date    2014-05-09
  *
  * @license
  * Copyright (C) 2014 Jos de Jong <wjosdejong@gmail.com>
@@ -25,14 +25,14 @@
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
+		module.exports = factory(require("os"), require("child_process"));
 	else if(typeof define === 'function' && define.amd)
-		define(factory);
+		define(["os", "child_process"], factory);
 	else if(typeof exports === 'object')
-		exports["workerpool"] = factory();
+		exports["workerpool"] = factory(require("os"), require("child_process"));
 	else
-		root["workerpool"] = factory();
-})(this, function() {
+		root["workerpool"] = factory(root["os"], root["child_process"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_5__, __WEBPACK_EXTERNAL_MODULE_7__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	
 /******/ 	// The module cache
@@ -122,7 +122,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var Promise = __webpack_require__(8),
-	    WorkerHandler = __webpack_require__(5);
+	    WorkerHandler = __webpack_require__(6);
 
 	/**
 	 * A pool to manage workers
@@ -148,7 +148,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  else {
 	    var environment = __webpack_require__(2);
-	    var numCPUs = (environment == 'browser') ? 4 : __webpack_require__(6).cpus().length;
+	    var numCPUs = (environment == 'browser') ? 4 : __webpack_require__(5).cpus().length;
 	    this.maxWorkers = Math.max(numCPUs - 1, 1);
 	  }
 
@@ -201,19 +201,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise.<*, Error>} result
 	 */
 	Pool.prototype.exec = function (method, params) {
-	  var me = this;
-	  return new Promise(function (resolve, reject) {
-	    // add a new task to the queue
-	    me.tasks.push({
-	      method:  method,
-	      params:  params,
-	      resolve: resolve,
-	      reject:  reject
-	    });
+	  var resolver = Promise.defer();
 
-	    // trigger task execution
-	    me._next();
+	  // add a new task to the queue
+	  this.tasks.push({
+	    method:  method,
+	    params:  params,
+	    resolver: resolver
 	  });
+
+	  // trigger task execution
+	  this._next();
+
+	  return resolver.promise.cancellable();
 	};
 
 	/**
@@ -255,14 +255,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var task = this.tasks.shift();
 
 	      // send the request to the worker
-	      worker.exec(task.method, task.params)
-	          .then(function (result) {
-	            task.resolve(result);
+	      worker.exec(task.method, task.params, task.resolver)
+	          .then(function () {
 	            me._next(); // trigger next task in the queue
 	          })
-	          .catch(function (error) {
-	            task.reject(error);
-
+	          .catch(function () {
 	            // if the worker crashed and terminated, remove it from the pool
 	            if (worker.terminated) {
 	              me._removeWorker(worker);
@@ -324,6 +321,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *                                  progress. If true, the workers will be
 	 *                                  terminated immediately.
 	 */
+	// TODO: rename clear to terminate
 	Pool.prototype.clear = function (force) {
 	  this.workers.forEach(function (worker) {
 	    // TODO: implement callbacks when a worker is actually terminated, only then clear the worker from our array
@@ -379,7 +377,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {/**
+	/**
 	 * worker must be started as a child process or a web worker.
 	 * It listens for RPC messages from the parent process.
 	 */
@@ -504,15 +502,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	if (true) {
 	  exports.add = worker.register;
 	}
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
+
 
 /***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(__dirname) {var Promise = __webpack_require__(8),
-	    child_process = __webpack_require__(9);
+	module.exports = require("os");
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Promise = __webpack_require__(8);
 
 	// determine environment
 	var environment = __webpack_require__(2);
@@ -569,7 +571,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  else {
 	    // on node.js, create a child process
-	    this.worker = child_process.fork(this.script);
+	    this.worker = __webpack_require__(7).fork(this.script);
 	  }
 
 	  var me = this;
@@ -584,10 +586,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // resolve the task's promise
 	      try {
 	        if (response.error) {
-	          task.reject(response.error);
+	          task.resolver.reject(response.error);
 	        }
 	        else {
-	          task.resolve(response.result);
+	          task.resolver.resolve(response.result);
 	        }
 	      }
 	      catch (err) {}
@@ -606,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    for (var id in me.processing) {
 	      if (me.processing.hasOwnProperty(id)) {
-	        me.processing[id].reject(error);
+	        me.processing[id].resolver.reject(error);
 	      }
 	    }
 	    me.processing = {};
@@ -638,32 +640,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Execute a method with given parameters on the worker
 	 * @param {String} method
 	 * @param {Array} [params]
+	 * @param {PromiseResolver} [resolver]
 	 * @return {Promise.<*, Error>} result
 	 */
-	WorkerHandler.prototype.exec = function(method, params) {
-	  var me = this;
+	WorkerHandler.prototype.exec = function(method, params, resolver) {
+	  if (!resolver) {
+	    resolver = Promise.defer();
+	  }
 
-	  return new Promise(function (resolve, reject) {
-	    // generate a unique id for the task
-	    var id = ++me.lastId;
+	  // generate a unique id for the task
+	  var id = ++this.lastId;
 
-	    // register a new task as being in progress
-	    me.processing[id] = {
-	      id: id,
-	      resolve: resolve,
-	      reject: reject
-	    };
+	  // register a new task as being in progress
+	  this.processing[id] = {
+	    id: id,
+	    resolver: resolver
+	  };
 
-	    // build a JSON-RPC request
-	    var request = {
-	      id: id,
-	      method: method,
-	      params: params
-	    };
+	  // build a JSON-RPC request
+	  var request = {
+	    id: id,
+	    method: method,
+	    params: params
+	  };
 
+	  if (this.terminated) {
+	    resolver.reject(new Error('Worker is terminated'));
+	  }
+	  else {
 	    // send the request to the worker
-	    me.worker.send(request);
-	  });
+	    this.worker.send(request);
+	  }
+
+	  // on cancellation, force the worker to terminate
+	  var me = this;
+	  resolver.promise
+	      .cancellable()
+	      .catch(function(error) {
+	        if (error instanceof Promise.CancellationError) {
+	        // terminate worker
+	        me.terminate(true);
+	        }
+	      });
+
+	  return resolver.promise;
 	};
 
 	/**
@@ -686,7 +706,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // cancel all tasks in progress
 	    for (var id in this.processing) {
 	      if (this.processing.hasOwnProperty(id)) {
-	        this.processing[id].reject(new Error('Worker terminated'));
+	        this.processing[id].resolver.reject(new Error('Worker terminated'));
 	      }
 	    }
 	    this.processing = {};
@@ -716,125 +736,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = WorkerHandler;
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, "/"))
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports.endianness = function () { return 'LE' };
-
-	exports.hostname = function () {
-	    if (typeof location !== 'undefined') {
-	        return location.hostname
-	    }
-	    else return '';
-	};
-
-	exports.loadavg = function () { return [] };
-
-	exports.uptime = function () { return 0 };
-
-	exports.freemem = function () {
-	    return Number.MAX_VALUE;
-	};
-
-	exports.totalmem = function () {
-	    return Number.MAX_VALUE;
-	};
-
-	exports.cpus = function () { return [] };
-
-	exports.type = function () { return 'Browser' };
-
-	exports.release = function () {
-	    if (typeof navigator !== 'undefined') {
-	        return navigator.appVersion;
-	    }
-	    return '';
-	};
-
-	exports.networkInterfaces
-	= exports.getNetworkInterfaces
-	= function () { return {} };
-
-	exports.arch = function () { return 'javascript' };
-
-	exports.platform = function () { return 'browser' };
-
-	exports.tmpdir = exports.tmpDir = function () {
-	    return '/tmp';
-	};
-
-	exports.EOL = '\n';
 
 
 /***/ },
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// shim for using process in browser
-
-	var process = module.exports = {};
-
-	process.nextTick = (function () {
-	    var canSetImmediate = typeof window !== 'undefined'
-	    && window.setImmediate;
-	    var canPost = typeof window !== 'undefined'
-	    && window.postMessage && window.addEventListener
-	    ;
-
-	    if (canSetImmediate) {
-	        return function (f) { return window.setImmediate(f) };
-	    }
-
-	    if (canPost) {
-	        var queue = [];
-	        window.addEventListener('message', function (ev) {
-	            var source = ev.source;
-	            if ((source === window || source === null) && ev.data === 'process-tick') {
-	                ev.stopPropagation();
-	                if (queue.length > 0) {
-	                    var fn = queue.shift();
-	                    fn();
-	                }
-	            }
-	        }, true);
-
-	        return function nextTick(fn) {
-	            queue.push(fn);
-	            window.postMessage('process-tick', '*');
-	        };
-	    }
-
-	    return function nextTick(fn) {
-	        setTimeout(fn, 0);
-	    };
-	})();
-
-	process.title = 'browser';
-	process.browser = true;
-	process.env = {};
-	process.argv = [];
-
-	function noop() {}
-
-	process.on = noop;
-	process.once = noop;
-	process.off = noop;
-	process.emit = noop;
-
-	process.binding = function (name) {
-	    throw new Error('process.binding is not supported');
-	}
-
-	// TODO(shtylman)
-	process.cwd = function () { return '/' };
-	process.chdir = function (dir) {
-	    throw new Error('process.chdir is not supported');
-	};
-
+	module.exports = require("child_process");
 
 /***/ },
 /* 8 */
@@ -863,20 +771,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var Promise = __webpack_require__(10)();
+	var Promise = __webpack_require__(9)();
 	module.exports = Promise;
 
 /***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {/**
+	/**
 	 * Copyright (c) 2014 Petka Antonov
 	 * 
 	 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -900,19 +802,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function() {
-	var global = __webpack_require__(11);
-	var util = __webpack_require__(12);
-	var async = __webpack_require__(13);
-	var errors = __webpack_require__(14);
+	var global = __webpack_require__(10);
+	var util = __webpack_require__(11);
+	var async = __webpack_require__(12);
+	var errors = __webpack_require__(13);
 
 	var INTERNAL = function(){};
 	var APPLY = {};
 	var NEXT_FILTER = {e: null};
 
-	var PromiseArray = __webpack_require__(15)(Promise, INTERNAL);
-	var CapturedTrace = __webpack_require__(16)();
-	var CatchFilter = __webpack_require__(17)(NEXT_FILTER);
-	var PromiseResolver = __webpack_require__(18);
+	var PromiseArray = __webpack_require__(14)(Promise, INTERNAL);
+	var CapturedTrace = __webpack_require__(15)();
+	var CatchFilter = __webpack_require__(16)(NEXT_FILTER);
+	var PromiseResolver = __webpack_require__(17);
 
 	var isArray = util.isArray;
 
@@ -929,7 +831,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var markAsOriginatingFromRejection = errors.markAsOriginatingFromRejection;
 	var canAttach = errors.canAttach;
 	var thrower = util.thrower;
-	var apiRejection = __webpack_require__(19)(Promise);
+	var apiRejection = __webpack_require__(18)(Promise);
 
 
 	var makeSelfResolutionError = function Promise$_makeSelfResolutionError() {
@@ -1976,10 +1878,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	Promise._makeSelfResolutionError = makeSelfResolutionError;
-	__webpack_require__(20)(Promise, NEXT_FILTER);
-	__webpack_require__(21)(Promise);
-	__webpack_require__(22)(Promise, INTERNAL);
-	__webpack_require__(23)(Promise);
+	__webpack_require__(19)(Promise, NEXT_FILTER);
+	__webpack_require__(20)(Promise);
+	__webpack_require__(21)(Promise, INTERNAL);
+	__webpack_require__(22)(Promise);
 	Promise.RangeError = RangeError;
 	Promise.CancellationError = CancellationError;
 	Promise.TimeoutError = TimeoutError;
@@ -1988,34 +1890,33 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	util.toFastProperties(Promise);
 	util.toFastProperties(Promise.prototype);
-	__webpack_require__(24)(Promise,INTERNAL);
-	__webpack_require__(25)(Promise,Promise$_CreatePromiseArray,PromiseArray);
-	__webpack_require__(26)(Promise,INTERNAL);
-	__webpack_require__(27)(Promise);
-	__webpack_require__(28)(Promise,Promise$_CreatePromiseArray,PromiseArray,apiRejection);
-	__webpack_require__(29)(Promise,apiRejection,INTERNAL);
-	__webpack_require__(30)(Promise,PromiseArray,INTERNAL,apiRejection);
-	__webpack_require__(31)(Promise);
-	__webpack_require__(32)(Promise,INTERNAL);
-	__webpack_require__(33)(Promise,PromiseArray);
-	__webpack_require__(34)(Promise,Promise$_CreatePromiseArray,PromiseArray,apiRejection,INTERNAL);
-	__webpack_require__(35)(Promise,Promise$_CreatePromiseArray,PromiseArray);
-	__webpack_require__(36)(Promise,Promise$_CreatePromiseArray,PromiseArray,apiRejection);
-	__webpack_require__(37)(Promise,isPromiseArrayProxy);
-	__webpack_require__(38)(Promise,INTERNAL);
+	__webpack_require__(23)(Promise,INTERNAL);
+	__webpack_require__(24)(Promise,Promise$_CreatePromiseArray,PromiseArray);
+	__webpack_require__(25)(Promise,INTERNAL);
+	__webpack_require__(26)(Promise);
+	__webpack_require__(27)(Promise,Promise$_CreatePromiseArray,PromiseArray,apiRejection);
+	__webpack_require__(28)(Promise,apiRejection,INTERNAL);
+	__webpack_require__(29)(Promise,PromiseArray,INTERNAL,apiRejection);
+	__webpack_require__(30)(Promise);
+	__webpack_require__(31)(Promise,INTERNAL);
+	__webpack_require__(32)(Promise,PromiseArray);
+	__webpack_require__(33)(Promise,Promise$_CreatePromiseArray,PromiseArray,apiRejection,INTERNAL);
+	__webpack_require__(34)(Promise,Promise$_CreatePromiseArray,PromiseArray);
+	__webpack_require__(35)(Promise,Promise$_CreatePromiseArray,PromiseArray,apiRejection);
+	__webpack_require__(36)(Promise,isPromiseArrayProxy);
+	__webpack_require__(37)(Promise,INTERNAL);
 
 	Promise.prototype = Promise.prototype;
 	return Promise;
 
 	};
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
+
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {/**
+	/**
 	 * Copyright (c) 2014 Petka Antonov
 	 * 
 	 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -2046,11 +1947,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    try {return self;}
 	    catch(e) {}
 	})();
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2076,8 +1976,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var global = __webpack_require__(11);
-	var es5 = __webpack_require__(39);
+	var global = __webpack_require__(10);
+	var es5 = __webpack_require__(38);
 	var haveGetters = (function(){
 	    try {
 	        var o = {};
@@ -2249,7 +2149,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2275,11 +2175,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var schedule = __webpack_require__(40);
-	var Queue = __webpack_require__(41);
-	var errorObj = __webpack_require__(12).errorObj;
-	var tryCatch1 = __webpack_require__(12).tryCatch1;
-	var process = __webpack_require__(11).process;
+	var schedule = __webpack_require__(39);
+	var Queue = __webpack_require__(40);
+	var errorObj = __webpack_require__(11).errorObj;
+	var tryCatch1 = __webpack_require__(11).tryCatch1;
+	var process = __webpack_require__(10).process;
 
 	function Async() {
 	    this._isTickUsed = false;
@@ -2366,7 +2266,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2392,9 +2292,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var global = __webpack_require__(11);
-	var Objectfreeze = __webpack_require__(39).freeze;
-	var util = __webpack_require__(12);
+	var global = __webpack_require__(10);
+	var Objectfreeze = __webpack_require__(38).freeze;
+	var util = __webpack_require__(11);
 	var inherits = util.inherits;
 	var notEnumerableProp = util.notEnumerableProp;
 	var Error = global.Error;
@@ -2486,7 +2386,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2513,9 +2413,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
-	var canAttach = __webpack_require__(14).canAttach;
-	var util = __webpack_require__(12);
-	var async = __webpack_require__(13);
+	var canAttach = __webpack_require__(13).canAttach;
+	var util = __webpack_require__(11);
+	var async = __webpack_require__(12);
 	var hasOwn = {}.hasOwnProperty;
 	var isArray = util.isArray;
 
@@ -2725,7 +2625,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2752,8 +2652,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function() {
-	var inherits = __webpack_require__(12).inherits;
-	var defineProperty = __webpack_require__(39).defineProperty;
+	var inherits = __webpack_require__(11).inherits;
+	var defineProperty = __webpack_require__(38).defineProperty;
 
 	var rignore = new RegExp(
 	    "\\b(?:[a-zA-Z0-9.]+\\$_\\w+|" +
@@ -2953,7 +2853,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2980,11 +2880,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(NEXT_FILTER) {
-	var util = __webpack_require__(12);
-	var errors = __webpack_require__(14);
+	var util = __webpack_require__(11);
+	var errors = __webpack_require__(13);
 	var tryCatch1 = util.tryCatch1;
 	var errorObj = util.errorObj;
-	var keys = __webpack_require__(39).keys;
+	var keys = __webpack_require__(38).keys;
 	var TypeError = errors.TypeError;
 
 	function CatchFilter(instances, callback, promise) {
@@ -3053,7 +2953,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3079,14 +2979,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var util = __webpack_require__(12);
+	var util = __webpack_require__(11);
 	var maybeWrapAsError = util.maybeWrapAsError;
-	var errors = __webpack_require__(14);
+	var errors = __webpack_require__(13);
 	var TimeoutError = errors.TimeoutError;
 	var RejectionError = errors.RejectionError;
-	var async = __webpack_require__(13);
+	var async = __webpack_require__(12);
 	var haveGetters = util.haveGetters;
-	var es5 = __webpack_require__(39);
+	var es5 = __webpack_require__(38);
 
 	function isUntypedError(obj) {
 	    return obj instanceof Error &&
@@ -3217,7 +3117,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3244,7 +3144,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise) {
-	var TypeError = __webpack_require__(14).TypeError;
+	var TypeError = __webpack_require__(13).TypeError;
 
 	function apiRejection(msg) {
 	    var error = new TypeError(msg);
@@ -3261,7 +3161,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3288,7 +3188,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, NEXT_FILTER) {
-	var util = __webpack_require__(12);
+	var util = __webpack_require__(11);
 	var wrapsPrimitiveReceiver = util.wrapsPrimitiveReceiver;
 	var isPrimitive = util.isPrimitive;
 	var thrower = util.thrower;
@@ -3390,7 +3290,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3416,7 +3316,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var util = __webpack_require__(12);
+	var util = __webpack_require__(11);
 	var isPrimitive = util.isPrimitive;
 	var wrapsPrimitiveReceiver = util.wrapsPrimitiveReceiver;
 
@@ -3475,7 +3375,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 22 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3502,8 +3402,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
-	var util = __webpack_require__(12);
-	var canAttach = __webpack_require__(14).canAttach;
+	var util = __webpack_require__(11);
+	var canAttach = __webpack_require__(13).canAttach;
 	var errorObj = util.errorObj;
 	var isObject = util.isObject;
 
@@ -3616,7 +3516,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3701,7 +3601,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3727,7 +3627,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var global = __webpack_require__(11);
+	var global = __webpack_require__(10);
 	var setTimeout = function(fn, ms) {
 	    var $_len = arguments.length;var args = new Array($_len - 2); for(var $_i = 2; $_i < $_len; ++$_i) {args[$_i - 2] = arguments[$_i];}
 	    global.setTimeout(function(){
@@ -3736,9 +3636,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = function(Promise, INTERNAL) {
-	var util = __webpack_require__(12);
-	var errors = __webpack_require__(14);
-	var apiRejection = __webpack_require__(19)(Promise);
+	var util = __webpack_require__(11);
+	var errors = __webpack_require__(13);
+	var apiRejection = __webpack_require__(18)(Promise);
 	var TimeoutError = Promise.TimeoutError;
 
 	var afterTimeout = function Promise$_afterTimeout(promise, message, ms) {
@@ -3810,7 +3710,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3838,7 +3738,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 	module.exports = function(Promise, Promise$_CreatePromiseArray, PromiseArray) {
 
-	var SomePromiseArray = __webpack_require__(42)(PromiseArray);
+	var SomePromiseArray = __webpack_require__(41)(PromiseArray);
 	function Promise$_Any(promises, useBound) {
 	    var ret = Promise$_CreatePromiseArray(
 	        promises,
@@ -3869,7 +3769,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3896,8 +3796,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
-	var apiRejection = __webpack_require__(19)(Promise);
-	var isArray = __webpack_require__(12).isArray;
+	var apiRejection = __webpack_require__(18)(Promise);
+	var isArray = __webpack_require__(11).isArray;
 
 	var raceLater = function Promise$_raceLater(promise) {
 	    return promise.then(function(array) {
@@ -3959,7 +3859,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4018,7 +3918,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4045,7 +3945,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise) {
-	var isArray = __webpack_require__(12).isArray;
+	var isArray = __webpack_require__(11).isArray;
 
 	function Promise$_filter(booleans) {
 	    var values = this instanceof Promise ? this._settledValue : this;
@@ -4075,7 +3975,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 29 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4102,10 +4002,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, apiRejection, INTERNAL) {
-	var PromiseSpawn = __webpack_require__(43)(Promise, INTERNAL);
-	var errors = __webpack_require__(14);
+	var PromiseSpawn = __webpack_require__(42)(Promise, INTERNAL);
+	var errors = __webpack_require__(13);
 	var TypeError = errors.TypeError;
-	var deprecated = __webpack_require__(12).deprecated;
+	var deprecated = __webpack_require__(11).deprecated;
 
 	Promise.coroutine = function Promise$Coroutine(generatorFunction) {
 	    if (typeof generatorFunction !== "function") {
@@ -4137,7 +4037,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 30 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4166,8 +4066,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Promise, PromiseArray, INTERNAL, apiRejection) {
 
 	var all = Promise.all;
-	var util = __webpack_require__(12);
-	var canAttach = __webpack_require__(14).canAttach;
+	var util = __webpack_require__(11);
+	var canAttach = __webpack_require__(13).canAttach;
 	var isArray = util.isArray;
 	var _cast = Promise._cast;
 
@@ -4319,7 +4219,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 31 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4346,8 +4246,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise) {
-	var util = __webpack_require__(12);
-	var async = __webpack_require__(13);
+	var util = __webpack_require__(11);
+	var async = __webpack_require__(12);
 	var tryCatch2 = util.tryCatch2;
 	var tryCatch1 = util.tryCatch1;
 	var errorObj = util.errorObj;
@@ -4389,7 +4289,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 32 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4417,15 +4317,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
 	var THIS = {};
-	var util = __webpack_require__(12);
-	var es5 = __webpack_require__(39);
-	var nodebackForPromise = __webpack_require__(18)
+	var util = __webpack_require__(11);
+	var es5 = __webpack_require__(38);
+	var nodebackForPromise = __webpack_require__(17)
 	    ._nodebackForPromise;
 	var withAppended = util.withAppended;
 	var maybeWrapAsError = util.maybeWrapAsError;
 	var canEvaluate = util.canEvaluate;
 	var deprecated = util.deprecated;
-	var TypeError = __webpack_require__(14).TypeError;
+	var TypeError = __webpack_require__(13).TypeError;
 
 
 	var rasyncSuffix = new RegExp("Async" + "$");
@@ -4688,7 +4588,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 33 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4715,10 +4615,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, PromiseArray) {
-	var PropertiesPromiseArray = __webpack_require__(44)(
+	var PropertiesPromiseArray = __webpack_require__(43)(
 	    Promise, PromiseArray);
-	var util = __webpack_require__(12);
-	var apiRejection = __webpack_require__(19)(Promise);
+	var util = __webpack_require__(11);
+	var apiRejection = __webpack_require__(18)(Promise);
 	var isObject = util.isObject;
 
 	function Promise$_Props(promises, useBound) {
@@ -4758,7 +4658,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 34 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4925,7 +4825,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 35 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4954,7 +4854,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports =
 	    function(Promise, Promise$_CreatePromiseArray, PromiseArray) {
 
-	var SettledPromiseArray = __webpack_require__(45)(
+	var SettledPromiseArray = __webpack_require__(44)(
 	    Promise, PromiseArray);
 
 	function Promise$_Settle(promises, useBound) {
@@ -4978,7 +4878,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 36 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5007,7 +4907,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports =
 	function(Promise, Promise$_CreatePromiseArray, PromiseArray, apiRejection) {
 
-	var SomePromiseArray = __webpack_require__(42)(PromiseArray);
+	var SomePromiseArray = __webpack_require__(41)(PromiseArray);
 	function Promise$_Some(promises, howMany, useBound) {
 	    if ((howMany | 0) !== howMany || howMany < 0) {
 	        return apiRejection("expecting a positive integer");
@@ -5040,7 +4940,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 37 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5067,9 +4967,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, isPromiseArrayProxy) {
-	var util = __webpack_require__(12);
-	var async = __webpack_require__(13);
-	var errors = __webpack_require__(14);
+	var util = __webpack_require__(11);
+	var async = __webpack_require__(12);
+	var errors = __webpack_require__(13);
 	var tryCatch1 = util.tryCatch1;
 	var errorObj = util.errorObj;
 
@@ -5157,7 +5057,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 38 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5184,8 +5084,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
-	var errors = __webpack_require__(14);
-	var async = __webpack_require__(13);
+	var errors = __webpack_require__(13);
+	var async = __webpack_require__(12);
 	var CancellationError = errors.CancellationError;
 
 	Promise.prototype._cancel = function Promise$_cancel() {
@@ -5236,7 +5136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 39 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5331,10 +5231,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 40 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {/**
+	/**
 	 * Copyright (c) 2014 Petka Antonov
 	 * 
 	 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -5357,7 +5257,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 
 	 */
 	"use strict";
-	var global = __webpack_require__(11);
+	var global = __webpack_require__(10);
 	var schedule;
 	if (typeof process !== "undefined" && process !== null &&
 	    typeof process.cwd === "function" &&
@@ -5455,11 +5355,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = schedule;
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
+
 
 /***/ },
-/* 41 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5600,7 +5499,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 42 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5627,8 +5526,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function (PromiseArray) {
-	var util = __webpack_require__(12);
-	var RangeError = __webpack_require__(14).RangeError;
+	var util = __webpack_require__(11);
+	var RangeError = __webpack_require__(13).RangeError;
 	var inherits = util.inherits;
 	var isArray = util.isArray;
 
@@ -5737,7 +5636,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 43 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5764,9 +5663,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
-	var errors = __webpack_require__(14);
+	var errors = __webpack_require__(13);
 	var TypeError = errors.TypeError;
-	var util = __webpack_require__(12);
+	var util = __webpack_require__(11);
 	var isArray = util.isArray;
 	var errorObj = util.errorObj;
 	var tryCatch1 = util.tryCatch1;
@@ -5873,7 +5772,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 44 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5900,9 +5799,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	"use strict";
 	module.exports = function(Promise, PromiseArray) {
-	var util = __webpack_require__(12);
+	var util = __webpack_require__(11);
 	var inherits = util.inherits;
-	var es5 = __webpack_require__(39);
+	var es5 = __webpack_require__(38);
 
 	function PropertiesPromiseArray(obj, boundTo) {
 	    var keys = es5.keys(obj);
@@ -5956,7 +5855,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 45 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5984,7 +5883,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 	module.exports = function(Promise, PromiseArray) {
 	var PromiseInspection = Promise.PromiseInspection;
-	var util = __webpack_require__(12);
+	var util = __webpack_require__(11);
 	var inherits = util.inherits;
 	function SettledPromiseArray(values, boundTo) {
 	    this.constructor$(values, boundTo);

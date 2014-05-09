@@ -21,7 +21,7 @@ exports.worker = function worker(methods) {
     // worker is already loaded by requiring worker
 
     // use embedded worker.js
-    var blob = new Blob([require('./lib/embeddedWorker')], {type: 'text/javascript'});
+    var blob = new Blob([require('./lib/generated/embeddedWorker')], {type: 'text/javascript'});
     var url = window.URL.createObjectURL(blob);
     importScripts(url);
   }

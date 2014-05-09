@@ -6,13 +6,12 @@ var fs = require('fs'),
 
 var ENTRY       = './index.js',
     HEADER      = './lib/header.js',
+    WORKER      = './lib/worker.js',
     FILE        = 'workerpool.js',
     FILE_MIN    = 'workerpool.min.js',
     FILE_MAP    = 'workerpool.map',
-    WORKER      = 'worker.js',
     DIST        = './dist',
     LIB_JS      = DIST + '/' + FILE,
-    LIB_WORKER  = DIST + '/' + WORKER,
     LIB_MIN_JS  = DIST + '/' + FILE_MIN,
     LIB_MAP_JS  = DIST + '/' + FILE_MAP;
 
@@ -31,14 +30,44 @@ var bannerPlugin = new webpack.BannerPlugin(createBanner(), {
   raw: true
 });
 
+// TODO: webpack is quite compilicated to configure. Switch to browserify?
+
+var JsonpTemplatePlugin  = require('./node_modules/webpack/lib/JsonpTemplatePlugin');
+var FunctionModulePlugin = require('./node_modules/webpack/lib/FunctionModulePlugin');
+var NodeTargetPlugin     = require('./node_modules/webpack/lib/node/NodeTargetPlugin');
+var NodeTemplatePlugin   = require('./node_modules/webpack/lib/node/NodeTemplatePlugin');
+var LoaderTargetPlugin   = require('./node_modules/webpack/lib/LoaderTargetPlugin');
+
+var webpackOutput = {
+  library: 'workerpool',
+      libraryTarget: 'umd',
+      path: DIST,
+      filename: FILE
+};
+
+var webpackNode = {
+  // do not include poly fills...
+  console: false,
+  process: false,
+  global: false,
+  buffer: false,
+  __filename: false,
+  __dirname: false
+};
+
 var webpackConfig = {
   entry: ENTRY,
-  output: {
-    library: 'workerpool',
-    libraryTarget: 'umd',
-    path: DIST,
-    filename: FILE
+  target: function(compiler) {
+    compiler.apply(
+        new JsonpTemplatePlugin(webpackOutput),
+        new FunctionModulePlugin(webpackOutput),
+        new NodeTemplatePlugin(webpackOutput),
+        new NodeTargetPlugin(webpackNode),
+        new LoaderTargetPlugin('web')
+    );
   },
+  output: webpackOutput,
+  node: webpackNode,
   plugins: [
     bannerPlugin
   ],
@@ -68,7 +97,7 @@ function updateEmbeddedWorker() {
       ' */\n' +
       'module.exports = ' + JSON.stringify(result.code) + ';\n';
 
-  fs.writeFileSync('./lib/embeddedWorker.js', embedded);
+  fs.writeFileSync('./lib/generated/embeddedWorker.js', embedded);
 }
 
 // create a single instance of the compiler to allow caching
@@ -81,12 +110,18 @@ gulp.task('bundle', function (cb) {
   // update the file with embedded worker
   updateEmbeddedWorker();
 
+  // note in browserify we would do something like:
+  // browserify ./index.js -o dist/workerpool.js -s workerpool --no-builtins --insert-global-vars none
+
   compiler.run(function (err, stats) {
     if (err) {
       gutil.log(err);
     }
 
     gutil.log('bundled ' + LIB_JS);
+
+    // copy the file worker.js
+    gulp.src(WORKER).pipe(gulp.dest(DIST));
 
     cb();
   });
