@@ -33,3 +33,9 @@ exports.worker = function worker(methods) {
 
   worker.add(methods);
 };
+
+/**
+ * Create a promise.
+ * @type {Promise} promise
+ */
+exports.Promise = require('./lib/Promise');

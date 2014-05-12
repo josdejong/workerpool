@@ -1,84 +1,77 @@
 var assert = require('assert'),
     Promise = require('../lib/Promise');
 
-function _checkStatus(actual, expected){
-  return function (args){
-    assert.equal(actual, expected);
-    assert.deepEqual(args, ["foo", "bar"]);
-  };
-}
-
 describe ('Promise', function () {
 
-  describe('done', function () {
-    it('should call done when resolved', function (done) {
+  describe('construction', function () {
+    it('should construct a promise without handler', function () {
       var promise = new Promise();
-
-      promise.done(function (result) {
-        assert.equal(result, 'foo');
-        done();
-      });
-
-      promise.resolve('foo');
+      assert(promise instanceof Promise);
     });
 
-    it('should call done when resolved before done is attached', function (done) {
-      var promise = new Promise();
-
-      promise.resolve('foo');
-
-      promise.done(function (result) {
-        assert.equal(result, 'foo');
-        done();
-      });
+    it('should construct a promise with handler and resolve it', function (done) {
+      new Promise(function (resolve, reject) {
+        resolve(2)
+      })
+          .then(function (result) {
+            assert.equal(result, 2);
+            done();
+          });
     });
 
-    it('should not call done again when resolving a promise twice', function () {
-      var promise = new Promise();
-      var count = 0;
-
-      promise.done(function (result) {
-        count ++;
-      });
-
-      promise.resolve('foo');
-      promise.resolve('foo');
-
-      assert.equal(count, 1);
+    it('should construct a promise with handler and reject it', function (done) {
+      new Promise(function (resolve, reject) {
+        reject(2)
+      })
+          .catch(function (error) {
+            assert.equal(error, 2);
+            done();
+          });
     });
 
-  });
-
-  describe('catch', function () {
-    it('should call catch when rejected', function (done) {
-      var promise = new Promise();
-
-      promise.catch(function (err) {
-        assert.equal(err, 'err');
-        done();
-      });
-
-      promise.reject('err');
+    it('should throw an error when constructed without new keyword', function () {
+      assert.throws(function () {Promise()}, /Error/);
     });
-
-    it('should not call catch again when rejecting a promise twice', function () {
-      var promise = new Promise();
-      var count = 0;
-
-      promise.catch(function (result) {
-        count ++;
-      });
-
-      promise.reject('foo');
-      promise.reject('foo');
-
-      assert.equal(count, 1);
-    });
-
   });
 
   describe('then', function () {
-    it('should call then when resolved', function (done) {
+    it('should call onSuccess when resolved', function (done) {
+      var promise = new Promise();
+
+      promise.then(function (result) {
+        assert.equal(result, 'foo');
+        done();
+      });
+
+      promise.resolve('foo');
+    });
+
+    it('should call onSuccess when resolved before then is attached', function (done) {
+      var promise = new Promise();
+
+      promise.resolve('foo');
+
+      promise.then(function (result) {
+        assert.equal(result, 'foo');
+        done();
+      });
+    });
+
+    it('should not call onSuccess again when resolving a promise twice', function () {
+      var promise = new Promise();
+      var count = 0;
+
+      promise.then(function () {
+        count ++;
+      });
+
+      promise.resolve('foo');
+      promise.resolve('foo');
+
+      assert.equal(count, 1);
+    });
+
+    it('should not call onFail when resolved', function (done) {
       var promise = new Promise();
 
       promise.then(function (result) {
@@ -91,10 +84,10 @@ describe ('Promise', function () {
       promise.resolve('foo');
     });
 
-    it('should call then when rejected', function (done) {
+    it('should not call onSuccess when rejected', function (done) {
       var promise = new Promise();
 
-      promise.then(function (result) {
+      promise.then(function () {
         assert.ok(false, 'should not resolve');
       }, function (err) {
         assert.equal(err, 'err');
@@ -103,8 +96,36 @@ describe ('Promise', function () {
 
       promise.reject('err');
     });
+
   });
 
+  describe('catch', function () {
+    it('should call onFail when rejected', function (done) {
+      var promise = new Promise();
+
+      promise.catch(function (err) {
+        assert.equal(err, 'err');
+        done();
+      });
+
+      promise.reject('err');
+    });
+
+    it('should not call onFail again when rejecting a promise twice', function () {
+      var promise = new Promise();
+      var count = 0;
+
+      promise.catch(function () {
+        count ++;
+      });
+
+      promise.reject('foo');
+      promise.reject('foo');
+
+      assert.equal(count, 1);
+    });
+
+  });
 
   describe('always', function () {
     it('should call always when resolved', function (done) {
@@ -130,42 +151,177 @@ describe ('Promise', function () {
     });
   });
 
-  it('should pass arguments through the promise chain', function () {
+  it('should resolve a promise returned by a onSuccess callback', function (done) {
+    new Promise()
+        .then(function (result) {
+          assert.equal(result, 1);
+          return new Promise().resolve(2);
+        })
+        .then(function (result) {
+          assert.equal(result, 2);
+          done();
+        })
+        .resolve(1);
+  });
+
+  it('should resolve a promise returned by an onFail callback', function (done) {
+    new Promise()
+        .catch(function (err) {
+          assert.equal(err, 1);
+          return new Promise().resolve(2);
+        })
+        .then(function (result) {
+          assert.equal(result, 2);
+          done();
+        })
+        .reject(1);
+  });
+
+  it('should resolve a rejected error from a returned promise (2)', function (done) {
+    new Promise()
+        .catch(function (err) {
+          assert.equal(err, 1);
+          return new Promise().reject(2);
+        })
+        .catch(function (err) {
+          assert.equal(err, 2);
+          done();
+        })
+        .reject(1);
+  });
+
+  it('should catch an error thrown by an onSuccess callback', function (done) {
+    new Promise()
+        .then(function (result) {
+          assert.equal(result, 1);
+          throw new Error('2');
+        })
+        .catch(function (err) {
+          assert.equal(err.toString(), 'Error: 2');
+          done();
+        })
+        .resolve(1);
+  });
+
+  it('should catch an error thrown by an onFail callback', function (done) {
+    new Promise()
+        .catch(function (err) {
+          assert.equal(err.toString(), 'Error: 1');
+          throw new Error('2');
+        })
+        .catch(function (err) {
+          assert.equal(err.toString(), 'Error: 2');
+          done();
+        })
+        .reject(new Error(1));
+  });
+
+  it('should pass arguments through the promise chain which is already resolved', function () {
     var log = [];
     new Promise()
-        .done(function (a){ log.push(a) })
+        .then(function (res){
+          log.push(res)
+        })
         .resolve(1)
-        .then(function (a){
-          return new Promise().reject(a + 2)
+        .then(function (res){
+          log.push(res)
+          assert.equal(res, 1);
+          return new Promise().reject(2)
         })
-        .done(function (){ log.push('fail') })
-        .catch(function (a){ log.push(a) })
-        .then(null, function (a){
-          return new Promise().resolve(a + 3);
+        .then(function (){
+          assert('should not resolve')
         })
-        .done(function (a){ log.push(a) })
-        .catch(function (){ log.push('fail') }) ;
+        .catch(function (res) {
+          assert.equal(res, 2);
+          log.push(res);
+          throw 3;
+        })
+        .catch(function (err) {
+          log.push(err);
+          assert.equal(err, 3);
+          return new Promise().reject(4)
+        })
+        .then(null, function (err){
+          log.push(err);
+          assert.equal(err, 4);
+          return new Promise().resolve(5);
+        })
+        .then(function (res) {
+          log.push(res);
+          assert.equal(res, 5);
+        })
+        .catch(function (){
+          log.push('fail')
+        });
 
-    assert.equal(log.join('->'), '1->3->6');
+    assert.equal(log.join(','), '1,1,2,3,4,5');
+  });
+
+  it('should pass arguments through the promise chain which is not yet resolved', function () {
+    var log = [];
+    new Promise()
+        .then(function (res){
+          log.push(res)
+        })
+        .then(function (res){
+          log.push(res)
+          assert.equal(res, 1);
+          return new Promise().reject(2)
+        })
+        .then(function (){
+          assert('should not resolve')
+        })
+        .catch(function (res) {
+          assert.equal(res, 2);
+          log.push(res);
+          throw 3;
+        })
+        .catch(function (err) {
+          log.push(err);
+          assert.equal(err, 3);
+          return new Promise().reject(4)
+        })
+        .then(null, function (err){
+          log.push(err);
+          assert.equal(err, 4);
+          return new Promise().resolve(5);
+        })
+        .then(function (res) {
+          log.push(res);
+          assert.equal(res, 5);
+        })
+        .catch(function (){
+          log.push('fail')
+        })
+        .resolve(1);
+
+
+    assert.equal(log.join(','), '1,1,2,3,4,5');
   });
 
   describe('all', function () {
 
-    it('should resolve all when all promises are resolved', function (done) {
+    it('should resolve "all" when all promises are resolved', function (done) {
       var foo = new Promise(),
           bar = new Promise(),
           baz = new Promise(),
           qux = new Promise();
 
-      setTimeout(foo.resolve, 100);
-      bar.resolve();
+      setTimeout(function () {
+        foo.resolve('foo');
+      }, 100);
+      bar.resolve('bar');
 
-      setTimeout(baz.resolve, 150);
-      qux.resolve();
+      setTimeout(function () {
+        baz.resolve('baz');
+      }, 150);
+      qux.resolve('qux');
 
-      new Promise.all([foo, bar, baz, qux])
-          .then(function (){
+      Promise.all([foo, bar, baz, qux])
+          .then(function (results) {
             assert.ok(true, 'then');
+            assert.deepEqual(results, ['foo', 'bar', 'baz', 'qux']);
+
             done();
           })
           .catch(function (){
@@ -173,24 +329,29 @@ describe ('Promise', function () {
           });
     });
 
-    it('should reject all when any of the promises failed', function (done) {
+    it('should reject "all" when any of the promises failed', function (done) {
       var foo = new Promise(),
           bar = new Promise(),
           baz = new Promise(),
           qux = new Promise();
 
-      setTimeout(foo.resolve, 100);
-      bar.resolve();
+      setTimeout(function () {
+        foo.resolve('foo');
+      }, 100);
+      bar.resolve('bar');
 
-      setTimeout(baz.reject, 150);
-      qux.resolve();
+      setTimeout(function () {
+        baz.reject('The Error');
+      }, 150);
+      qux.resolve('qux');
 
-      new Promise.all([foo, bar, baz, qux])
-          .then(function (){
-            assert.ok(false, 'then');
+      Promise.all([foo, bar, baz, qux])
+          .then(function (result){
+            assert('should not resolve');
           })
-          .catch(function (){
+          .catch(function (err){
             assert.ok(true, 'catch');
+            assert.equal(err, 'The Error');
             done();
           });
     });
