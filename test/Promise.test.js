@@ -299,6 +299,67 @@ describe ('Promise', function () {
     assert.equal(log.join(','), '1,1,2,3,4,5');
   });
 
+  describe('cancel', function () {
+    it('should cancel a promise', function (done) {
+      var p = new Promise()
+          .catch(function (err) {
+            assert(err instanceof Promise.CancellationError);
+            done();
+          });
+
+      setTimeout(function () {
+        p.cancel();
+      }, 10);
+    });
+
+    it('should cancel a promise and catch afterwards', function (done) {
+      var p = new Promise().cancel();
+
+      p.catch(function (err) {
+        assert(err instanceof Promise.CancellationError);
+        done();
+      })
+    });
+  });
+
+  describe('timeout', function () {
+    it('should timeout a promise', function (done) {
+      var p = new Promise()
+          .catch(function (err) {
+            assert(err instanceof Promise.TimeoutError);
+            done();
+          });
+
+      p.timeout(30);
+    });
+
+    it('timeout should be stopped when promise resolves', function (done) {
+      var p = new Promise()
+          .then(function (result) {
+            assert.equal(result, 1);
+            //done();
+          })
+          .catch(function (err) {
+            assert.ok(false, 'should not throw an error');
+          });
+
+      p.timeout(30);
+      p.resolve(1);
+      setTimeout(done, 50);
+    });
+
+    it('timeout should be stopped when promise rejects', function (done) {
+      var p = new Promise()
+          .catch(function (err) {
+            assert.equal(err.toString(), 'Error: My Error');
+          });
+
+      p.timeout(30);
+      p.reject(new Error('My Error'));
+      setTimeout(done, 50);
+    });
+  });
+
   describe('all', function () {
 
     it('should resolve "all" when all promises are resolved', function (done) {
@@ -309,12 +370,12 @@ describe ('Promise', function () {
 
       setTimeout(function () {
         foo.resolve('foo');
-      }, 100);
+      }, 25);
       bar.resolve('bar');
 
       setTimeout(function () {
         baz.resolve('baz');
-      }, 150);
+      }, 40);
       qux.resolve('qux');
 
       Promise.all([foo, bar, baz, qux])
@@ -337,12 +398,12 @@ describe ('Promise', function () {
 
       setTimeout(function () {
         foo.resolve('foo');
-      }, 100);
+      }, 40);
       bar.resolve('bar');
 
       setTimeout(function () {
         baz.reject('The Error');
-      }, 150);
+      }, 25);
       qux.resolve('qux');
 
       Promise.all([foo, bar, baz, qux])
