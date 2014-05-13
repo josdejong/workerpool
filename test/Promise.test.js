@@ -4,9 +4,8 @@ var assert = require('assert'),
 describe ('Promise', function () {
 
   describe('construction', function () {
-    it('should construct a promise without handler', function () {
-      var promise = new Promise();
-      assert(promise instanceof Promise);
+    it('should throw an error when constructed without handler', function () {
+      assert.throws(function () {new Promise();}, SyntaxError);
     });
 
     it('should construct a promise with handler and resolve it', function (done) {
@@ -36,20 +35,20 @@ describe ('Promise', function () {
 
   describe('then', function () {
     it('should call onSuccess when resolved', function (done) {
-      var promise = new Promise();
-
-      promise.then(function (result) {
+      new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve('foo');
+        }, 0);
+      }).then(function (result) {
         assert.equal(result, 'foo');
         done();
       });
-
-      promise.resolve('foo');
     });
 
     it('should call onSuccess when resolved before then is attached', function (done) {
-      var promise = new Promise();
-
-      promise.resolve('foo');
+      var promise = new Promise(function (resolve, reject) {
+        resolve('foo');
+      });
 
       promise.then(function (result) {
         assert.equal(result, 'foo');
@@ -57,22 +56,22 @@ describe ('Promise', function () {
       });
     });
 
-    it('should not call onSuccess again when resolving a promise twice', function () {
-      var promise = new Promise();
-      var count = 0;
+    it('should throw an error when resolving a promise twice', function (done) {
+      new Promise(function (resolve, reject) {
+        resolve('foo');
 
-      promise.then(function () {
-        count ++;
+        assert.throws(function () {resolve('foo')}, Error);
+
+        done();
       });
-
-      promise.resolve('foo');
-      promise.resolve('foo');
-
-      assert.equal(count, 1);
     });
 
     it('should not call onFail when resolved', function (done) {
-      var promise = new Promise();
+      var promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve('foo');
+        }, 0);
+      });
 
       promise.then(function (result) {
         assert.equal(result, 'foo');
@@ -80,12 +79,14 @@ describe ('Promise', function () {
       }, function (err) {
         assert.ok(false, 'shouldn\'t throw an error');
       });
-
-      promise.resolve('foo');
     });
 
     it('should not call onSuccess when rejected', function (done) {
-      var promise = new Promise();
+      var promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          reject('err');
+        }, 0);
+      });
 
       promise.then(function () {
         assert.ok(false, 'should not resolve');
@@ -93,105 +94,177 @@ describe ('Promise', function () {
         assert.equal(err, 'err');
         done();
       });
-
-      promise.reject('err');
     });
 
   });
 
   describe('catch', function () {
     it('should call onFail when rejected', function (done) {
-      var promise = new Promise();
+      var promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          reject('err');
+        }, 0);
+      });
 
       promise.catch(function (err) {
         assert.equal(err, 'err');
         done();
       });
-
-      promise.reject('err');
     });
 
-    it('should not call onFail again when rejecting a promise twice', function () {
-      var promise = new Promise();
-      var count = 0;
+    it('should throw an error when rejecting a promise twice', function (done) {
+      var promise = new Promise(function (resolve, reject) {
+        reject('foo');
 
-      promise.catch(function () {
-        count ++;
+        assert.throws(function() {reject('foo')}, Error);
+
+        done();
+      });
+    });
+
+    it('should not propagate an error when caught', function (done) {
+      var log = [];
+
+      var promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+
+          reject(new Error('My Error'));
+
+          assert.deepEqual(log, ['catch', 'then']);
+
+          done();
+        }, 0);
       });
 
-      promise.reject('foo');
-      promise.reject('foo');
+      promise.catch(function (err) {
+        assert.equal(err, 'Error: My Error');
+        log.push('catch');
+      })
+          .then(function (result) {
+            assert.strictEqual(result, undefined);
+            log.push('then');
+          })
+          .catch(function (err) {
+            assert.ok(false, 'should not catch error another time');
+            log.push('catch2')
+          });
 
-      assert.equal(count, 1);
+    });
+
+    it('should rethrow an error', function (done) {
+      var promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          reject(new Error('My Error'));
+        }, 0);
+      });
+
+      promise.catch(function (err) {
+        assert.equal(err, 'Error: My Error');
+        throw new Error('My Error 2');
+      })
+          .catch(function (err) {
+            assert.equal(err, 'Error: My Error 2');
+            done();
+          });
+    });
+
+    it('should pass onFail to chained promises', function (done) {
+      new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          reject(new Error('My Error'));
+        }, 0);
+      })
+          .then(function () {
+            assert.ok(false, 'should not call onSuccess');
+          })
+          .catch(function (err) {
+            assert.equal(err, 'Error: My Error');
+            done();
+          });
     });
 
   });
 
   describe('always', function () {
     it('should call always when resolved', function (done) {
-      var promise = new Promise();
+      var promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve('foo');
+        }, 0);
+      });
 
       promise.always(function (result) {
         assert.equal(result, 'foo');
         done();
       });
-
-      promise.resolve('foo');
     });
 
     it('should call always when rejected', function (done) {
-      var promise = new Promise();
+      var promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          reject('err');
+        }, 0);
+      });
 
       promise.always(function (result) {
         assert.equal(result, 'err');
         done();
       });
-
-      promise.reject('err');
     });
   });
 
   it('should resolve a promise returned by a onSuccess callback', function (done) {
-    new Promise()
+    new Promise(function (resolve, reject) {
+      resolve(1)
+    })
         .then(function (result) {
           assert.equal(result, 1);
-          return new Promise().resolve(2);
+          return new Promise(function (resolve, reject) {
+            resolve(2);
+          });
         })
         .then(function (result) {
           assert.equal(result, 2);
           done();
-        })
-        .resolve(1);
+        });
   });
 
   it('should resolve a promise returned by an onFail callback', function (done) {
-    new Promise()
+    new Promise(function (resolve, reject) {
+      reject(1)
+    })
         .catch(function (err) {
           assert.equal(err, 1);
-          return new Promise().resolve(2);
+          return new Promise(function (resolve, reject) {
+            resolve(2)
+          });
         })
         .then(function (result) {
           assert.equal(result, 2);
           done();
-        })
-        .reject(1);
+        });
   });
 
   it('should resolve a rejected error from a returned promise (2)', function (done) {
-    new Promise()
+    new Promise(function (resolve, reject) {
+      reject(1)
+    })
         .catch(function (err) {
           assert.equal(err, 1);
-          return new Promise().reject(2);
+          return new Promise(function (resolve, reject) {
+            reject(2);
+          });
         })
         .catch(function (err) {
           assert.equal(err, 2);
           done();
-        })
-        .reject(1);
+        });
   });
 
   it('should catch an error thrown by an onSuccess callback', function (done) {
-    new Promise()
+    new Promise(function (resolve, reject) {
+      resolve(1)
+    })
         .then(function (result) {
           assert.equal(result, 1);
           throw new Error('2');
@@ -199,12 +272,13 @@ describe ('Promise', function () {
         .catch(function (err) {
           assert.equal(err.toString(), 'Error: 2');
           done();
-        })
-        .resolve(1);
+        });
   });
 
   it('should catch an error thrown by an onFail callback', function (done) {
-    new Promise()
+    new Promise(function (resolve, reject) {
+      reject(new Error(1))
+    })
         .catch(function (err) {
           assert.equal(err.toString(), 'Error: 1');
           throw new Error('2');
@@ -212,24 +286,32 @@ describe ('Promise', function () {
         .catch(function (err) {
           assert.equal(err.toString(), 'Error: 2');
           done();
-        })
-        .reject(new Error(1));
+        });
   });
 
-  it('should pass arguments through the promise chain which is already resolved', function () {
+  it('should pass arguments through the promise chain which is already resolved', function (done) {
     var log = [];
-    new Promise()
+    var promise = new Promise(function (resolve, reject) {
+      resolve(1);
+    });
+
+    // first chain
+    promise
         .then(function (res){
-          log.push(res)
-        })
-        .resolve(1)
-        .then(function (res){
-          log.push(res)
+          log.push(res);
           assert.equal(res, 1);
-          return new Promise().reject(2)
+        });
+
+    // second chain
+    promise.then(function (res){
+          log.push(res);
+          assert.equal(res, 1);
+          return new Promise(function (resolve, reject) {
+            reject(2)
+          });
         })
         .then(function (){
-          assert('should not resolve')
+          assert.ok(false, 'should not resolve')
         })
         .catch(function (res) {
           assert.equal(res, 2);
@@ -239,12 +321,16 @@ describe ('Promise', function () {
         .catch(function (err) {
           log.push(err);
           assert.equal(err, 3);
-          return new Promise().reject(4)
+          return new Promise(function (resolve, reject) {
+            reject(4)
+          })
         })
         .then(null, function (err){
           log.push(err);
           assert.equal(err, 4);
-          return new Promise().resolve(5);
+          return new Promise(function (resolve, reject) {
+            resolve(5)
+          });
         })
         .then(function (res) {
           log.push(res);
@@ -255,21 +341,39 @@ describe ('Promise', function () {
         });
 
     assert.equal(log.join(','), '1,1,2,3,4,5');
+    done();
   });
 
-  it('should pass arguments through the promise chain which is not yet resolved', function () {
+  it('should pass arguments through the promise chain which is not yet resolved', function (done) {
     var log = [];
-    new Promise()
+
+    var promise = new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        resolve(1)
+
+        assert.equal(log.join(','), '1,1,2,3,4,5');
+        done();
+      }, 0)
+    });
+
+    // first chain
+    promise
         .then(function (res){
-          log.push(res)
-        })
-        .then(function (res){
-          log.push(res)
+          log.push(res);
           assert.equal(res, 1);
-          return new Promise().reject(2)
+        });
+
+    // second chain
+    promise
+        .then(function (res){
+          log.push(res);
+          assert.equal(res, 1);
+          return new Promise(function (resolve, reject) {
+            reject(2)
+          })
         })
         .then(function (){
-          assert('should not resolve')
+          assert.ok(false, 'should not resolve')
         })
         .catch(function (res) {
           assert.equal(res, 2);
@@ -279,12 +383,16 @@ describe ('Promise', function () {
         .catch(function (err) {
           log.push(err);
           assert.equal(err, 3);
-          return new Promise().reject(4)
+          return new Promise(function (resolve, reject) {
+            reject(4)
+          })
         })
         .then(null, function (err){
           log.push(err);
           assert.equal(err, 4);
-          return new Promise().resolve(5);
+          return new Promise(function (resolve, reject) {
+            resolve(5)
+          })
         })
         .then(function (res) {
           log.push(res);
@@ -292,16 +400,12 @@ describe ('Promise', function () {
         })
         .catch(function (){
           log.push('fail')
-        })
-        .resolve(1);
-
-
-    assert.equal(log.join(','), '1,1,2,3,4,5');
+        });
   });
 
   describe('cancel', function () {
     it('should cancel a promise', function (done) {
-      var p = new Promise()
+      var p = new Promise(function (resolve, reject) {})
           .catch(function (err) {
             assert(err instanceof Promise.CancellationError);
             done();
@@ -313,7 +417,7 @@ describe ('Promise', function () {
     });
 
     it('should cancel a promise and catch afterwards', function (done) {
-      var p = new Promise().cancel();
+      var p = new Promise(function (resolve, reject) {}).cancel();
 
       p.catch(function (err) {
         assert(err instanceof Promise.CancellationError);
@@ -324,59 +428,94 @@ describe ('Promise', function () {
 
   describe('timeout', function () {
     it('should timeout a promise', function (done) {
-      var p = new Promise()
+      new Promise(function (resolve, reject) {})
+          .timeout(30)
           .catch(function (err) {
             assert(err instanceof Promise.TimeoutError);
             done();
           });
-
-      p.timeout(30);
     });
 
     it('timeout should be stopped when promise resolves', function (done) {
-      var p = new Promise()
+      new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve(1);
+       }, 0);
+      })
+          .timeout(30)
           .then(function (result) {
             assert.equal(result, 1);
-            //done();
           })
           .catch(function (err) {
             assert.ok(false, 'should not throw an error');
           });
-
-      p.timeout(30);
-      p.resolve(1);
-      setTimeout(done, 50);
     });
 
     it('timeout should be stopped when promise rejects', function (done) {
-      var p = new Promise()
+      new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          reject(new Error('My Error'));
+        }, 0);
+      })
+          .timeout(30)
           .catch(function (err) {
             assert.equal(err.toString(), 'Error: My Error');
           });
-
-      p.timeout(30);
-      p.reject(new Error('My Error'));
-      setTimeout(done, 50);
     });
+
+    it('timeout should be propagated to parent promise', function (done) {
+      new Promise(function (resolve, reject) {})
+          .then() // force creation of a child promise
+          .catch(function (err) {
+            assert(err instanceof Promise.TimeoutError);
+          })
+          .timeout(30);
+    });
+  });
+
+  describe('defer', function () {
+    it('should create a resolver and resolve it', function (done) {
+      var resolver = Promise.defer();
+
+      resolver.promise.then(function (result) {
+        assert.equal(result, 3);
+        done();
+      });
+
+      resolver.resolve(3);
+    });
+
+    it('should create a resolver and reject it', function (done) {
+      var resolver = Promise.defer();
+
+      resolver.promise.catch(function (err) {
+        assert.equal(err.toString(), 'Error: My Error');
+        done();
+      });
+
+      resolver.reject(new Error('My Error'));
+    })
   });
 
   describe('all', function () {
 
     it('should resolve "all" when all promises are resolved', function (done) {
-      var foo = new Promise(),
-          bar = new Promise(),
-          baz = new Promise(),
-          qux = new Promise();
-
-      setTimeout(function () {
-        foo.resolve('foo');
-      }, 25);
-      bar.resolve('bar');
-
-      setTimeout(function () {
-        baz.resolve('baz');
-      }, 40);
-      qux.resolve('qux');
+      var foo = new Promise(function (resolve, reject) {
+            setTimeout(function () {
+              resolve('foo');
+            }, 25);
+          }),
+          bar = new Promise(function (resolve, reject) {
+            resolve('bar');
+          }),
+          baz = new Promise(function (resolve, reject) {
+            setTimeout(function () {
+              resolve('baz');
+            }, 40);
+          }),
+          qux = new Promise(function (resolve, reject) {
+            resolve('qux');
+          });
 
       Promise.all([foo, bar, baz, qux])
           .then(function (results) {
@@ -391,24 +530,26 @@ describe ('Promise', function () {
     });
 
     it('should reject "all" when any of the promises failed', function (done) {
-      var foo = new Promise(),
-          bar = new Promise(),
-          baz = new Promise(),
-          qux = new Promise();
-
-      setTimeout(function () {
-        foo.resolve('foo');
-      }, 40);
-      bar.resolve('bar');
-
-      setTimeout(function () {
-        baz.reject('The Error');
-      }, 25);
-      qux.resolve('qux');
+      var foo = new Promise(function (resolve, reject) {
+            setTimeout(function () {
+              resolve('foo');
+            }, 40);
+          }),
+          bar = new Promise(function (resolve, reject) {
+            resolve('bar');
+          }),
+          baz = new Promise(function (resolve, reject) {
+            setTimeout(function () {
+              reject('The Error');
+            }, 25);
+          }),
+          qux = new Promise(function (resolve, reject) {
+            resolve('qux');
+          });
 
       Promise.all([foo, bar, baz, qux])
           .then(function (result){
-            assert('should not resolve');
+            assert.ok(false, 'should not resolve');
           })
           .catch(function (err){
             assert.ok(true, 'catch');
@@ -416,6 +557,6 @@ describe ('Promise', function () {
             done();
           });
     });
-  })
+  });
 
 });
