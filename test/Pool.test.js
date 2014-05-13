@@ -1,5 +1,5 @@
 var assert = require('assert'),
-    Promise = require('bluebird'),
+    Promise = require('../lib/Promise'),
     Pool = require('../lib/Pool');
 
 function add(a, b) {
@@ -149,17 +149,16 @@ describe('Pool', function () {
     var pool = new Pool({maxWorkers: 10});
 
     function forever() {
-      new Promise(function () {
-        // never resolves...
-      });
+      while (true) {} // runs forever
     }
 
     var promise = pool.run(forever)
         .then(function (result) {
           assert('promise should never resolve');
         })
-        .catch(Promise.CancellationError, function (err) {
-          assert.equal(err.toString(), 'CancellationError: cancellation error');
+      //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
+        .catch(function (err) {
+          assert.equal(err.toString(), 'CancellationError: promise cancelled');
 
           assert.equal(pool.workers.length, 0);
 
@@ -167,7 +166,9 @@ describe('Pool', function () {
         });
 
     // cancel the task
-    promise.cancel();
+    setTimeout(function () {
+      promise.cancel();
+    }, 0);
   });
 
   // TODO: test whether a task in the queue can be neatly cancelled

@@ -234,6 +234,14 @@ workerpool.worker({
 ```
 
 
+## Sources of inspiration
+
+- https://github.com/learnboost/cluster
+- https://github.com/adambom/parallel.js
+- https://github.com/padolsey/operative
+- https://github.com/calvinmetcalf/catiline
+
+
 ## Build
 
 First clone the project from github:

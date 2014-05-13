@@ -1,5 +1,5 @@
 var assert = require('assert'),
-    Promise = require('bluebird'),
+    Promise = require('../lib/Promise'),
     WorkerHandler = require('../lib/WorkerHandler');
 
 function add(a, b) {
@@ -88,9 +88,11 @@ describe('WorkerHandler', function () {
     var handler = new WorkerHandler();
 
     handler.exec('run', [String(add), [2, 4]])
+        /*
         .then(function (result) {
           assert('Should not complete request');
         })
+        */
         .catch(function (err) {
           assert.equal(err.toString(), 'Error: Worker terminated');
           done();
@@ -106,7 +108,7 @@ describe('WorkerHandler', function () {
     var handler = new WorkerHandler();
 
     function asyncAdd(a, b) {
-      var Promise = require('bluebird');
+      var Promise = require('bluebird'); // TODO: remove dependency on bluebird
 
       return new Promise(function (resolve, reject) {
         if (typeof a === 'number' && typeof b === 'number') {
@@ -161,8 +163,9 @@ describe('WorkerHandler', function () {
         .then(function (result) {
           assert('promise should never resolve');
         })
-        .catch(Promise.CancellationError, function (err) {
-          assert.equal(err.toString(), 'CancellationError: cancellation error');
+        //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
+        .catch(function (err) {
+          assert.equal(err.toString(), 'CancellationError: promise cancelled');
 
           assert.equal(handler.worker, null);
           assert.equal(handler.terminated, true);

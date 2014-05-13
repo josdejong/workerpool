@@ -424,6 +424,28 @@ describe ('Promise', function () {
         done();
       })
     });
+
+    it('should propagate cancellation of a promise to the promise parent', function (done) {
+      var p = new Promise(function (resolve, reject) {});
+
+      var processing = 2;
+      function next() {
+        processing--;
+        if (processing == 0) done();
+      }
+
+      var p1 = p.catch(function (err) {
+        assert(err instanceof Promise.CancellationError);
+        next();
+      });
+
+      var p2 = p.catch(function (err) {
+        assert(err instanceof Promise.CancellationError);
+        next();
+      });
+
+      p1.cancel();
+    });
   });
 
   describe.skip('timeout', function () {
