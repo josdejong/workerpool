@@ -426,7 +426,7 @@ describe ('Promise', function () {
     });
   });
 
-  describe('timeout', function () {
+  describe.skip('timeout', function () {
     it('should timeout a promise', function (done) {
       new Promise(function (resolve, reject) {})
           .timeout(30)
