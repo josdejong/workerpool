@@ -448,14 +448,24 @@ describe ('Promise', function () {
     });
   });
 
-  describe.skip('timeout', function () {
+  describe('timeout', function () {
     it('should timeout a promise', function (done) {
       new Promise(function (resolve, reject) {})
           .timeout(30)
           .catch(function (err) {
             assert(err instanceof Promise.TimeoutError);
             done();
+          })
+    });
+
+    it('should timeout a promise afterwards', function (done) {
+      var p = new Promise(function (resolve, reject) {})
+          .catch(function (err) {
+            assert(err instanceof Promise.TimeoutError);
+            done();
           });
+
+      p.timeout(30)
     });
 
     it('timeout should be stopped when promise resolves', function (done) {
@@ -467,6 +477,7 @@ describe ('Promise', function () {
           .timeout(30)
           .then(function (result) {
             assert.equal(result, 1);
+            done();
           })
           .catch(function (err) {
             assert.ok(false, 'should not throw an error');
@@ -482,6 +493,7 @@ describe ('Promise', function () {
           .timeout(30)
           .catch(function (err) {
             assert.equal(err.toString(), 'Error: My Error');
+            done();
           });
     });
 
@@ -490,6 +502,7 @@ describe ('Promise', function () {
           .then() // force creation of a child promise
           .catch(function (err) {
             assert(err instanceof Promise.TimeoutError);
+            done();
           })
           .timeout(30);
     });
