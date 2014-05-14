@@ -154,9 +154,9 @@ describe('WorkerHandler', function () {
     var handler = new WorkerHandler();
 
     function forever() {
-      new Promise(function () {
-        // never resolves...
-      });
+      while(1 > 0) {
+        // whoops... infinite loop...
+      }
     }
 
     var promise = handler.exec('run', [String(forever)])
@@ -175,6 +175,31 @@ describe('WorkerHandler', function () {
 
     // cancel the task
     promise.cancel();
+  });
+
+  it('should timeout a task', function (done) {
+    var handler = new WorkerHandler();
+
+    function forever() {
+      while(1 > 0) {
+        // whoops... infinite loop...
+      }
+    }
+
+    handler.exec('run', [String(forever)])
+        .timeout(50)
+        .then(function (result) {
+          assert('promise should never resolve');
+        })
+        //.catch(Promise.TimeoutError, function (err) { // TODO: not yet supported
+        .catch(function (err) {
+          assert(err instanceof Promise.TimeoutError);
+
+          assert.equal(handler.worker, null);
+          assert.equal(handler.terminated, true);
+
+          done();
+        });
   });
 
   it('should handle errors thrown by a worker (1)', function (done) {

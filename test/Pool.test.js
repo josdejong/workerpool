@@ -149,7 +149,7 @@ describe('Pool', function () {
     var pool = new Pool({maxWorkers: 10});
 
     function forever() {
-      while (true) {} // runs forever
+      while (1 > 0) {} // runs forever
     }
 
     var promise = pool.run(forever)
@@ -158,7 +158,7 @@ describe('Pool', function () {
         })
       //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
-          assert.equal(err.toString(), 'CancellationError: promise cancelled');
+          assert(err instanceof Promise.CancellationError);
 
           assert.equal(pool.workers.length, 0);
 
@@ -171,8 +171,29 @@ describe('Pool', function () {
     }, 0);
   });
 
-  // TODO: test whether a task in the queue can be neatly cancelled
+  it('should timeout a task', function (done) {
+    var pool = new Pool({maxWorkers: 10});
 
+    function forever() {
+      while (1 > 0) {} // runs forever
+    }
+
+    var promise = pool.run(forever)
+        .timeout(50)
+        .then(function (result) {
+          assert('promise should never resolve');
+        })
+      //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
+        .catch(function (err) {
+          assert(err instanceof Promise.TimeoutError);
+
+          assert.equal(pool.workers.length, 0);
+
+          done();
+        });
+  });
+
+  // TODO: test whether a task in the queue can be neatly cancelled
 
   it('should handle crashed workers (1)', function (done) {
     var pool = new Pool({maxWorkers: 1});
