@@ -171,6 +171,51 @@ describe('Pool', function () {
     }, 0);
   });
 
+  it('should cancel a queued task', function (done) {
+    var pool = new Pool({maxWorkers: 1});
+    var reachedTheEnd = false;
+
+    function delayed() {
+      var Promise = require('../lib/Promise');
+
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve(1);
+        }, 0);
+      });
+    }
+
+    function one() {
+      return 1;
+    }
+
+    var p1 = pool.run(delayed)
+        .then(function (result) {
+          assert.equal(result, 1);
+          assert.equal(reachedTheEnd, true);
+
+          assert.equal(pool.workers.length, 1);
+          assert.equal(pool.tasks.length, 0);
+
+          done();
+        });
+
+    assert.equal(pool.workers.length, 1);
+    assert.equal(pool.tasks.length, 0);
+
+    var p2 = pool.run(one); // will be queued
+    assert.equal(pool.workers.length, 1);
+    assert.equal(pool.tasks.length, 1);
+
+    p2.cancel();            // cancel immediately
+    assert.equal(pool.workers.length, 1);
+    assert.equal(pool.tasks.length, 1);
+
+    reachedTheEnd = true;
+  });
+
+  // TODO: test whether a task in the queue can be neatly cancelled
+
   it('should timeout a task', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
@@ -192,8 +237,6 @@ describe('Pool', function () {
           done();
         });
   });
-
-  // TODO: test whether a task in the queue can be neatly cancelled
 
   it('should handle crashed workers (1)', function (done) {
     var pool = new Pool({maxWorkers: 1});

@@ -23,6 +23,7 @@ Therefore, CPU intensive tasks should be offloaded from the main event loop onto
 - Dynamically offload functions to a worker
 - Access workers via a proxy
 - Cancel running tasks
+- Set a timeout on tasks
 - Handles crashed workers
 
 
@@ -162,7 +163,11 @@ The functions `Pool.run`, `Pool.exec`, and the proxy functions all return a `Pro
   Get the error of the promise when rejected.
 - `Promise.cancel()`<br>
   A running task can be cancelled. The worker executing the task is enforced to terminate immediately.
-  The promise will be rejected with a `CancellationError`.
+  The promise will be rejected with a `Promise.CancellationError`.
+- `Promise.timeout(delay: number)`<br>
+  Cancel a running task when it is not resolved or rejected withing given delay in milliseconds.
+  The worker executing the task is enforced to terminate immediately.
+  The promise will be rejected with a `Promise.TimeoutError`.
 
 Example usage:
 

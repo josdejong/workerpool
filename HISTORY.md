@@ -5,6 +5,7 @@ https://github.com/josdejong/workerpool
 ## not yet released, version 0.2.0
 
 - Implemented support for cancelling running tasks.
+- Implemented support for cancelling running tasks after a timeout.
 
 
 ## 2014-05-07, version 0.1.0

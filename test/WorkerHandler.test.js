@@ -108,7 +108,7 @@ describe('WorkerHandler', function () {
     var handler = new WorkerHandler();
 
     function asyncAdd(a, b) {
-      var Promise = require('bluebird'); // TODO: remove dependency on bluebird
+      var Promise = require('../lib/Promise');
 
       return new Promise(function (resolve, reject) {
         if (typeof a === 'number' && typeof b === 'number') {
