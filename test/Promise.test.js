@@ -213,6 +213,44 @@ describe ('Promise', function () {
     });
   });
 
+  describe('status', function () {
+    it('should have correct status before and after being resolved', function (done) {
+      var p = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve(1);
+
+          assert.equal(p.resolved, true);
+          assert.equal(p.rejected, false);
+          assert.equal(p.pending, false);
+
+          done();
+        }, 0);
+      });
+
+      assert.equal(p.resolved, false);
+      assert.equal(p.rejected, false);
+      assert.equal(p.pending, true);
+    });
+
+    it('should have correct status before and after being rejected', function (done) {
+      var p = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          reject(1);
+ 
+          assert.equal(p.resolved, false);
+          assert.equal(p.rejected, true);
+          assert.equal(p.pending, false);
+
+          done();
+        }, 0);
+      });
+
+      assert.equal(p.resolved, false);
+      assert.equal(p.rejected, false);
+      assert.equal(p.pending, true);
+    });
+  });
+
   it('should resolve a promise returned by a onSuccess callback', function (done) {
     new Promise(function (resolve, reject) {
       resolve(1)
