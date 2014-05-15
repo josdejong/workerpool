@@ -71,7 +71,7 @@ function add(a, b) {
   return a + b;
 }
 
-pool.run(add, [3, 4])
+pool.exec(add, [3, 4])
     .then(function (result) {
       console.log('result', result); // outputs 7
 
@@ -111,7 +111,7 @@ var workerpool = require('workerpool');
 // create a worker pool using an external worker script
 var pool = workerpool.pool(__dirname + '/myWorker.js');
 
-// run functions on the worker via exec
+// run registered functions on the worker via exec
 pool.exec('fibonacci', [10])
     .then(function (result) {
       console.log('Result: ' + result); // outputs 55
@@ -139,7 +139,7 @@ A workerpool can be created using the function `workerpool.pool`:
 `workerpool.pool([script: string] [, options: Object]) : Pool`
 
 When a `script` argument is provided, the provided script will be started as a dedicated worker.
-When no `script` argument is provided, a default worker is started which can be used to offload functions dynamically via `Pool.run`.
+When no `script` argument is provided, a default worker is started which can be used to offload functions dynamically via `Pool.exec`.
 Note that on node.js, `script` must be an absolute file path like `__dirname + '/myWorker.js'`.
 
 The following options are available:
@@ -147,16 +147,16 @@ The following options are available:
 
 A worker pool contains the following functions:
 
-- `Pool.exec(method: string, params: Array | null) : Promise.<*, Error>`<br>
+- `Pool.exec(method: Function | string, params: Array | null) : Promise.<*, Error>`<br>
   Execute a function on a worker with given arguments.
-- `Pool.run(fn: Function, args: Array | null) : Promise.<*, Error>`<br>
-  Offload a function dynamically to a worker, execute it with given arguments, and return the result. The provided function `fn` is stringified and send to the worker, therefore this function must be static.
+  - When `method` is a string, a method with this name must exist at the worker and must be registered to make it accessible via the pool. The function will be executed on the worker with given parameters.
+  - When `method` is a function, the provided function `fn` will be stringified, send to the worker, and executed there with the provided parameters. The provided function must be static, it must not depend on variables in a surrounding scope.
 - `Pool.proxy() : Promise.<Object, Error>`<br>
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
 - `Pool.clear([force: boolean])`<br>
   Clear all workers from the pool. If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks.
 
-The functions `Pool.run`, `Pool.exec`, and the proxy functions all return a `Promise`. The promise has the following functions available:
+The function `Pool.exec` and the proxy functions all return a `Promise`. The promise has the following functions available:
 
 - `Promise.then(fn: Function.<result: *>)`<br>
   Get the result of the promise once resolve.
@@ -182,7 +182,7 @@ function add(a, b) {
 var pool1 = workerpool.pool();
 
 // offload a function to a worker
-pool1.run(add, [2, 4])
+pool1.exec(add, [2, 4])
     .then(function (result) {
       console.log(result); // will output 6
     });

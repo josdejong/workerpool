@@ -17,7 +17,7 @@ describe('Pool', function () {
 
     assert.equal(pool.workers.length, 0);
 
-    pool.run(add, [3, 4])
+    pool.exec(add, [3, 4])
         .then(function (result) {
           assert.equal(result, 7);
           assert.equal(pool.workers.length, 1);
@@ -42,8 +42,8 @@ describe('Pool', function () {
     assert.equal(pool.workers.length, 0);
 
     Promise.all([
-          pool.run(add, [3, 4]),
-          pool.run(add, [2, 3])
+          pool.exec(add, [3, 4]),
+          pool.exec(add, [2, 3])
         ])
         .then(function (results) {
           assert.deepEqual(results, [7, 5]);
@@ -66,14 +66,14 @@ describe('Pool', function () {
     assert.equal(pool.tasks.length, 0);
     assert.equal(pool.workers.length, 0);
 
-    var task1 = pool.run(add, [3, 4]);
-    var task2 = pool.run(add, [2, 3]);
+    var task1 = pool.exec(add, [3, 4]);
+    var task2 = pool.exec(add, [2, 3]);
 
     assert.equal(pool.tasks.length, 0);
     assert.equal(pool.workers.length, 2);
 
-    var task3 = pool.run(add, [5, 7]);
-    var task4 = pool.run(add, [1, 1]);
+    var task3 = pool.exec(add, [5, 7]);
+    var task4 = pool.exec(add, [1, 1]);
 
     assert.equal(pool.tasks.length, 2);
     assert.equal(pool.workers.length, 2);
@@ -136,7 +136,7 @@ describe('Pool', function () {
       throw new TypeError('Test error');
     }
 
-    pool.run(test)
+    pool.exec(test)
         .catch(function (err) {
           assert.equal(err.toString(), 'TypeError: Test error');
 
@@ -152,7 +152,7 @@ describe('Pool', function () {
       while (1 > 0) {} // runs forever
     }
 
-    var promise = pool.run(forever)
+    var promise = pool.exec(forever)
         .then(function (result) {
           assert('promise should never resolve');
         })
@@ -189,7 +189,7 @@ describe('Pool', function () {
       return 1;
     }
 
-    var p1 = pool.run(delayed)
+    var p1 = pool.exec(delayed)
         .then(function (result) {
           assert.equal(result, 1);
           assert.equal(reachedTheEnd, true);
@@ -203,7 +203,7 @@ describe('Pool', function () {
     assert.equal(pool.workers.length, 1);
     assert.equal(pool.tasks.length, 0);
 
-    var p2 = pool.run(one); // will be queued
+    var p2 = pool.exec(one); // will be queued
     assert.equal(pool.workers.length, 1);
     assert.equal(pool.tasks.length, 1);
 
@@ -223,7 +223,7 @@ describe('Pool', function () {
       while (1 > 0) {} // runs forever
     }
 
-    var promise = pool.run(forever)
+    var promise = pool.exec(forever)
         .timeout(50)
         .then(function (result) {
           assert('promise should never resolve');
@@ -241,7 +241,7 @@ describe('Pool', function () {
   it('should handle crashed workers (1)', function (done) {
     var pool = new Pool({maxWorkers: 1});
 
-    pool.run(add)
+    pool.exec(add)
         .then(function () {
           assert('Promise should not be resolved');
         })
@@ -251,7 +251,7 @@ describe('Pool', function () {
           assert.equal(pool.workers.length, 0);
 
           // validate whether a new worker is spawned
-          pool.run(add, [2,3])
+          pool.exec(add, [2,3])
               .then(function (result) {
                 assert.equal(result, 5);
 
@@ -295,11 +295,11 @@ describe('Pool', function () {
     it('should limit to the configured number of max workers', function () {
       var pool = new Pool({maxWorkers: 2});
 
-      pool.run(add, [1, 2]);
-      pool.run(add, [3, 4]);
-      pool.run(add, [5, 6]);
-      pool.run(add, [7, 8]);
-      pool.run(add, [9, 0]);
+      pool.exec(add, [1, 2]);
+      pool.exec(add, [3, 4]);
+      pool.exec(add, [5, 6]);
+      pool.exec(add, [7, 8]);
+      pool.exec(add, [9, 0]);
 
       assert.equal(pool.maxWorkers, 2);
       assert.equal(pool.workers.length, 2);
@@ -332,7 +332,7 @@ describe('Pool', function () {
       return 'ok';
     }
 
-    pool.run(test)
+    pool.exec(test)
         .then(function (result) {
           assert.equal(result, 'ok');
 
@@ -357,7 +357,7 @@ describe('Pool', function () {
       return 'ok';
     }
 
-    pool.run(test)
+    pool.exec(test)
         .then(function (result) {
           assert.equal(result, 'ok');
 
@@ -373,11 +373,13 @@ describe('Pool', function () {
     assert.equal(pool.workers.length, 0);
   });
 
-  it('should throw an error in case of wrong type of arguments in function run', function () {
+  it('should throw an error in case of wrong type of arguments in function exec', function () {
     var pool = new Pool();
-    assert.throws(function () {pool.run()}, TypeError);
-    assert.throws(function () {pool.run('a string')}, TypeError);
-    assert.throws(function () {pool.run(add, {})}, TypeError);
+    assert.throws(function () {pool.exec()}, TypeError);
+    assert.throws(function () {pool.exec(23)}, TypeError);
+    assert.throws(function () {pool.exec(add, {})}, TypeError);
+    assert.throws(function () {pool.exec(add, 2, 3)}, TypeError);
+    assert.throws(function () {pool.exec(add, 'a string')}, TypeError);
   });
 
 });

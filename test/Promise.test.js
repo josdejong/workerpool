@@ -630,6 +630,45 @@ describe ('Promise', function () {
             done();
           });
     });
+
+    it('should resolve "all" when all of the promises are already resolved', function (done) {
+      var foo = new Promise(function (resolve, reject) {
+            resolve('foo');
+          }),
+          bar = new Promise(function (resolve, reject) {
+            resolve('bar');
+          }),
+          baz = new Promise(function (resolve, reject) {
+            resolve('baz');
+          }),
+          qux = new Promise(function (resolve, reject) {
+            resolve('qux');
+          });
+
+      Promise.all([foo, bar, baz, qux])
+          .then(function (results) {
+            assert.ok(true, 'then');
+            assert.deepEqual(results, ['foo', 'bar', 'baz', 'qux']);
+
+            done();
+          })
+          .catch(function (){
+            assert.ok(false, 'catch');
+          });
+    });
+
+    it('should resolve "all" when empty', function (done) {
+      Promise.all([])
+          .then(function (results) {
+            assert.ok(true, 'then');
+            assert.deepEqual(results, []);
+
+            done();
+          })
+          .catch(function (){
+            assert.ok(false, 'catch');
+          });
+    });
   });
 
 });
