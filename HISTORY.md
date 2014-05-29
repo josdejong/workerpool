@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet released, version 0.3.0
+## 2014-05-29, version 1.0.0
 
 - Merged function `Pool.run` into `Pool.exec`, simplifying the API.
 

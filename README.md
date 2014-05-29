@@ -84,7 +84,7 @@ Note that both function and arguments must be static and stringifiable, as they 
 
 ### Dedicated workers
 
-A dedicated worker can be created and used via a worker pool. The worker is written in a separate JavaScript file.
+A dedicated worker can be created in a separate script, and then used via a worker pool.
 
 **myWorker.js**
 ```js
