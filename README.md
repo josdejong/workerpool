@@ -25,7 +25,7 @@ Therefore, CPU intensive tasks should be offloaded from the main event loop onto
 - Cancel running tasks
 - Set a timeout on tasks
 - Handles crashed workers
-- Small, only 3.4 kB minified and gzipped
+- Small, only 3.5 kB minified and gzipped
 
 
 ## Install
