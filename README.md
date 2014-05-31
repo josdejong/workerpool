@@ -240,6 +240,18 @@ workerpool.worker({
 ```
 
 
+## Roadmap
+
+- Implement a property `minWorkers`, to ensure a minimum number of workers
+  always up and running.
+- Implement functions for parallel processing: `map`, `reduce`, `forEach`,
+  `filter`, `some`, `every`, ...
+- Implement graceful degradation on old browsers not supporting webworkers:
+  fallback to processing tasks in the main application.
+- Implement session support: be able to handle a series of related tasks by a 
+  single worker, which can keep a state for the session.
+
+
 ## Sources of inspiration
 
 - https://github.com/learnboost/cluster
