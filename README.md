@@ -9,7 +9,7 @@ JavaScript is based upon a single event loop which handles one event at a time. 
 This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any new request while executing a single, heavy request.
 
 For front-end processes, this is not a desired situation.
-Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](http://nodejs.org/api/child_process.html) are available. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
+Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](http://nodejs.org/api/child_process.html) are available. An application should be split in separate, decoupled parts, which can run independent of each other in a parallelized way. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
 
 **workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
