@@ -11,7 +11,7 @@ This means that CPU heavy tasks will block other tasks from being executed. In c
 For front-end processes, this is not a desired situation.
 Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](http://nodejs.org/api/child_process.html) are available. An application should be split in separate, decoupled parts, which can run independent of each other in a parallelized way. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
 
-**workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
+**workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** basically implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern). There is a pool of workers to execute tasks. New tasks are put in a queue. A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
 **workerpool** runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
 
@@ -258,6 +258,8 @@ workerpool.worker({
 - https://github.com/adambom/parallel.js
 - https://github.com/padolsey/operative
 - https://github.com/calvinmetcalf/catiline
+- https://github.com/Unitech/pm2
+- https://github.com/godaddy/node-cluster-service
 
 
 ## Build
