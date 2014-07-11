@@ -118,6 +118,15 @@ pool.exec('fibonacci', [10])
 
       pool.clear(); // clear all workers when done
     });
+    
+// or run registered functions on the worker via a proxy:
+pool.proxy()
+    .then(function (worker) {
+      worker.fibonacci(10)
+          .then(function (result) {
+            console.log('Result: ' + result); // outputs 55
+          });
+    });
 ```
 
 
