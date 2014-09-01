@@ -19,7 +19,7 @@ Therefore, CPU intensive tasks should be offloaded from the main event loop onto
 ## Features
 
 - Easy to use
-- Runs in the browser and on node.js
+- Isomorphic: runs in the browser and on node.js
 - Dynamically offload functions to a worker
 - Access workers via a proxy
 - Cancel running tasks

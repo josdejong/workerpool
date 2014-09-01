@@ -12,7 +12,8 @@
     "worker",
     "web worker",
     "cluster",
-    "pool"
+    "pool",
+    "isomorphic"
   ],
   "main": "./index.js",
   "scripts": {
