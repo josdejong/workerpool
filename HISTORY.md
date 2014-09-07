@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet released, version 1.1.0
+
+- Added an error message when wrongly calling `pool.proxy`.
+
+
 ## 2014-05-29, version 1.0.0
 
 - Merged function `Pool.run` into `Pool.exec`, simplifying the API.
