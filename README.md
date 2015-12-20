@@ -248,6 +248,25 @@ workerpool.worker({
 });
 ```
 
+Asynchronous results can be handled by returning a Promise from a function in the worker:
+
+```js
+// file myWorker.js
+var workerpool = require('workerpool');
+
+function timeout(delay) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(resolve, delay)
+  });
+}
+
+// create a worker and register functions
+workerpool.worker({
+  timeout: timeout
+});
+```
+
+
 
 ## Roadmap
 
@@ -269,6 +288,7 @@ workerpool.worker({
 - https://github.com/calvinmetcalf/catiline
 - https://github.com/Unitech/pm2
 - https://github.com/godaddy/node-cluster-service
+- https://github.com/ramesaliyev/EasyWebWorker
 
 
 ## Build

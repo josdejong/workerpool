@@ -9,8 +9,17 @@ function multiply(a, b) {
   return a * b;
 }
 
+function timeout(delay) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      resolve('done');
+    }, delay)
+  });
+}
+
 // create a worker and register some functions
 workerpool.worker({
   add: add,
-  multiply: multiply
+  multiply: multiply,
+  timeout: timeout
 });

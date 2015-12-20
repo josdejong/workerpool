@@ -115,11 +115,35 @@ describe('Pool', function () {
     var pool = new Pool(__dirname + '/workers/simple.js');
 
     pool.proxy().then(function (proxy) {
-      assert.deepEqual(Object.keys(proxy).sort(), ['add','methods','multiply','run']);
+      assert.deepEqual(Object.keys(proxy).sort(), ['add','methods','multiply','run','timeout']);
 
+      done();
+    });
+  });
+
+  it('should invoke a method via a proxy', function (done) {
+    var pool = new Pool(__dirname + '/workers/simple.js');
+
+    pool.proxy().then(function (proxy) {
       proxy.multiply(4, 3)
           .then(function (result) {
             assert.equal(result, 12);
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+          });
+    });
+  });
+
+  it('should invoke an async method via a proxy', function (done) {
+    var pool = new Pool(__dirname + '/workers/simple.js');
+
+    pool.proxy().then(function (proxy) {
+      proxy.timeout(100)
+          .then(function (result) {
+            assert.equal(result, 'done');
             done();
           })
           .catch(function (err) {
@@ -141,6 +165,41 @@ describe('Pool', function () {
           assert.equal(err.toString(), 'TypeError: Test error');
 
           pool.clear();
+          done();
+        });
+  });
+
+  it('should execute a function returning a Promise', function (done) {
+    var pool = new Pool({maxWorkers: 10});
+
+    function testAsync() {
+      return Promise.resolve('done');
+    }
+
+    pool.exec(testAsync)
+        .then(function (result) {
+          assert.equal(result, 'done');
+          done();
+        })
+        .catch(function (err) {
+          assert('Should not throw an error');
+        });
+  });
+
+  it('should propagate a rejected Promise', function (done) {
+    var pool = new Pool({maxWorkers: 10});
+
+    function testAsync() {
+      return Promise.reject(new Error('I reject!'));
+    }
+
+    pool.exec(testAsync)
+        .then(function (result) {
+          assert('Should not resolve');
+        })
+        .catch(function (err) {
+          //assert.ok(err instanceof Error);  // FIXME: returned error should be an instanceof Error
+          assert.equal(err, err.toString('Error: I reject!'));
           done();
         });
   });
