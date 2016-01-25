@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 1.0.0
- * @date    2014-05-29
+ * @version 1.1.0
+ * @date    2016-01-25
  *
  * @license
  * Copyright (C) 2014 Jos de Jong <wjosdejong@gmail.com>
@@ -25,53 +25,52 @@
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("os"), require("child_process"));
+		module.exports = factory(require("child_process"), require("os"));
 	else if(typeof define === 'function' && define.amd)
-		define(["os", "child_process"], factory);
+		define(["child_process", "os"], factory);
 	else if(typeof exports === 'object')
-		exports["workerpool"] = factory(require("os"), require("child_process"));
+		exports["workerpool"] = factory(require("child_process"), require("os"));
 	else
-		root["workerpool"] = factory(root["os"], root["child_process"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_8__) {
+		root["workerpool"] = factory(root["child_process"], root["os"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_7__) {
 return /******/ (function(modules) { // webpackBootstrap
-/******/ 	
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/ 	
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
+
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/ 		
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-/******/ 		
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 		
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/ 		
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
-/******/ 	
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/ 	
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/ 	
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/ 	
-/******/ 	
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -87,10 +86,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} [options]
 	 * @returns {Pool} pool
 	 */
-	exports.pool = function pool(options) {
+	exports.pool = function pool(script, options) {
 	  var Pool = __webpack_require__(1);
 
-	  return new Pool(options);
+	  return new Pool(script, options);
 	};
 
 	/**
@@ -98,19 +97,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} [methods]
 	 */
 	exports.worker = function worker(methods) {
-	  var environment = __webpack_require__(2);
+	  var environment = __webpack_require__(4);
 	  if (environment == 'browser') {
 	    // worker is already loaded by requiring worker
 
 	    // use embedded worker.js
-	    var blob = new Blob([__webpack_require__(3)], {type: 'text/javascript'});
+	    var blob = new Blob([__webpack_require__(5)], {type: 'text/javascript'});
 	    var url = window.URL.createObjectURL(blob);
 	    importScripts(url);
 	  }
 	  else {
 	    // node
 	    // TODO: do not include worker in browserified library
-	    var worker = __webpack_require__(4);
+	    var worker = __webpack_require__(8);
 	  }
 
 	  worker.add(methods);
@@ -120,15 +119,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Create a promise.
 	 * @type {Promise} promise
 	 */
-	exports.Promise = __webpack_require__(5);
+	exports.Promise = __webpack_require__(2);
 
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Promise = __webpack_require__(5),
-	    WorkerHandler = __webpack_require__(7);
+	var Promise = __webpack_require__(2),
+	    WorkerHandler = __webpack_require__(3);
 
 	/**
 	 * A pool to manage workers
@@ -153,8 +152,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.maxWorkers = options.maxWorkers;
 	  }
 	  else {
-	    var environment = __webpack_require__(2);
-	    var numCPUs = (environment == 'browser') ? 4 : __webpack_require__(6).cpus().length;
+	    var environment = __webpack_require__(4);
+	    var numCPUs = (environment == 'browser') ? 4 : __webpack_require__(7).cpus().length;
 	    this.maxWorkers = Math.max(numCPUs - 1, 1);
 	  }
 
@@ -230,6 +229,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise.<Object, Error>} proxy
 	 */
 	Pool.prototype.proxy = function () {
+	  if (arguments.length > 0) {
+	    throw new Error('No arguments expected');
+	  }
+
 	  var pool = this;
 	  return this.exec('methods')
 	      .then(function (methods) {
@@ -244,6 +247,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return proxy;
 	      });
 	};
+
+	/**
+	 * Creates new array with the results of calling a provided callback function
+	 * on every element in this array.
+	 * @param {Array} array
+	 * @param {function} callback  Function taking two arguments:
+	 *                             `callback(currentValue, index)`
+	 * @return {Promise.<Array>} Returns a promise which resolves  with an Array
+	 *                           containing the results of the callback function
+	 *                           executed for each of the array elements.
+	 */
+	/* TODO: implement map
+	Pool.prototype.map = function (array, callback) {
+	};
+	*/
 
 	/**
 	 * Grab the first task from the queue, find a free worker, and assign the
@@ -365,158 +383,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// determines the JavaScript environment: browser or node
-	module.exports = (typeof window !== 'undefined') ? 'browser' : 'node';
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * embeddedWorker.js contains an embedded version of worker.js.
-	 * This file is automatically generated,
-	 * changes made in this file will be overwritten.
-	 */
-	module.exports = "function isPromise(e){return e&&\"function\"==typeof e.then&&\"function\"==typeof e.catch}var worker={};if(\"undefined\"!=typeof self&&\"function\"==typeof postMessage&&\"function\"==typeof addEventListener)worker.on=function(e,r){addEventListener(e,function(e){r(e.data)})},worker.send=function(e){postMessage(e)};else{if(\"undefined\"==typeof process)throw new Error(\"Script must be executed as a worker\");worker.on=process.on.bind(process),worker.send=process.send.bind(process)}worker.methods={},worker.methods.run=function run(fn,args){var f=eval(\"(\"+fn+\")\");return f.apply(f,args)},worker.methods.methods=function(){return Object.keys(worker.methods)},worker.on(\"message\",function(e){try{var r=worker.methods[e.method];if(!r)throw new Error('Unknown method \"'+e.method+'\"');var o=r.apply(r,e.params);isPromise(o)?o.then(function(r){worker.send({id:e.id,result:r,error:null})}).catch(function(r){worker.send({id:e.id,result:null,error:r.toString()})}):worker.send({id:e.id,result:o,error:null})}catch(n){worker.send({id:e.id,result:null,error:n.toString()})}}),worker.register=function(e){if(e)for(var r in e)e.hasOwnProperty(r)&&(worker.methods[r]=e[r])},\"undefined\"!=typeof exports&&(exports.add=worker.register);";
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * worker must be started as a child process or a web worker.
-	 * It listens for RPC messages from the parent process.
-	 */
-
-	// create a worker API for sending and receiving messages which works both on
-	// node.js and in the browser
-	var worker = {};
-	if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
-	  // worker in the browser
-	  worker.on = function (event, callback) {
-	    addEventListener(event, function (message) {
-	      callback(message.data);
-	    })
-	  };
-	  worker.send = function (message) {
-	    postMessage(message);
-	  };
-	}
-	else if (typeof process !== 'undefined') {
-	  // node.js
-	  worker.on = process.on.bind(process);
-	  worker.send = process.send.bind(process);
-	}
-	else {
-	  throw new Error('Script must be executed as a worker');
-	}
-
-	/**
-	 * Test whether a value is a Promise via duck typing.
-	 * @param {*} value
-	 * @returns {boolean} Returns true when given value is an object
-	 *                    having functions `then` and `catch`.
-	 */
-	function isPromise(value) {
-	  return value && (typeof value.then === 'function') && (typeof value.catch === 'function');
-	}
-
-	// functions available externally
-	worker.methods = {};
-
-	/**
-	 * Execute a function with provided arguments
-	 * @param {String} fn     Stringified function
-	 * @param {Array} [args]  Function arguments
-	 * @returns {*}
-	 */
-	worker.methods.run = function run(fn, args) {
-	  var f = eval('(' + fn + ')');
-	  return f.apply(f, args);
-	};
-
-	/**
-	 * Get a list with methods available on this worker
-	 * @return {String[]} methods
-	 */
-	worker.methods.methods = function methods() {
-	  return Object.keys(worker.methods);
-	};
-
-	worker.on('message', function (request) {
-	  try {
-	    var method = worker.methods[request.method];
-
-	    if (method) {
-	      // execute the function
-	      var result = method.apply(method, request.params);
-
-	      if (isPromise(result)) {
-	        // promise returned, resolve this and then return
-	        result
-	            .then(function (result) {
-	              worker.send({
-	                id: request.id,
-	                result: result,
-	                error: null
-	              });
-	            })
-	            .catch(function (err) {
-	              worker.send({
-	                id: request.id,
-	                result: null,
-	                error: err.toString() // TODO: now to create a serializable error?
-	              });
-	            });
-	      }
-	      else {
-	        // immediate result
-	        worker.send({
-	          id: request.id,
-	          result: result,
-	          error: null
-	        });
-	      }
-	    }
-	    else {
-	      throw new Error('Unknown method "' + request.method + '"');
-	    }
-	  }
-	  catch (err) {
-	    worker.send({
-	      id: request.id,
-	      result: null,
-	      error: err.toString() // TODO: now to create a serializable error?
-	    });
-	  }
-	});
-
-	/**
-	 * Register methods to the worker
-	 * @param {Object} methods
-	 */
-	worker.register = function (methods) {
-	  if (methods) {
-	    for (var name in methods) {
-	      if (methods.hasOwnProperty(name)) {
-	        worker.methods[name] = methods[name];
-	      }
-	    }
-	  }
-	};
-
-	if (true) {
-	  exports.add = worker.register;
-	}
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
 
@@ -804,19 +671,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = require("os");
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Promise = __webpack_require__(5);
+	var Promise = __webpack_require__(2);
 
 	// determine environment
-	var environment = __webpack_require__(2);
+	var environment = __webpack_require__(4);
 
 	// get the default worker script
 	function getDefaultWorker() {
@@ -830,7 +691,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    // use embedded worker.js
-	    var blob = new Blob([__webpack_require__(3)], {type: 'text/javascript'});
+	    var blob = new Blob([__webpack_require__(5)], {type: 'text/javascript'});
 	    return window.URL.createObjectURL(blob);
 	  }
 	  else {
@@ -870,7 +731,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  else {
 	    // on node.js, create a child process
-	    this.worker = __webpack_require__(8).fork(this.script);
+	    this.worker = __webpack_require__(6).fork(this.script);
 	  }
 
 	  var me = this;
@@ -1039,11 +900,169 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
+/* 4 */
+/***/ function(module, exports) {
+
+	// determines the JavaScript environment: browser or node
+	module.exports = (typeof window !== 'undefined') ? 'browser' : 'node';
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	/**
+	 * embeddedWorker.js contains an embedded version of worker.js.
+	 * This file is automatically generated,
+	 * changes made in this file will be overwritten.
+	 */
+	module.exports = "function isPromise(e){return e&&\"function\"==typeof e.then&&\"function\"==typeof e[\"catch\"]}var worker={};if(\"undefined\"!=typeof self&&\"function\"==typeof postMessage&&\"function\"==typeof addEventListener)worker.on=function(e,r){addEventListener(e,function(e){r(e.data)})},worker.send=function(e){postMessage(e)};else{if(\"undefined\"==typeof process)throw new Error(\"Script must be executed as a worker\");worker.on=process.on.bind(process),worker.send=process.send.bind(process)}worker.methods={},worker.methods.run=function run(fn,args){var f=eval(\"(\"+fn+\")\");return f.apply(f,args)},worker.methods.methods=function(){return Object.keys(worker.methods)},worker.on(\"message\",function(e){try{var r=worker.methods[e.method];if(!r)throw new Error('Unknown method \"'+e.method+'\"');var o=r.apply(r,e.params);isPromise(o)?o.then(function(r){worker.send({id:e.id,result:r,error:null})})[\"catch\"](function(r){worker.send({id:e.id,result:null,error:r.toString()})}):worker.send({id:e.id,result:o,error:null})}catch(n){worker.send({id:e.id,result:null,error:n.toString()})}}),worker.register=function(e){if(e)for(var r in e)e.hasOwnProperty(r)&&(worker.methods[r]=e[r])},\"undefined\"!=typeof exports&&(exports.add=worker.register);";
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
 
 	module.exports = require("child_process");
 
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	module.exports = require("os");
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * worker must be started as a child process or a web worker.
+	 * It listens for RPC messages from the parent process.
+	 */
+
+	// create a worker API for sending and receiving messages which works both on
+	// node.js and in the browser
+	var worker = {};
+	if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
+	  // worker in the browser
+	  worker.on = function (event, callback) {
+	    addEventListener(event, function (message) {
+	      callback(message.data);
+	    })
+	  };
+	  worker.send = function (message) {
+	    postMessage(message);
+	  };
+	}
+	else if (typeof process !== 'undefined') {
+	  // node.js
+	  worker.on = process.on.bind(process);
+	  worker.send = process.send.bind(process);
+	}
+	else {
+	  throw new Error('Script must be executed as a worker');
+	}
+
+	/**
+	 * Test whether a value is a Promise via duck typing.
+	 * @param {*} value
+	 * @returns {boolean} Returns true when given value is an object
+	 *                    having functions `then` and `catch`.
+	 */
+	function isPromise(value) {
+	  return value && (typeof value.then === 'function') && (typeof value.catch === 'function');
+	}
+
+	// functions available externally
+	worker.methods = {};
+
+	/**
+	 * Execute a function with provided arguments
+	 * @param {String} fn     Stringified function
+	 * @param {Array} [args]  Function arguments
+	 * @returns {*}
+	 */
+	worker.methods.run = function run(fn, args) {
+	  var f = eval('(' + fn + ')');
+	  return f.apply(f, args);
+	};
+
+	/**
+	 * Get a list with methods available on this worker
+	 * @return {String[]} methods
+	 */
+	worker.methods.methods = function methods() {
+	  return Object.keys(worker.methods);
+	};
+
+	worker.on('message', function (request) {
+	  try {
+	    var method = worker.methods[request.method];
+
+	    if (method) {
+	      // execute the function
+	      var result = method.apply(method, request.params);
+
+	      if (isPromise(result)) {
+	        // promise returned, resolve this and then return
+	        result
+	            .then(function (result) {
+	              worker.send({
+	                id: request.id,
+	                result: result,
+	                error: null
+	              });
+	            })
+	            .catch(function (err) {
+	              worker.send({
+	                id: request.id,
+	                result: null,
+	                error: err.toString() // TODO: now to create a serializable error?
+	              });
+	            });
+	      }
+	      else {
+	        // immediate result
+	        worker.send({
+	          id: request.id,
+	          result: result,
+	          error: null
+	        });
+	      }
+	    }
+	    else {
+	      throw new Error('Unknown method "' + request.method + '"');
+	    }
+	  }
+	  catch (err) {
+	    worker.send({
+	      id: request.id,
+	      result: null,
+	      error: err.toString() // TODO: now to create a serializable error?
+	    });
+	  }
+	});
+
+	/**
+	 * Register methods to the worker
+	 * @param {Object} methods
+	 */
+	worker.register = function (methods) {
+	  if (methods) {
+	    for (var name in methods) {
+	      if (methods.hasOwnProperty(name)) {
+	        worker.methods[name] = methods[name];
+	      }
+	    }
+	  }
+	};
+
+	if (true) {
+	  exports.add = worker.register;
+	}
+
+
 /***/ }
 /******/ ])
-})
+});
+;
