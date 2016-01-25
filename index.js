@@ -5,10 +5,10 @@ var isBrowser = (typeof window !== 'undefined');
  * @param {Object} [options]
  * @returns {Pool} pool
  */
-exports.pool = function pool(options) {
+exports.pool = function pool(script, options) {
   var Pool = require('./lib/Pool');
 
-  return new Pool(options);
+  return new Pool(script, options);
 };
 
 /**
