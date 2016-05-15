@@ -94,7 +94,7 @@ describe('WorkerHandler', function () {
         })
         */
         .catch(function (err) {
-          assert.equal(err.toString(), 'Error: Worker terminated');
+          assert.ok(err.stack.match(/Error: Worker terminated/))
           done();
         });
 
@@ -126,7 +126,7 @@ describe('WorkerHandler', function () {
 
           handler.exec('run', [String(asyncAdd), [2, 'oops']])
               .catch(function (err) {
-                assert.equal(err, 'TypeError: Invalid input, two numbers expected');
+                assert.ok(err.stack.match(/TypeError: Invalid input, two numbers expected/))
                 done();
               });
         });
@@ -165,7 +165,7 @@ describe('WorkerHandler', function () {
         })
         //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
-          assert.equal(err.toString(), 'CancellationError: promise cancelled');
+          assert.ok(err.stack.match(/CancellationError/))
 
           assert.equal(handler.worker, null);
           assert.equal(handler.terminated, true);
@@ -211,7 +211,7 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(test)])
         .catch(function (err) {
-          assert.equal(err.toString(), 'TypeError: Test error');
+          assert.ok(err.stack.match(/TypeError: Test error/))
 
           done();
         });
@@ -226,7 +226,7 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(test)])
         .catch(function (err) {
-          assert.equal(err.toString(), 'RangeError: Maximum call stack size exceeded');
+          assert.ok(err.stack.match(/RangeError: Maximum call stack size exceeded/))
 
           done();
         });
@@ -240,7 +240,7 @@ describe('WorkerHandler', function () {
           assert('Promise should not be resolved');
         })
         .catch(function (err) {
-          assert.equal(err.toString(), 'Error: Worker terminated unexpectedly');
+          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/))
 
           done();
         });
@@ -257,7 +257,7 @@ describe('WorkerHandler', function () {
           assert('Promise should not be resolved');
         })
         .catch(function (err) {
-          assert.equal(err.toString(), 'Error: Worker terminated unexpectedly');
+          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/))
 
           done();
         });
