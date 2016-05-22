@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2016-05-22, version 1.2.0
+
+- Implemented serializing errors with stacktrace. Thanks @mujx.
+
+
 ## 2016-01-25, version 1.1.0
 
 - Added an error message when wrongly calling `pool.proxy`.
