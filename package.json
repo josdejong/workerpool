@@ -23,7 +23,8 @@
     "coverage": "istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\""
   },
   "dependencies": {
-    "promise": "^5.0.0"
+    "promise": "^5.0.0",
+    "serializerr": "^1.0.2"
   },
   "devDependencies": {
     "gulp": "^3.6.2",
