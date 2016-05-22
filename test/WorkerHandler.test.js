@@ -240,7 +240,8 @@ describe('WorkerHandler', function () {
           assert('Promise should not be resolved');
         })
         .catch(function (err) {
-          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/))
+          assert(err instanceof Error);
+          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
 
           done();
         });
@@ -257,7 +258,8 @@ describe('WorkerHandler', function () {
           assert('Promise should not be resolved');
         })
         .catch(function (err) {
-          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/))
+          assert(err instanceof Error);
+          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
 
           done();
         });
