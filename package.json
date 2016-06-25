@@ -1,6 +1,6 @@
 {
   "name": "workerpool",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Offload tasks to a pool of workers on node.js and in the browser",
   "homepage": "https://github.com/josdejong/workerpool",
   "author": "Jos de Jong <wjosdejong@gmail.com> (https://github.com/josdejong)",
@@ -23,7 +23,6 @@
     "coverage": "istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\""
   },
   "dependencies": {
-    "promise": "^5.0.0",
     "serializerr": "^1.0.2"
   },
   "devDependencies": {

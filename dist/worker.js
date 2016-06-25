@@ -1,127 +1,248 @@
-/**
- * worker must be started as a child process or a web worker.
- * It listens for RPC messages from the parent process.
- */
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
 
-var serializerr = require('serializerr')
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
 
-// create a worker API for sending and receiving messages which works both on
-// node.js and in the browser
-var worker = {};
-if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
-  // worker in the browser
-  worker.on = function (event, callback) {
-    addEventListener(event, function (message) {
-      callback(message.data);
-    })
-  };
-  worker.send = function (message) {
-    postMessage(message);
-  };
-}
-else if (typeof process !== 'undefined') {
-  // node.js
-  worker.on = process.on.bind(process);
-  worker.send = process.send.bind(process);
-}
-else {
-  throw new Error('Script must be executed as a worker');
-}
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
 
-/**
- * Test whether a value is a Promise via duck typing.
- * @param {*} value
- * @returns {boolean} Returns true when given value is an object
- *                    having functions `then` and `catch`.
- */
-function isPromise(value) {
-  return value && (typeof value.then === 'function') && (typeof value.catch === 'function');
-}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
 
-// functions available externally
-worker.methods = {};
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 
-/**
- * Execute a function with provided arguments
- * @param {String} fn     Stringified function
- * @param {Array} [args]  Function arguments
- * @returns {*}
- */
-worker.methods.run = function run(fn, args) {
-  var f = eval('(' + fn + ')');
-  return f.apply(f, args);
-};
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
 
-/**
- * Get a list with methods available on this worker
- * @return {String[]} methods
- */
-worker.methods.methods = function methods() {
-  return Object.keys(worker.methods);
-};
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
 
-worker.on('message', function (request) {
-  try {
-    var method = worker.methods[request.method];
 
-    if (method) {
-      // execute the function
-      var result = method.apply(method, request.params);
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
 
-      if (isPromise(result)) {
-        // promise returned, resolve this and then return
-        result
-            .then(function (result) {
-              worker.send({
-                id: request.id,
-                result: result,
-                error: null
-              });
-            })
-            .catch(function (err) {
-              worker.send({
-                id: request.id,
-                result: null,
-                error: serializerr(err)
-              });
-            });
-      }
-      else {
-        // immediate result
-        worker.send({
-          id: request.id,
-          result: result,
-          error: null
-        });
-      }
-    }
-    else {
-      throw new Error('Unknown method "' + request.method + '"');
-    }
-  }
-  catch (err) {
-    worker.send({
-      id: request.id,
-      result: null,
-      error: serializerr(err)
-    });
-  }
-});
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
 
-/**
- * Register methods to the worker
- * @param {Object} methods
- */
-worker.register = function (methods) {
-  if (methods) {
-    for (var name in methods) {
-      if (methods.hasOwnProperty(name)) {
-        worker.methods[name] = methods[name];
-      }
-    }
-  }
-};
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
 
-if (typeof exports !== 'undefined') {
-  exports.add = worker.register;
-}
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * worker must be started as a child process or a web worker.
+	 * It listens for RPC messages from the parent process.
+	 */
+
+	var serializerr = __webpack_require__(1);
+
+	// create a worker API for sending and receiving messages which works both on
+	// node.js and in the browser
+	var worker = {};
+	if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
+	  // worker in the browser
+	  worker.on = function (event, callback) {
+	    addEventListener(event, function (message) {
+	      callback(message.data);
+	    })
+	  };
+	  worker.send = function (message) {
+	    postMessage(message);
+	  };
+	}
+	else if (typeof process !== 'undefined') {
+	  // node.js
+	  worker.on = process.on.bind(process);
+	  worker.send = process.send.bind(process);
+	}
+	else {
+	  throw new Error('Script must be executed as a worker');
+	}
+
+	/**
+	 * Test whether a value is a Promise via duck typing.
+	 * @param {*} value
+	 * @returns {boolean} Returns true when given value is an object
+	 *                    having functions `then` and `catch`.
+	 */
+	function isPromise(value) {
+	  return value && (typeof value.then === 'function') && (typeof value.catch === 'function');
+	}
+
+	// functions available externally
+	worker.methods = {};
+
+	/**
+	 * Execute a function with provided arguments
+	 * @param {String} fn     Stringified function
+	 * @param {Array} [args]  Function arguments
+	 * @returns {*}
+	 */
+	worker.methods.run = function run(fn, args) {
+	  var f = eval('(' + fn + ')');
+	  return f.apply(f, args);
+	};
+
+	/**
+	 * Get a list with methods available on this worker
+	 * @return {String[]} methods
+	 */
+	worker.methods.methods = function methods() {
+	  return Object.keys(worker.methods);
+	};
+
+	worker.on('message', function (request) {
+	  try {
+	    var method = worker.methods[request.method];
+
+	    if (method) {
+	      // execute the function
+	      var result = method.apply(method, request.params);
+
+	      if (isPromise(result)) {
+	        // promise returned, resolve this and then return
+	        result
+	            .then(function (result) {
+	              worker.send({
+	                id: request.id,
+	                result: result,
+	                error: null
+	              });
+	            })
+	            .catch(function (err) {
+	              worker.send({
+	                id: request.id,
+	                result: null,
+	                error: serializerr(err)
+	              });
+	            });
+	      }
+	      else {
+	        // immediate result
+	        worker.send({
+	          id: request.id,
+	          result: result,
+	          error: null
+	        });
+	      }
+	    }
+	    else {
+	      throw new Error('Unknown method "' + request.method + '"');
+	    }
+	  }
+	  catch (err) {
+	    worker.send({
+	      id: request.id,
+	      result: null,
+	      error: serializerr(err)
+	    });
+	  }
+	});
+
+	/**
+	 * Register methods to the worker
+	 * @param {Object} methods
+	 */
+	worker.register = function (methods) {
+	  if (methods) {
+	    for (var name in methods) {
+	      if (methods.hasOwnProperty(name)) {
+	        worker.methods[name] = methods[name];
+	      }
+	    }
+	  }
+	};
+
+	if (true) {
+	  exports.add = worker.register;
+	}
+
+
+/***/ },
+/* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _protochain = __webpack_require__(2);
+
+	var _protochain2 = _interopRequireDefault(_protochain);
+
+	function serializerr() {
+	  var obj = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+	  var chain = (0, _protochain2['default'])(obj).filter(function (obj) {
+	    return obj !== Object.prototype;
+	  });
+	  return [obj].concat(chain).map(function (item) {
+	    return Object.getOwnPropertyNames(item);
+	  }).reduce(function (result, names) {
+	    names.forEach(function (name) {
+	      return result[name] = obj[name];
+	    });
+	    return result;
+	  }, {});
+	}
+
+	module.exports = serializerr;
+	serializerr.serializerr = serializerr;
+	exports['default'] = serializerr;
+	module.exports = exports['default'];
+
+
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = protochain;
+
+	function protochain(obj) {
+	  var result = [];
+	  var target = getPrototypeOf(obj);
+	  while (target) {
+	    result.push(target);
+	    target = getPrototypeOf(target);
+	  }
+
+	  return result;
+	}
+
+	function getPrototypeOf(obj) {
+	  if (obj == null) {
+	    return obj;
+	  }if (isPrimitive(obj)) obj = Object(obj);
+	  return Object.getPrototypeOf(obj);
+	}
+
+	function isPrimitive(item) {
+	  return item === null || typeof item !== "object" && typeof item !== "function";
+	}
+
+
+
+/***/ }
+/******/ ]);
