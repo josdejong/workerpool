@@ -26,11 +26,11 @@
     "serializerr": "^1.0.2"
   },
   "devDependencies": {
-    "gulp": "^3.6.2",
-    "gulp-util": "^2.2.14",
-    "istanbul": "^0.2.8",
-    "mocha": "^1.18.2",
-    "uglify-js": "^2.4.13",
-    "webpack": "^1.1.8"
+    "gulp": "^3.9.1",
+    "gulp-util": "^3.0.7",
+    "istanbul": "^0.4.4",
+    "mocha": "^2.5.3",
+    "uglify-js": "^2.6.4",
+    "webpack": "^1.13.1"
   }
 }
