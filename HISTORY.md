@@ -2,6 +2,10 @@
 https://github.com/josdejong/workerpool
 
 
+## 2016-06-25, version 1.2.1
+
+- Fixed #5 error when loading via AMD or bundling using Webpack.
+
 ## 2016-05-22, version 1.2.0
 
 - Implemented serializing errors with stacktrace. Thanks @mujx.
