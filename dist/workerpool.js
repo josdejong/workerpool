@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 1.2.1
- * @date    2016-06-25
+ * @version 1.3.0
+ * @date    2016-08-21
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -156,8 +156,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  else {
 	    var environment = __webpack_require__(4);
-	    // call node.require to prevent os to be required when loading with AMD
-	    var numCPUs = (environment == 'browser') ? 4 : node.require('os').cpus().length;
+
+	    var numCPUs = (environment == 'browser')
+	        ? (window.navigator.hardwareConcurrency || 4)
+	        : node.require('os').cpus().length;  // call node.require to prevent `os` to be required when loading with AMD
+
 	    this.maxWorkers = Math.max(numCPUs - 1, 1);
 	  }
 

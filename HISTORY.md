@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## Not yet released, version 1.3.0
+## 2016-08-21, version 1.3.0
 
 - Determine `maxWorkers` as the number of CPU's minus one in browsers too. See #6.
 
