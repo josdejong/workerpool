@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## Not yet released, version 1.3.0
+
+- Determine `maxWorkers` as the number of CPU's minus one in browsers too. See #6.
+
+
 ## 2016-06-25, version 1.2.1
 
 - Fixed #5 error when loading via AMD or bundling using Webpack.
