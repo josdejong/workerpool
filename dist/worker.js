@@ -179,27 +179,27 @@
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
+	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var _protochain = __webpack_require__(2);
 
 	var _protochain2 = _interopRequireDefault(_protochain);
 
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 	function serializerr() {
 	  var obj = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-	  var chain = (0, _protochain2['default'])(obj).filter(function (obj) {
+	  var chain = (0, _protochain2.default)(obj).filter(function (obj) {
 	    return obj !== Object.prototype;
 	  });
 	  return [obj].concat(chain).map(function (item) {
 	    return Object.getOwnPropertyNames(item);
 	  }).reduce(function (result, names) {
 	    names.forEach(function (name) {
-	      return result[name] = obj[name];
+	      result[name] = obj[name];
 	    });
 	    return result;
 	  }, {});
@@ -207,8 +207,7 @@
 
 	module.exports = serializerr;
 	serializerr.serializerr = serializerr;
-	exports['default'] = serializerr;
-	module.exports = exports['default'];
+	exports.default = serializerr;
 
 
 
@@ -216,30 +215,22 @@
 /* 2 */
 /***/ function(module, exports) {
 
-	"use strict";
+	'use strict';
 
-	module.exports = protochain;
-
-	function protochain(obj) {
-	  var result = [];
+	module.exports = function protochain(obj) {
+	  var chain = [];
 	  var target = getPrototypeOf(obj);
 	  while (target) {
-	    result.push(target);
+	    chain.push(target);
 	    target = getPrototypeOf(target);
 	  }
 
-	  return result;
-	}
+	  return chain;
+	};
 
 	function getPrototypeOf(obj) {
-	  if (obj == null) {
-	    return obj;
-	  }if (isPrimitive(obj)) obj = Object(obj);
-	  return Object.getPrototypeOf(obj);
-	}
-
-	function isPrimitive(item) {
-	  return item === null || typeof item !== "object" && typeof item !== "function";
+	  if (obj == null) return null;
+	  return Object.getPrototypeOf(Object(obj));
 	}
 
 
