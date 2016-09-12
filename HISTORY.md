@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2016-09-12, version 1.3.1
+
+- Fix for a bug in PhantomJS (see #7). Thanks @natlibfi-arlehiko.
+
+
 ## 2016-08-21, version 1.3.0
 
 - Determine `maxWorkers` as the number of CPU's minus one in browsers too. See #6.
