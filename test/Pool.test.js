@@ -162,7 +162,8 @@ describe('Pool', function () {
 
     pool.exec(test)
         .catch(function (err) {
-          assert.equal(err.toString(), 'TypeError: Test error');
+          assert.ok(err instanceof Error);
+          assert.equal(err.message, 'Test error')
 
           pool.clear();
           done();
