@@ -49,8 +49,6 @@
 	 * It listens for RPC messages from the parent process.
 	 */
 
-	var serializerr = __webpack_require__(1);
-
 	// create a worker API for sending and receiving messages which works both on
 	// node.js and in the browser
 	var worker = {};
@@ -72,6 +70,15 @@
 	}
 	else {
 	  throw new Error('Script must be executed as a worker');
+	}
+
+	function convertError(error) {
+	  return Object.getOwnPropertyNames(error).reduce(function(product, name) {
+	    return Object.defineProperty(product, name, {
+		value: error[name],
+		enumerable: true
+	    });
+	  }, {});
 	}
 
 	/**
@@ -128,7 +135,7 @@
 	              worker.send({
 	                id: request.id,
 	                result: null,
-	                error: serializerr(err)
+	                error: convertError(err)
 	              });
 	            });
 	      }
@@ -149,7 +156,7 @@
 	    worker.send({
 	      id: request.id,
 	      result: null,
-	      error: serializerr(err)
+	      error: convertError(err)
 	    });
 	  }
 	});
@@ -171,68 +178,6 @@
 	if (true) {
 	  exports.add = worker.register;
 	}
-
-
-/***/ },
-/* 1 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _protochain = __webpack_require__(2);
-
-	var _protochain2 = _interopRequireDefault(_protochain);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function serializerr() {
-	  var obj = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-	  var chain = (0, _protochain2.default)(obj).filter(function (obj) {
-	    return obj !== Object.prototype;
-	  });
-	  return [obj].concat(chain).map(function (item) {
-	    return Object.getOwnPropertyNames(item);
-	  }).reduce(function (result, names) {
-	    names.forEach(function (name) {
-	      result[name] = obj[name];
-	    });
-	    return result;
-	  }, {});
-	}
-
-	module.exports = serializerr;
-	serializerr.serializerr = serializerr;
-	exports.default = serializerr;
-
-
-
-/***/ },
-/* 2 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = function protochain(obj) {
-	  var chain = [];
-	  var target = getPrototypeOf(obj);
-	  while (target) {
-	    chain.push(target);
-	    target = getPrototypeOf(target);
-	  }
-
-	  return chain;
-	};
-
-	function getPrototypeOf(obj) {
-	  if (obj == null) return null;
-	  return Object.getPrototypeOf(Object(obj));
-	}
-
 
 
 /***/ }
