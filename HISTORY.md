@@ -2,6 +2,15 @@
 https://github.com/josdejong/workerpool
 
 
+## 2016-09-18, version 2.0.0
+
+- Replaced conversion of Error-objecting using serializerr to custom
+  implementation to prevent issues with serializing/deserializing functions.
+  This conversion implementation loses the prototype object which means that
+  e.g. 'TypeError' will become just 'Error' in the main code. See #8.
+  Thanks @natlibfi-arlehiko.
+
+
 ## 2016-09-12, version 1.3.1
 
 - Fix for a bug in PhantomJS (see #7). Thanks @natlibfi-arlehiko.
