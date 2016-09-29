@@ -1,4 +1,4 @@
-var isBrowser = (typeof window !== 'undefined');
+var environment = require('./lib/environment');
 
 /**
  * Create a new worker pool
@@ -16,21 +16,7 @@ exports.pool = function pool(script, options) {
  * @param {Object} [methods]
  */
 exports.worker = function worker(methods) {
-  var environment = require('./lib/environment');
-  if (environment == 'browser') {
-    // worker is already loaded by requiring worker
-
-    // use embedded worker.js
-    var blob = new Blob([require('./lib/generated/embeddedWorker')], {type: 'text/javascript'});
-    var url = window.URL.createObjectURL(blob);
-    importScripts(url);
-  }
-  else {
-    // node
-    // TODO: do not include worker in browserified library
-    var worker = require('./lib/worker');
-  }
-
+  var worker = require('./lib/worker');
   worker.add(methods);
 };
 
@@ -39,3 +25,7 @@ exports.worker = function worker(methods) {
  * @type {Promise} promise
  */
 exports.Promise = require('./lib/Promise');
+
+exports.platform = environment.platform;
+exports.is_main_thread = environment.is_main_thread;
+exports.cpus = environment.cpus;

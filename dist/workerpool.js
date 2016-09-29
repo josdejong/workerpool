@@ -5,7 +5,7 @@
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
  * @version 2.0.0
- * @date    2016-09-18
+ * @date    2016-09-29
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -79,7 +79,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isBrowser = (typeof window !== 'undefined');
+	var environment = __webpack_require__(1);
 
 	/**
 	 * Create a new worker pool
@@ -87,7 +87,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Pool} pool
 	 */
 	exports.pool = function pool(script, options) {
-	  var Pool = __webpack_require__(1);
+	  var Pool = __webpack_require__(3);
 
 	  return new Pool(script, options);
 	};
@@ -97,21 +97,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} [methods]
 	 */
 	exports.worker = function worker(methods) {
-	  var environment = __webpack_require__(4);
-	  if (environment == 'browser') {
-	    // worker is already loaded by requiring worker
-
-	    // use embedded worker.js
-	    var blob = new Blob([__webpack_require__(6)], {type: 'text/javascript'});
-	    var url = window.URL.createObjectURL(blob);
-	    importScripts(url);
-	  }
-	  else {
-	    // node
-	    // TODO: do not include worker in browserified library
-	    var worker = __webpack_require__(8);
-	  }
-
+	  var worker = __webpack_require__(8);
 	  worker.add(methods);
 	};
 
@@ -119,18 +105,74 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Create a promise.
 	 * @type {Promise} promise
 	 */
-	exports.Promise = __webpack_require__(2);
+	exports.Promise = __webpack_require__(4);
 
+	exports.platform = environment.platform;
+	exports.is_main_thread = environment.is_main_thread;
+	exports.cpus = environment.cpus;
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Promise = __webpack_require__(2),
-	    WorkerHandler = __webpack_require__(3);
+	// used to prevent webpack from resolving requires on node libs
+	var node = {require: __webpack_require__(2)};
+
+	// determines the JavaScript platform: browser or node
+	module.exports.platform = typeof Window !== 'undefined' || typeof WorkerGlobalScope !== 'undefined' ? 'browser' : 'node';
+
+	// determines whether the code is running in main thread or not
+	module.exports.is_main_thread = module.exports.platform === 'browser' ? typeof Window !== 'undefined' : !node.require('process').connected;
+
+	// determines the number of cpus available
+	module.exports.cpus = module.exports.platform === 'browser'
+	  ? self.navigator.hardwareConcurrency
+	  : node.require('os').cpus().length;  // call node.require to prevent `os` to be required when loading with AMD
+
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var map = {
+		"./Pool": 3,
+		"./Pool.js": 3,
+		"./Promise": 4,
+		"./Promise.js": 4,
+		"./WorkerHandler": 5,
+		"./WorkerHandler.js": 5,
+		"./environment": 1,
+		"./environment.js": 1,
+		"./generated/embeddedWorker": 6,
+		"./generated/embeddedWorker.js": 6,
+		"./header": 7,
+		"./header.js": 7,
+		"./worker": 8,
+		"./worker.js": 8
+	};
+	function webpackContext(req) {
+		return __webpack_require__(webpackContextResolve(req));
+	};
+	function webpackContextResolve(req) {
+		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
+	};
+	webpackContext.keys = function webpackContextKeys() {
+		return Object.keys(map);
+	};
+	webpackContext.resolve = webpackContextResolve;
+	module.exports = webpackContext;
+	webpackContext.id = 2;
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Promise = __webpack_require__(4),
+	    WorkerHandler = __webpack_require__(5);
 
 	// used to prevent webpack from resolving requires on node libs
-	var node = {require: __webpack_require__(5)};
+	var node = {require: __webpack_require__(2)};
+	var environment = __webpack_require__(1);
 
 	/**
 	 * A pool to manage workers
@@ -155,13 +197,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.maxWorkers = options.maxWorkers;
 	  }
 	  else {
-	    var environment = __webpack_require__(4);
-
-	    var numCPUs = (environment == 'browser')
-	        ? (window.navigator.hardwareConcurrency || 4)
-	        : node.require('os').cpus().length;  // call node.require to prevent `os` to be required when loading with AMD
-
-	    this.maxWorkers = Math.max(numCPUs - 1, 1);
+	    this.maxWorkers = Math.max((environment.cpus || 4) - 1, 1);
 	  }
 
 	  this.workers = [];  // queue with all workers
@@ -389,7 +425,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 2 */
+/* 4 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -678,20 +714,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 3 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Promise = __webpack_require__(2);
+	var Promise = __webpack_require__(4);
 
 	// determine environment
-	var environment = __webpack_require__(4);
+	var environment = __webpack_require__(1);
 
 	// used to prevent webpack from resolving requires on node libs
-	var node = {require: __webpack_require__(5)};
+	var node = {require: __webpack_require__(2)};
 
 	// get the default worker script
 	function getDefaultWorker() {
-	  if (environment == 'browser') {
+	  if (environment.platform == 'browser') {
 	    // test whether the browser supports all features that we need
 	    if (typeof Blob === 'undefined') {
 	      throw new Error('Blob not supported by the browser');
@@ -736,7 +772,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function WorkerHandler(script) {
 	  this.script = script || getDefaultWorker();
 
-	  if (environment == 'browser') {
+	  if (environment.platform == 'browser') {
 	    // check whether Worker is supported by the browser
 	    // Workaround for a bug in PhantomJS (Or QtWebkit): https://github.com/ariya/phantomjs/issues/14534
 	    if (typeof Worker !== 'function' && (typeof Worker !== 'object' || typeof Worker.prototype.constructor !== 'function')) {
@@ -925,48 +961,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = WorkerHandler;
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	// determines the JavaScript environment: browser or node
-	module.exports = (typeof window !== 'undefined') ? 'browser' : 'node';
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var map = {
-		"./Pool": 1,
-		"./Pool.js": 1,
-		"./Promise": 2,
-		"./Promise.js": 2,
-		"./WorkerHandler": 3,
-		"./WorkerHandler.js": 3,
-		"./environment": 4,
-		"./environment.js": 4,
-		"./generated/embeddedWorker": 6,
-		"./generated/embeddedWorker.js": 6,
-		"./header": 7,
-		"./header.js": 7,
-		"./worker": 8,
-		"./worker.js": 8
-	};
-	function webpackContext(req) {
-		return __webpack_require__(webpackContextResolve(req));
-	};
-	function webpackContextResolve(req) {
-		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
-	};
-	webpackContext.keys = function webpackContextKeys() {
-		return Object.keys(map);
-	};
-	webpackContext.resolve = webpackContextResolve;
-	module.exports = webpackContext;
-	webpackContext.id = 5;
 
 
 /***/ },
