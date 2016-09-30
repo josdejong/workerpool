@@ -27,5 +27,5 @@ exports.worker = function worker(methods) {
 exports.Promise = require('./lib/Promise');
 
 exports.platform = environment.platform;
-exports.is_main_thread = environment.is_main_thread;
+exports.isMainThread = environment.isMainThread;
 exports.cpus = environment.cpus;

@@ -129,6 +129,25 @@ pool.proxy()
     });
 ```
 
+Worker can also initialize asynchronously:
+
+**myAsyncWorker.js**
+```js
+define(['workerpool/dist/workerpool'], function(workerpool) {
+
+  // a deliberately inefficient implementation of the fibonacci sequence
+  function fibonacci(n) {
+    if (n < 2) return n;
+    return fibonacci(n - 2) + fibonacci(n - 1);
+  }
+
+  // create a worker and register public functions
+  workerpool.worker({
+    fibonacci: fibonacci
+  });
+
+});
+```
 
 ## Examples
 
@@ -269,7 +288,7 @@ workerpool.worker({
 ### Utilities
 Following properties are available for convenience:
 - **platform**: The Javascript platform. Either *node* or *browser*
-- **is\_main\_thread**: Whether the code is running in main thread or not (Workers)
+- **isMainThread**: Whether the code is running in main thread or not (Workers)
 - **cpus**: The number of CPUs/cores available
 
 

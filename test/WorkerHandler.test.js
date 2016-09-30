@@ -150,6 +150,17 @@ describe('WorkerHandler', function () {
         });
   });
 
+  it('should handle the asynchronous initialization of a worker', function (done) {
+
+    var handler = new WorkerHandler(__dirname + '/workers/async.js');
+
+      handler.exec('add', [2, 4])
+        .then(function (result) {
+          assert.equal(result, 6);
+          done();
+        });
+  });
+
   it('should cancel a task', function (done) {
     var handler = new WorkerHandler();
 
