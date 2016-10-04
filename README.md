@@ -118,7 +118,7 @@ pool.exec('fibonacci', [10])
 
       pool.clear(); // clear all workers when done
     });
-    
+
 // or run registered functions on the worker via a proxy:
 pool.proxy()
     .then(function (worker) {
@@ -152,6 +152,7 @@ When no `script` argument is provided, a default worker is started which can be 
 Note that on node.js, `script` must be an absolute file path like `__dirname + '/myWorker.js'`.
 
 The following options are available:
+- `minWorkers: number`. The minimum number of workers to have started and ready.  Setting this to `true` will create `numCPUs-1` workers.
 - `maxWorkers: number`. The default number of workers number of CPU's minus one. When the number of CPU's could not be determined (for example in older browsers), `maxWorkers` is 3 by default.
 
 A worker pool contains the following functions:
@@ -276,7 +277,7 @@ workerpool.worker({
   `filter`, `some`, `every`, ...
 - Implement graceful degradation on old browsers not supporting webworkers:
   fallback to processing tasks in the main application.
-- Implement session support: be able to handle a series of related tasks by a 
+- Implement session support: be able to handle a series of related tasks by a
   single worker, which can keep a state for the session.
 
 
