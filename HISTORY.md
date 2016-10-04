@@ -2,6 +2,15 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet released, version 2.1.0
+
+- Implemented support for registering the workers methods asynchronously.
+  This enables asynchronous initialization of workers, for example when
+  using AMD modules. Thanks @atlibfi-arlehiko.
+- Implemented environment variables `platform`, `isMainThread`, and `cpus`.
+  Thanks @atlibfi-arlehiko.
+
+
 ## 2016-09-18, version 2.0.0
 
 - Replaced conversion of Error-objecting using serializerr to custom

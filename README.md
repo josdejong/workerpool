@@ -286,7 +286,9 @@ workerpool.worker({
 ```
 
 ### Utilities
+
 Following properties are available for convenience:
+
 - **platform**: The Javascript platform. Either *node* or *browser*
 - **isMainThread**: Whether the code is running in main thread or not (Workers)
 - **cpus**: The number of CPUs/cores available
