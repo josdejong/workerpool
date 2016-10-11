@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet released, version 2.1.0
+## 2016-10-11, version 2.1.0
 
 - Implemented support for registering the workers methods asynchronously.
   This enables asynchronous initialization of workers, for example when

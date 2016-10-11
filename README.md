@@ -171,8 +171,8 @@ When no `script` argument is provided, a default worker is started which can be 
 Note that on node.js, `script` must be an absolute file path like `__dirname + '/myWorker.js'`.
 
 The following options are available:
-- `minWorkers: number | string`. The minimum number of workers to have started and ready.  Setting this to `'max'` will create `maxWorkers` default workers (see below).
-- `maxWorkers: number`. The default number of workers number of CPU's minus one. When the number of CPU's could not be determined (for example in older browsers), `maxWorkers` is 3 by default.
+- `minWorkers: number | 'max'`. The minimum number of workers that must be initialized and kept available. Setting this to `'max'` will create `maxWorkers` default workers (see below).
+- `maxWorkers: number`. The default number of maxWorkers is the number of CPU's minus one. When the number of CPU's could not be determined (for example in older browsers), `maxWorkers` is set to 3.
 
 A worker pool contains the following functions:
 

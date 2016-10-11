@@ -166,6 +166,7 @@
 	 * @param {Object} methods
 	 */
 	worker.register = function (methods) {
+
 	  if (methods) {
 	    for (var name in methods) {
 	      if (methods.hasOwnProperty(name)) {
@@ -173,6 +174,9 @@
 	      }
 	    }
 	  }
+
+	  worker.send('ready');
+
 	};
 
 	if (true) {

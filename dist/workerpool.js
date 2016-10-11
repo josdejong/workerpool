@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 2.0.0
- * @date    2016-10-03
+ * @version 2.1.0
+ * @date    2016-10-11
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -108,7 +108,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.Promise = __webpack_require__(4);
 
 	exports.platform = environment.platform;
-	exports.isMainThread = environment.is_main_thread;
+	exports.isMainThread = environment.isMainThread;
 	exports.cpus = environment.cpus;
 
 /***/ },
@@ -167,11 +167,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Promise = __webpack_require__(4),
-	    WorkerHandler = __webpack_require__(5);
-
-	// used to prevent webpack from resolving requires on node libs
-	var node = {require: __webpack_require__(2)};
+	var Promise = __webpack_require__(4);
+	var WorkerHandler = __webpack_require__(5);
 	var environment = __webpack_require__(1);
 
 	/**
@@ -189,6 +186,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    options = script;
 	  }
 
+	  this.workers = [];  // queue with all workers
+	  this.tasks = [];    // queue with tasks awaiting execution
+
 	  // configuration
 	  if (options && 'maxWorkers' in options) {
 	    if (!isNumber(options.maxWorkers) || !isInteger(options.maxWorkers) || options.maxWorkers < 1) {
@@ -200,8 +200,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.maxWorkers = Math.max((environment.cpus || 4) - 1, 1);
 	  }
 
-	  this.workers = [];  // queue with all workers
-	  this.tasks = [];    // queue with tasks awaiting execution
+	  if (options && 'minWorkers' in options) {
+	    if(options.minWorkers==='max') {
+	      this.minWorkers = Math.max((environment.cpus || 4) - 1, 1);
+	    } else {
+	      if (!isNumber(options.minWorkers) || !isInteger(options.minWorkers) || options.minWorkers < 0) {
+	        throw new TypeError('Option minWorkers must be a positive integer number');
+	      }
+	      this.minWorkers = options.minWorkers;
+	      this.maxWorkers = Math.max(this.minWorkers, this.maxWorkers);     // in case minWorkers is higher than maxWorkers
+	    }
+	    this._ensureMinWorkers();
+	  }
 	}
 
 	/**
@@ -326,17 +336,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (task.resolver.promise.pending) {
 	        // send the request to the worker
 	        worker.exec(task.method, task.params, task.resolver)
-	            .then(function () {
-	              me._next(); // trigger next task in the queue
-	            })
-	            .catch(function () {
-	              // if the worker crashed and terminated, remove it from the pool
-	              if (worker.terminated) {
-	                me._removeWorker(worker);
-	              }
-
-	              me._next(); // trigger next task in the queue
-	            });
+	          .then(function () {
+	            me._next(); // trigger next task in the queue
+	          })
+	          .catch(function () {
+	            // if the worker crashed and terminated, remove it from the pool
+	            if (worker.terminated) {
+	              me._removeWorker(worker);
+	              // If minWorkers set, spin up new workers to replace the crashed ones
+	              me._ensureMinWorkers();
+	            }
+	            me._next(); // trigger next task in the queue
+	          });
 	      }
 	    }
 	  }
@@ -382,7 +393,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // remove from the list with workers
 	  var index = this.workers.indexOf(worker);
-	  if (index != -1) this.workers.splice(index, 1);
+	  if (index != -1) {
+	    this.workers.splice(index, 1);
+	  }
 	};
 
 	/**
@@ -401,6 +414,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 
 	  this.workers = [];
+	};
+
+	/**
+	 * Ensures that a minimum of minWorkers is up and running
+	 * @private
+	 */
+	Pool.prototype._ensureMinWorkers = function() {
+	  if (this.minWorkers) {
+	    for(var i = this.workers.length; i < this.minWorkers; i++) {
+	      this.workers.push(new WorkerHandler(this.script));
+	    }
+	  }
 	};
 
 	/**
@@ -799,26 +824,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  var me = this;
+
+	  // The ready message is only sent if the worker.add method is called (And the default script is not used)
+	  if (!script) {
+	    this.worker.ready = true;
+	  }
+
+	  // queue for requests that are received before the worker is ready
+	  this.requestQueue = [];
 	  this.worker.on('message', function (response) {
-	    // find the task from the processing queue, and run the tasks callback
-	    var id = response.id;
-	    var task = me.processing[id];
-	    if (task) {
-	      // remove the task from the queue
-	      delete me.processing[id];
-
-	      // test if we need to terminate
-	      if (me.terminating) {
-	        // complete worker termination if all tasks are finished
-	        me.terminate();
-	      }
-
-	      // resolve the task's promise
-	      if (response.error) {
-	        task.resolver.reject(objectToError(response.error));
-	      }
-	      else {
-	        task.resolver.resolve(response.result);
+	    if (typeof response === 'string' && response === 'ready') {
+	      me.worker.ready = true;
+	      dispatchQueuedRequests();
+	    } else {
+	      // find the task from the processing queue, and run the tasks callback
+	      var id = response.id;
+	      var task = me.processing[id];
+	      if (task) {
+	        // remove the task from the queue
+	        delete me.processing[id];
+	       
+	        // test if we need to terminate
+	        if (me.terminating) {
+	          // complete worker termination if all tasks are finished
+	          me.terminate();
+	        }
+	       
+	        // resolve the task's promise
+	        if (response.error) {
+	          task.resolver.reject(objectToError(response.error));
+	        }
+	        else {
+	          task.resolver.resolve(response.result);
+	        }
 	      }
 	    }
 	  });
@@ -833,6 +871,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	    me.processing = {};
+	  }
+
+	  // send all queued requests to worker
+	  function dispatchQueuedRequests()
+	  {
+	    me.requestQueue.forEach(me.worker.send.bind(me.worker));
+	    me.requestQueue = [];
 	  }
 
 	  // listen for worker messages error and exit
@@ -887,10 +932,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (this.terminated) {
 	    resolver.reject(new Error('Worker is terminated'));
-	  }
-	  else {
+	  } else if (this.worker.ready) {
 	    // send the request to the worker
 	    this.worker.send(request);
+	  } else {
+	    this.requestQueue.push(request);    
 	  }
 
 	  // on cancellation, force the worker to terminate
@@ -972,7 +1018,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * This file is automatically generated,
 	 * changes made in this file will be overwritten.
 	 */
-	module.exports = "!function(r){function e(n){if(o[n])return o[n].exports;var t=o[n]={exports:{},id:n,loaded:!1};return r[n].call(t.exports,t,t.exports,e),t.loaded=!0,t.exports}var o={};return e.m=r,e.c=o,e.p=\"\",e(0)}([function(module,exports,__webpack_require__){function convertError(r){return Object.getOwnPropertyNames(r).reduce(function(e,o){return Object.defineProperty(e,o,{value:r[o],enumerable:!0})},{})}function isPromise(r){return r&&\"function\"==typeof r.then&&\"function\"==typeof r.catch}var worker={};if(\"undefined\"!=typeof self&&\"function\"==typeof postMessage&&\"function\"==typeof addEventListener)worker.on=function(r,e){addEventListener(r,function(r){e(r.data)})},worker.send=function(r){postMessage(r)};else{if(\"undefined\"==typeof process)throw new Error(\"Script must be executed as a worker\");worker.on=process.on.bind(process),worker.send=process.send.bind(process)}worker.methods={},worker.methods.run=function run(fn,args){var f=eval(\"(\"+fn+\")\");return f.apply(f,args)},worker.methods.methods=function(){return Object.keys(worker.methods)},worker.on(\"message\",function(r){try{var e=worker.methods[r.method];if(!e)throw new Error('Unknown method \"'+r.method+'\"');var o=e.apply(e,r.params);isPromise(o)?o.then(function(e){worker.send({id:r.id,result:e,error:null})}).catch(function(e){worker.send({id:r.id,result:null,error:convertError(e)})}):worker.send({id:r.id,result:o,error:null})}catch(e){worker.send({id:r.id,result:null,error:convertError(e)})}}),worker.register=function(r){if(r)for(var e in r)r.hasOwnProperty(e)&&(worker.methods[e]=r[e])},exports.add=worker.register}]);";
+	module.exports = "!function(r){function e(n){if(o[n])return o[n].exports;var t=o[n]={exports:{},id:n,loaded:!1};return r[n].call(t.exports,t,t.exports,e),t.loaded=!0,t.exports}var o={};return e.m=r,e.c=o,e.p=\"\",e(0)}([function(module,exports,__webpack_require__){function convertError(r){return Object.getOwnPropertyNames(r).reduce(function(e,o){return Object.defineProperty(e,o,{value:r[o],enumerable:!0})},{})}function isPromise(r){return r&&\"function\"==typeof r.then&&\"function\"==typeof r.catch}var worker={};if(\"undefined\"!=typeof self&&\"function\"==typeof postMessage&&\"function\"==typeof addEventListener)worker.on=function(r,e){addEventListener(r,function(r){e(r.data)})},worker.send=function(r){postMessage(r)};else{if(\"undefined\"==typeof process)throw new Error(\"Script must be executed as a worker\");worker.on=process.on.bind(process),worker.send=process.send.bind(process)}worker.methods={},worker.methods.run=function run(fn,args){var f=eval(\"(\"+fn+\")\");return f.apply(f,args)},worker.methods.methods=function(){return Object.keys(worker.methods)},worker.on(\"message\",function(r){try{var e=worker.methods[r.method];if(!e)throw new Error('Unknown method \"'+r.method+'\"');var o=e.apply(e,r.params);isPromise(o)?o.then(function(e){worker.send({id:r.id,result:e,error:null})}).catch(function(e){worker.send({id:r.id,result:null,error:convertError(e)})}):worker.send({id:r.id,result:o,error:null})}catch(e){worker.send({id:r.id,result:null,error:convertError(e)})}}),worker.register=function(r){if(r)for(var e in r)r.hasOwnProperty(e)&&(worker.methods[e]=r[e]);worker.send(\"ready\")},exports.add=worker.register}]);";
 
 
 /***/ },
@@ -1131,6 +1177,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} methods
 	 */
 	worker.register = function (methods) {
+
 	  if (methods) {
 	    for (var name in methods) {
 	      if (methods.hasOwnProperty(name)) {
@@ -1138,6 +1185,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  }
+
+	  worker.send('ready');
+
 	};
 
 	if (true) {
