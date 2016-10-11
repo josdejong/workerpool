@@ -9,6 +9,7 @@ https://github.com/josdejong/workerpool
   using AMD modules. Thanks @natlibfi-arlehiko.
 - Implemented environment variables `platform`, `isMainThread`, and `cpus`.
   Thanks @natlibfi-arlehiko.
+- Implemented option `minWorkers`. Thanks @sergei202.
 
 
 ## 2016-09-18, version 2.0.0
