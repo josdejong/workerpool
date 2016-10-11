@@ -377,6 +377,41 @@ describe('Pool', function () {
       pool.clear();
     });
 
+    it('should throw an error on invalid type or number of minWorkers', function () {
+      assert.throws(function () {
+        new Pool({minWorkers: 'a string'});
+      }, TypeError);
+
+      assert.throws(function () {
+        new Pool({minWorkers: 2.5});
+      }, TypeError);
+
+      assert.throws(function () {
+        new Pool({maxWorkers: -1});
+      }, TypeError);
+    });
+
+    it('should create number of cpus minus one when minWorkers set to \'max\'', function () {
+      var pool = new Pool({minWorkers:'max'});
+
+      var cpus = require('os').cpus();
+      assert.equal(pool.workers.length, cpus.length - 1);
+
+      pool.clear();
+    });
+
+    it('should increase maxWorkers to match minWorkers', function () {
+      var pool = new Pool({minWorkers: 16});
+
+      for(var i=0;i<20;i++) pool.exec(add, [i, i*2]);
+
+      assert.equal(pool.minWorkers, 16);
+      assert.equal(pool.maxWorkers, 16);
+      assert.equal(pool.workers.length, 16);
+      assert.equal(pool.tasks.length, 4);
+
+      pool.clear();
+    });
   });
 
   it.skip('should handle crashed workers (2)', function (done) {
