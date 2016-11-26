@@ -468,6 +468,56 @@ describe('Pool', function () {
     assert.equal(pool.workers.length, 0);
   });
 
+
+  it('should return statistics', function () {
+    var pool = new Pool({maxWorkers: 4});
+
+    function test() {
+      return new Promise(function (resolve, reject) {
+        setTimeout(resolve, 100);
+      });
+    }
+
+    function testError() {
+      return new Promise(function (resolve, reject) {
+        throw new Error('Test error')
+      });
+    }
+
+    assert.deepEqual(pool.stats(), {totalWorkers: 0, busyWorkers: 0, idleWorkers: 0, pendingTasks: 0, activeTasks: 0});
+
+    var promise = pool.exec(test)
+        .then(function () {
+          assert.deepEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 0, idleWorkers: 1, pendingTasks: 0, activeTasks: 0 });
+
+          // start six tasks (max workers is 4, so we should get pending tasks)
+          var all = Promise.all([
+            pool.exec(test),
+            pool.exec(test),
+            pool.exec(test),
+            pool.exec(test),
+            pool.exec(test),
+            pool.exec(test)
+          ]);
+
+          assert.deepEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 4, idleWorkers: 0, pendingTasks: 2, activeTasks: 4});
+
+          return all;
+        })
+        .then(function () {
+          assert.deepEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0 });
+
+          return pool.exec(testError)
+        })
+        .catch(function () {
+          assert.deepEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0});
+        });
+
+    assert.deepEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 1, idleWorkers: 0, pendingTasks: 0, activeTasks: 1});
+
+    return promise;
+  });
+
   it('should throw an error in case of wrong type of arguments in function exec', function () {
     var pool = new Pool();
     assert.throws(function () {pool.exec()}, TypeError);

@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet released, version 2.2.0
+
+- Implemented #18: method `pool.stats()`.
+
+
 ## 2016-10-11, version 2.1.0
 
 - Implemented support for registering the workers methods asynchronously.

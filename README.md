@@ -180,8 +180,25 @@ A worker pool contains the following functions:
   Execute a function on a worker with given arguments.
   - When `method` is a string, a method with this name must exist at the worker and must be registered to make it accessible via the pool. The function will be executed on the worker with given parameters.
   - When `method` is a function, the provided function `fn` will be stringified, send to the worker, and executed there with the provided parameters. The provided function must be static, it must not depend on variables in a surrounding scope.
+
 - `Pool.proxy() : Promise.<Object, Error>`<br>
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
+
+- `Pool.stats() : Object`<br>
+   Retrieve statistics on workers, and active and pending tasks.
+
+   Returns an object containing the following properties:
+
+   ```json
+   {
+     totalWorkers: 0,
+     busyWorkers: 0,
+     idleWorkers: 0,
+     pendingTasks: 0,
+     activeTasks: 0
+   }
+   ```
+
 - `Pool.clear([force: boolean])`<br>
   Clear all workers from the pool. If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks.
 
