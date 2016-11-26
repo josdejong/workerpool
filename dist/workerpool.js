@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 2.1.0
- * @date    2016-10-11
+ * @version 2.2.0
+ * @date    2016-11-26
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -319,7 +319,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Grab the first task from the queue, find a free worker, and assign the
 	 * worker to the task.
-	 * @private
+	 * @protected
 	 */
 	Pool.prototype._next = function () {
 	  if (this.tasks.length > 0) {
@@ -385,7 +385,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Remove a worker from the pool. For example after a worker terminated for
 	 * whatever reason
 	 * @param {WorkerHandler} worker
-	 * @private
+	 * @protected
 	 */
 	Pool.prototype._removeWorker = function(worker) {
 	  // terminate the worker (if not already terminated)
@@ -417,8 +417,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
+	 * Retrieve statistics on tasks and workers.
+	 * @return {{totalWorkers: number, busyWorkers: number, idleWorkers: number, pendingTasks: number, activeTasks: number}} Returns an object with statistics
+	 */
+	Pool.prototype.stats = function () {
+	  var totalWorkers = this.workers.length;
+	  var busyWorkers = this.workers.filter(function (worker) {
+	    return worker.busy();
+	  }).length;
+
+	  return {
+	    totalWorkers:  totalWorkers,
+	    busyWorkers:   busyWorkers,
+	    idleWorkers:   totalWorkers - busyWorkers,
+
+	    pendingTasks:  this.tasks.length,
+	    activeTasks:   busyWorkers
+	  };
+	};
+
+	/**
 	 * Ensures that a minimum of minWorkers is up and running
-	 * @private
+	 * @protected
 	 */
 	Pool.prototype._ensureMinWorkers = function() {
 	  if (this.minWorkers) {
@@ -942,7 +962,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // on cancellation, force the worker to terminate
 	  var me = this;
 	  resolver.promise
-	    //.catch(Promise.CancellationError, function(error) { // TODO: not yet supported
 	      .catch(function (error) {
 	        if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
 	          // remove this task from the queue. It is already rejected (hence this

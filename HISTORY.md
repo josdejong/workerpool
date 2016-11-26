@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet released, version 2.2.0
+## 2016-11-26, version 2.2.0
 
 - Implemented #18: method `pool.stats()`.
 
