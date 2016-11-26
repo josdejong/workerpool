@@ -189,7 +189,7 @@ A worker pool contains the following functions:
 
    Returns an object containing the following properties:
 
-   ```json
+   ```js
    {
      totalWorkers: 0,
      busyWorkers: 0,
