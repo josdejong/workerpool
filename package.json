@@ -29,5 +29,8 @@
     "mocha": "^2.5.3",
     "uglify-js": "^2.6.4",
     "webpack": "^1.13.1"
+  },
+  "dependencies": {
+    "object-assign": "^4.1.1"
   }
 }
