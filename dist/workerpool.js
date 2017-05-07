@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 2.2.0
- * @date    2016-11-26
+ * @version 2.2.1
+ * @date    2017-05-07
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -77,7 +77,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	var environment = __webpack_require__(1);
 
@@ -97,7 +97,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} [methods]
 	 */
 	exports.worker = function worker(methods) {
-	  var worker = __webpack_require__(8);
+	  var worker = __webpack_require__(9);
 	  worker.add(methods);
 	};
 
@@ -111,9 +111,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.isMainThread = environment.isMainThread;
 	exports.cpus = environment.cpus;
 
-/***/ },
+/***/ }),
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	// used to prevent webpack from resolving requires on node libs
 	var node = {require: __webpack_require__(2)};
@@ -129,9 +129,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  ? self.navigator.hardwareConcurrency
 	  : node.require('os').cpus().length;  // call node.require to prevent `os` to be required when loading with AMD
 
-/***/ },
+/***/ }),
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	var map = {
 		"./Pool": 3,
@@ -142,12 +142,12 @@ return /******/ (function(modules) { // webpackBootstrap
 		"./WorkerHandler.js": 5,
 		"./environment": 1,
 		"./environment.js": 1,
-		"./generated/embeddedWorker": 6,
-		"./generated/embeddedWorker.js": 6,
-		"./header": 7,
-		"./header.js": 7,
-		"./worker": 8,
-		"./worker.js": 8
+		"./generated/embeddedWorker": 7,
+		"./generated/embeddedWorker.js": 7,
+		"./header": 8,
+		"./header.js": 8,
+		"./worker": 9,
+		"./worker.js": 9
 	};
 	function webpackContext(req) {
 		return __webpack_require__(webpackContextResolve(req));
@@ -163,9 +163,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	webpackContext.id = 2;
 
 
-/***/ },
+/***/ }),
 /* 3 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	var Promise = __webpack_require__(4);
 	var WorkerHandler = __webpack_require__(5);
@@ -189,11 +189,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.workers = [];  // queue with all workers
 	  this.tasks = [];    // queue with tasks awaiting execution
 
+	  options = options || {};
+
+	  this.forkArgs = options.forkArgs || [];
+	  this.forkOpts = options.forkOpts || {};
+	  this.debugPortStart = options.debugPortStart || 43210;
+
 	  // configuration
 	  if (options && 'maxWorkers' in options) {
-	    if (!isNumber(options.maxWorkers) || !isInteger(options.maxWorkers) || options.maxWorkers < 1) {
-	      throw new TypeError('Option maxWorkers must be a positive integer number');
-	    }
+	    validateMaxWorkers(options.maxWorkers);
 	    this.maxWorkers = options.maxWorkers;
 	  }
 	  else {
@@ -201,12 +205,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  if (options && 'minWorkers' in options) {
-	    if(options.minWorkers==='max') {
+	    if(options.minWorkers === 'max') {
 	      this.minWorkers = Math.max((environment.cpus || 4) - 1, 1);
 	    } else {
-	      if (!isNumber(options.minWorkers) || !isInteger(options.minWorkers) || options.minWorkers < 0) {
-	        throw new TypeError('Option minWorkers must be a positive integer number');
-	      }
+	      validateMinWorkers(options.minWorkers);
 	      this.minWorkers = options.minWorkers;
 	      this.maxWorkers = Math.max(this.minWorkers, this.maxWorkers);     // in case minWorkers is higher than maxWorkers
 	    }
@@ -373,7 +375,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (this.workers.length < this.maxWorkers) {
 	    // create a new worker
-	    worker = new WorkerHandler(this.script);
+	    worker = new WorkerHandler(this.script, {
+	      forkArgs: this.forkArgs,
+	      forkOpts: this.forkOpts,
+	      debugPort: this.debugPortStart + this.workers.length
+	    });
 	    this.workers.push(worker);
 	    return worker;
 	  }
@@ -443,10 +449,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	Pool.prototype._ensureMinWorkers = function() {
 	  if (this.minWorkers) {
 	    for(var i = this.workers.length; i < this.minWorkers; i++) {
-	      this.workers.push(new WorkerHandler(this.script));
+	      this.workers.push(new WorkerHandler(this.script, {
+	        forkArgs: this.forkArgs,
+	        forkOpts: this.forkOpts,
+	        debugPort: this.debugPortStart + i
+	      }));
 	    }
 	  }
 	};
+
+	/**
+	 * Ensure that the maxWorkers option is an integer >= 1
+	 * @param {*} maxWorkers
+	 * @returns {boolean} returns true maxWorkers has a valid value
+	 */
+	function validateMaxWorkers(maxWorkers) {
+	  if (!isNumber(maxWorkers) || !isInteger(maxWorkers) || maxWorkers < 1) {
+	    throw new TypeError('Option maxWorkers must be an integer number >= 1');
+	  }
+	}
+
+	/**
+	 * Ensure that the minWorkers option is an integer >= 0
+	 * @param {*} minWorkers
+	 * @returns {boolean} returns true when minWorkers has a valid value
+	 */
+	function validateMinWorkers(minWorkers) {
+	  if (!isNumber(minWorkers) || !isInteger(minWorkers) || minWorkers < 0) {
+	    throw new TypeError('Option minWorkers must be an integer number >= 0');
+	  }
+	}
 
 	/**
 	 * Test whether a variable is a number
@@ -469,9 +501,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Pool;
 
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	'use strict';
 
@@ -758,11 +790,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Promise;
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	var Promise = __webpack_require__(4);
+	var assign = __webpack_require__(6);
 
 	// determine environment
 	var environment = __webpack_require__(1);
@@ -782,7 +815,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    // use embedded worker.js
-	    var blob = new Blob([__webpack_require__(6)], {type: 'text/javascript'});
+	    var blob = new Blob([__webpack_require__(7)], {type: 'text/javascript'});
 	    return window.URL.createObjectURL(blob);
 	  }
 	  else {
@@ -790,6 +823,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return __dirname + '/worker.js';
 	  }
 	}
+
+	// add debug flags to child processes if the node inspector is active
+	function resolveForkOptions(opts) {
+	  opts = opts || {};
+
+	  const execArgv = [];
+
+	  const inspectorActive = process.execArgv
+	    .indexOf('--inspect') !== -1;
+	  const debugBrk = process.execArgv
+	    .indexOf('--debug-brk') !== -1;
+
+	  if (inspectorActive) {
+	    execArgv.push('--inspect=' + opts.debugPort);
+
+	    if (debugBrk) {
+	      execArgv.push('--debug-brk');
+	    }
+	  }
+
+	  return assign({}, opts, {
+	    forkArgs: opts.forkArgs,
+	    forkOpts: assign({}, opts.forkOpts, {
+	      execArgv: (opts.forkOpts && opts.forkOpts.execArgv || [])
+	        .concat(execArgv)
+	    })
+	  });
+	};
 
 	/**
 	 * Converts a serialized error to Error
@@ -814,8 +875,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *                          function run will be created.
 	 * @constructor
 	 */
-	function WorkerHandler(script) {
+	function WorkerHandler(script, options) {
 	  this.script = script || getDefaultWorker();
+
+	  var forkOptions;
 
 	  if (environment.platform == 'browser') {
 	    // check whether Worker is supported by the browser
@@ -839,8 +902,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  else {
 	    // on node.js, create a child process
+	    forkOptions = resolveForkOptions(options);
+
 	    // call node.require to prevent child_process to be required when loading with AMD
-	    this.worker = node.require('child_process').fork(this.script);
+	    this.worker = node.require('child_process').fork(
+	      this.script,
+	      forkOptions.forkArgs,
+	      forkOptions.forkOpts
+	    );
 	  }
 
 	  var me = this;
@@ -1028,21 +1097,117 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = WorkerHandler;
 
 
-/***/ },
+/***/ }),
 /* 6 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
+
+	/*
+	object-assign
+	(c) Sindre Sorhus
+	@license MIT
+	*/
+
+	'use strict';
+	/* eslint-disable no-unused-vars */
+	var getOwnPropertySymbols = Object.getOwnPropertySymbols;
+	var hasOwnProperty = Object.prototype.hasOwnProperty;
+	var propIsEnumerable = Object.prototype.propertyIsEnumerable;
+
+	function toObject(val) {
+		if (val === null || val === undefined) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	function shouldUseNative() {
+		try {
+			if (!Object.assign) {
+				return false;
+			}
+
+			// Detect buggy property enumeration order in older V8 versions.
+
+			// https://bugs.chromium.org/p/v8/issues/detail?id=4118
+			var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
+			test1[5] = 'de';
+			if (Object.getOwnPropertyNames(test1)[0] === '5') {
+				return false;
+			}
+
+			// https://bugs.chromium.org/p/v8/issues/detail?id=3056
+			var test2 = {};
+			for (var i = 0; i < 10; i++) {
+				test2['_' + String.fromCharCode(i)] = i;
+			}
+			var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
+				return test2[n];
+			});
+			if (order2.join('') !== '0123456789') {
+				return false;
+			}
+
+			// https://bugs.chromium.org/p/v8/issues/detail?id=3056
+			var test3 = {};
+			'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
+				test3[letter] = letter;
+			});
+			if (Object.keys(Object.assign({}, test3)).join('') !==
+					'abcdefghijklmnopqrst') {
+				return false;
+			}
+
+			return true;
+		} catch (err) {
+			// We don't expect any of the above to throw, but better to be safe.
+			return false;
+		}
+	}
+
+	module.exports = shouldUseNative() ? Object.assign : function (target, source) {
+		var from;
+		var to = toObject(target);
+		var symbols;
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = Object(arguments[s]);
+
+			for (var key in from) {
+				if (hasOwnProperty.call(from, key)) {
+					to[key] = from[key];
+				}
+			}
+
+			if (getOwnPropertySymbols) {
+				symbols = getOwnPropertySymbols(from);
+				for (var i = 0; i < symbols.length; i++) {
+					if (propIsEnumerable.call(from, symbols[i])) {
+						to[symbols[i]] = from[symbols[i]];
+					}
+				}
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
 
 	/**
 	 * embeddedWorker.js contains an embedded version of worker.js.
 	 * This file is automatically generated,
 	 * changes made in this file will be overwritten.
 	 */
-	module.exports = "!function(r){function e(n){if(o[n])return o[n].exports;var t=o[n]={exports:{},id:n,loaded:!1};return r[n].call(t.exports,t,t.exports,e),t.loaded=!0,t.exports}var o={};return e.m=r,e.c=o,e.p=\"\",e(0)}([function(module,exports,__webpack_require__){function convertError(r){return Object.getOwnPropertyNames(r).reduce(function(e,o){return Object.defineProperty(e,o,{value:r[o],enumerable:!0})},{})}function isPromise(r){return r&&\"function\"==typeof r.then&&\"function\"==typeof r.catch}var worker={};if(\"undefined\"!=typeof self&&\"function\"==typeof postMessage&&\"function\"==typeof addEventListener)worker.on=function(r,e){addEventListener(r,function(r){e(r.data)})},worker.send=function(r){postMessage(r)};else{if(\"undefined\"==typeof process)throw new Error(\"Script must be executed as a worker\");worker.on=process.on.bind(process),worker.send=process.send.bind(process)}worker.methods={},worker.methods.run=function run(fn,args){var f=eval(\"(\"+fn+\")\");return f.apply(f,args)},worker.methods.methods=function(){return Object.keys(worker.methods)},worker.on(\"message\",function(r){try{var e=worker.methods[r.method];if(!e)throw new Error('Unknown method \"'+r.method+'\"');var o=e.apply(e,r.params);isPromise(o)?o.then(function(e){worker.send({id:r.id,result:e,error:null})}).catch(function(e){worker.send({id:r.id,result:null,error:convertError(e)})}):worker.send({id:r.id,result:o,error:null})}catch(e){worker.send({id:r.id,result:null,error:convertError(e)})}}),worker.register=function(r){if(r)for(var e in r)r.hasOwnProperty(e)&&(worker.methods[e]=r[e]);worker.send(\"ready\")},exports.add=worker.register}]);";
+	module.exports = "!function(r){function e(n){if(o[n])return o[n].exports;var t=o[n]={exports:{},id:n,loaded:!1};return r[n].call(t.exports,t,t.exports,e),t.loaded=!0,t.exports}var o={};e.m=r,e.c=o,e.p=\"\",e(0)}([function(module,exports,__webpack_require__){function convertError(r){return Object.getOwnPropertyNames(r).reduce(function(e,o){return Object.defineProperty(e,o,{value:r[o],enumerable:!0})},{})}function isPromise(r){return r&&\"function\"==typeof r.then&&\"function\"==typeof r.catch}var worker={};if(\"undefined\"!=typeof self&&\"function\"==typeof postMessage&&\"function\"==typeof addEventListener)worker.on=function(r,e){addEventListener(r,function(r){e(r.data)})},worker.send=function(r){postMessage(r)};else{if(\"undefined\"==typeof process)throw new Error(\"Script must be executed as a worker\");worker.on=process.on.bind(process),worker.send=process.send.bind(process)}worker.methods={},worker.methods.run=function run(fn,args){var f=eval(\"(\"+fn+\")\");return f.apply(f,args)},worker.methods.methods=function(){return Object.keys(worker.methods)},worker.on(\"message\",function(r){try{var e=worker.methods[r.method];if(!e)throw new Error('Unknown method \"'+r.method+'\"');var o=e.apply(e,r.params);isPromise(o)?o.then(function(e){worker.send({id:r.id,result:e,error:null})}).catch(function(e){worker.send({id:r.id,result:null,error:convertError(e)})}):worker.send({id:r.id,result:o,error:null})}catch(e){worker.send({id:r.id,result:null,error:convertError(e)})}}),worker.register=function(r){if(r)for(var e in r)r.hasOwnProperty(e)&&(worker.methods[e]=r[e]);worker.send(\"ready\")},exports.add=worker.register}]);";
 
 
-/***/ },
-/* 7 */
-/***/ function(module, exports) {
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
 
 	/**
 	 * workerpool.js
@@ -1070,9 +1235,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * worker must be started as a child process or a web worker.
@@ -1214,7 +1379,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 
-/***/ }
+/***/ })
 /******/ ])
 });
 ;

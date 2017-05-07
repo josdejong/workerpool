@@ -42,7 +42,7 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * worker must be started as a child process or a web worker.
@@ -184,5 +184,5 @@
 	}
 
 
-/***/ }
+/***/ })
 /******/ ]);
