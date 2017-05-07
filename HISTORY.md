@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2017-05-07, version 2.2.1
+
+- Fixed #2 and #19: support for debugging child processes. Thanks @tptee.
+
+
 ## 2016-11-26, version 2.2.0
 
 - Implemented #18: method `pool.stats()`.
