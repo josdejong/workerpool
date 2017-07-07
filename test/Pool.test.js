@@ -298,6 +298,73 @@ describe('Pool', function () {
         });
   });
 
+  it('should start timeout timer of a task once the task is taken from the queue (1)', function (done) {
+    var pool = new Pool({maxWorkers: 1});
+    var delay = 50
+
+    function sleep() {
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve ('done :)')
+        }, 100) // 2 * delay
+      })
+    }
+
+    function doNothing() {
+      return 'ready'
+    }
+
+    // add a task
+    pool.exec(sleep)
+
+    // add a second task, will be queued until the first finishes
+    // the timeout is shorter than the currently executing task and longer than
+    // the queued task, so it should not timeout
+    pool.exec(doNothing)
+        .timeout(delay)
+        .then(function (result) {
+          assert.equal(result, 'ready');
+
+          done();
+        })
+        .catch(function (err) {
+          assert('promise should not throw');
+        });
+  });
+
+  it('should start timeout timer of a task once the task is taken from the queue (2)', function (done) {
+    var pool = new Pool({maxWorkers: 1});
+    var delay = 50
+    var start = Date.now()
+
+    function sleep() {
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve ('done :)')
+        }, 100) // 2 * delay
+      })
+    }
+
+    // add a task
+    pool.exec(sleep)
+
+    // add a second task, will be queued until the first finishes
+    pool.exec(sleep)
+        .timeout(delay)
+        .then(function (result) {
+          assert('promise should never resolve');
+        })
+        .catch(function (err) {
+          assert(err instanceof Promise.TimeoutError);
+
+          var end = Date.now()
+          var duration = end - start
+          console.log('duration', duration) // should be about 3 * delay
+
+          done();
+        });
+  });
+
   it('should handle crashed workers (1)', function (done) {
     var pool = new Pool({maxWorkers: 1});
 
