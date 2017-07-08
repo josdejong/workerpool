@@ -335,7 +335,6 @@ describe('Pool', function () {
   it('should start timeout timer of a task once the task is taken from the queue (2)', function (done) {
     var pool = new Pool({maxWorkers: 1});
     var delay = 50
-    var start = Date.now()
 
     function sleep() {
       return new Promise(function (resolve, reject) {
@@ -356,10 +355,6 @@ describe('Pool', function () {
         })
         .catch(function (err) {
           assert(err instanceof Promise.TimeoutError);
-
-          var end = Date.now()
-          var duration = end - start
-          console.log('duration', duration) // should be about 3 * delay
 
           done();
         });
