@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2017-07-08, version 2.2.2
+
+- Fixed #25: timer of a timeout starting when the task is created
+  instead of when the task is started. Thanks @eclipsesk for input.
+
+
 ## 2017-05-07, version 2.2.1
 
 - Fixed #2 and #19: support for debugging child processes. Thanks @tptee.

@@ -212,7 +212,7 @@ The function `Pool.exec` and the proxy functions all return a `Promise`. The pro
   A running task can be cancelled. The worker executing the task is enforced to terminate immediately.
   The promise will be rejected with a `Promise.CancellationError`.
 - `Promise.timeout(delay: number)`<br>
-  Cancel a running task when it is not resolved or rejected withing given delay in milliseconds.
+  Cancel a running task when it is not resolved or rejected withing given delay in milliseconds. The timer will start when the task is actually started, not when the task is created and queued.
   The worker executing the task is enforced to terminate immediately.
   The promise will be rejected with a `Promise.TimeoutError`.
 
@@ -373,7 +373,7 @@ To see the coverage results, open the generated report in your browser:
 
 ## License
 
-Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
+Copyright (C) 2014-2017 Jos de Jong <wjosdejong@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

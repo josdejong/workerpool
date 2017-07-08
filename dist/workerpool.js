@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 2.2.1
- * @date    2017-05-07
+ * @version 2.2.2
+ * @date    2017-07-08
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -257,11 +257,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var resolver = Promise.defer();
 
 	    // add a new task to the queue
-	    this.tasks.push({
+	    var tasks = this.tasks;
+	    var task = {
 	      method:  method,
 	      params:  params,
-	      resolver: resolver
-	    });
+	      resolver: resolver,
+	      timeout: null
+	    };
+	    tasks.push(task);
+
+	    // replace the timeout method of the Promise with our own,
+	    // which starts the timer as soon as the task is actually started
+	    var originalTimeout = resolver.promise.timeout
+	    resolver.promise.timeout = function timeout (delay) {
+	      if (tasks.indexOf(task) !== -1) {
+	        // task is still queued -> start the timer later on
+	        task.timeout = delay;
+	        return resolver.promise;
+	      }
+	      else {
+	        // task is already being executed -> start timer immediately
+	        return originalTimeout.call(resolver.promise, delay);
+	      }
+	    }
 
 	    // trigger task execution
 	    this._next();
@@ -337,7 +355,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // check if the task is still pending (and not cancelled -> promise rejected)
 	      if (task.resolver.promise.pending) {
 	        // send the request to the worker
-	        worker.exec(task.method, task.params, task.resolver)
+	        var promise = worker.exec(task.method, task.params, task.resolver)
 	          .then(function () {
 	            me._next(); // trigger next task in the queue
 	          })
@@ -350,6 +368,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            me._next(); // trigger next task in the queue
 	          });
+
+	        // start queued timer now
+	        if (typeof task.timeout === 'number') {
+	          promise.timeout(task.timeout);
+	        }
 	      }
 	    }
 	  }

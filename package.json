@@ -1,6 +1,6 @@
 {
   "name": "workerpool",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Offload tasks to a pool of workers on node.js and in the browser",
   "homepage": "https://github.com/josdejong/workerpool",
   "author": "Jos de Jong <wjosdejong@gmail.com> (https://github.com/josdejong)",
@@ -31,6 +31,6 @@
     "webpack": "^1.13.1"
   },
   "dependencies": {
-    "object-assign": "^4.1.1"
+    "object-assign": "4.1.1"
   }
 }
