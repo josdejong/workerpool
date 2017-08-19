@@ -19,7 +19,7 @@
   "scripts": {
     "build": "gulp",
     "watch": "gulp watch",
-    "test": "mocha test",
+    "test": "mocha test --timeout 10000",
     "coverage": "istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\""
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
     "gulp-util": "^3.0.7",
     "istanbul": "^0.4.4",
     "mocha": "^2.5.3",
-    "uglify-js": "^2.6.4",
+    "uglify-js": "2.8.29",
     "webpack": "^1.13.1"
   },
   "dependencies": {
