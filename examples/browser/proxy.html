@@ -15,10 +15,13 @@
   pool.proxy()
       .then(function (proxy) {
         // execute a function via the proxy
-        proxy.fibonacci(10)
-            .then(function (result) {
-              document.write('Result: ' + result + '<br>'); // outputs 55
-            });
+        return proxy.fibonacci(10);
+      })
+      .then(function (result) {
+        document.write('Result: ' + result + '<br>'); // outputs 55
+      })
+      .catch(function (err) {
+        document.write('Result: ' + err);
       });
 
 </script>

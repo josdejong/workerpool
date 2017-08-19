@@ -74,7 +74,11 @@ function add(a, b) {
 pool.exec(add, [3, 4])
     .then(function (result) {
       console.log('result', result); // outputs 7
-
+    })
+    .catch(function (err) {
+      console.error(err);
+    })
+    .then(function () {
       pool.clear(); // clear all workers when done
     });
 ```
@@ -115,17 +119,27 @@ var pool = workerpool.pool(__dirname + '/myWorker.js');
 pool.exec('fibonacci', [10])
     .then(function (result) {
       console.log('Result: ' + result); // outputs 55
-
+    })
+    .catch(function (err) {
+      console.error(err);
+    })
+    .then(function () {
       pool.clear(); // clear all workers when done
     });
 
 // or run registered functions on the worker via a proxy:
 pool.proxy()
     .then(function (worker) {
-      worker.fibonacci(10)
-          .then(function (result) {
-            console.log('Result: ' + result); // outputs 55
-          });
+      return worker.fibonacci(10);
+    })
+    .then(function (result) {
+      console.log('Result: ' + result); // outputs 55
+    })
+    .catch(function (err) {
+      console.error(err);
+    })
+    .then(function () {
+      pool.clear(); // clear all workers when done
     });
 ```
 
@@ -231,6 +245,9 @@ var pool1 = workerpool.pool();
 pool1.exec(add, [2, 4])
     .then(function (result) {
       console.log(result); // will output 6
+    })
+    .catch(function (err) {
+      console.error(err);
     });
 
 // create a dedicated worker
@@ -240,15 +257,21 @@ var pool2 = workerpool.pool(__dirname + '/myWorker.js');
 pool2.exec('fibonacci', [10])
     .then(function (result) {
       console.log(result); // will output 55
+    })
+    .catch(function (err) {
+      console.error(err);
     });
 
 // create a proxy to myWorker.js
 pool2.proxy()
     .then(function (myWorker) {
-      myWorker.fibonacci(10)
-          .then(function (result) {
-            console.log(result); // will output 55
-          });
+      return myWorker.fibonacci(10)
+    })
+    .then(function (result) {
+      console.log(result); // will output 55
+    })
+    .catch(function (err) {
+      console.error(err);
     });
 
 // create a pool with a specified maximum number of workers

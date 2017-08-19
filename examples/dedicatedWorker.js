@@ -7,6 +7,10 @@ var pool = workerpool.pool(__dirname + '/workers/crossWorker.js');
 pool.exec('fibonacci', [10])
     .then(function (result) {
       console.log('Result: ' + result); // outputs 55
-
+    })
+    .catch(function (err) {
+      console.error(err);
+    })
+    .then(function () {
       pool.clear(); // clear all workers when done
     });

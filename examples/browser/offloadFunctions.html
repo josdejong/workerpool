@@ -20,6 +20,9 @@
   pool.exec(add, [3, 4])
       .then(function (result) {
         document.write('Result: ' + result); // outputs 7
+      })
+      .catch(function (err) {
+        document.write('Error: ' +  err);
       });
 
 </script>

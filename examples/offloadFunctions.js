@@ -12,6 +12,10 @@ function add(a, b) {
 pool.exec(add, [3, 4])
     .then(function (result) {
       console.log('result', result); // outputs 7
-
+    })
+    .catch(function (err) {
+      console.error(err);
+    })
+    .then(function () {
       pool.clear(); // clear all workers when done
     });
