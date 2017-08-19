@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2017-08-19, version 2.2.3
+
+- Updated all examples to neatly include `.catch(...)` callbacks.
+
+
 ## 2017-07-08, version 2.2.2
 
 - Fixed #25: timer of a timeout starting when the task is created
