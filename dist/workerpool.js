@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 2.2.3
- * @date    2017-08-19
+ * @version 2.2.4
+ * @date    2017-08-20
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -851,13 +851,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	function resolveForkOptions(opts) {
 	  opts = opts || {};
 
-	  const execArgv = [];
+	  var processExecArgv = process.execArgv.join(' ');
+	  var inspectorActive = processExecArgv.indexOf('--inspect') !== -1;
+	  var debugBrk = processExecArgv.indexOf('--debug-brk') !== -1;
 
-	  const inspectorActive = process.execArgv
-	    .indexOf('--inspect') !== -1;
-	  const debugBrk = process.execArgv
-	    .indexOf('--debug-brk') !== -1;
-
+	  var execArgv = [];
 	  if (inspectorActive) {
 	    execArgv.push('--inspect=' + opts.debugPort);
 
@@ -873,7 +871,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        .concat(execArgv)
 	    })
 	  });
-	};
+	}
 
 	/**
 	 * Converts a serialized error to Error

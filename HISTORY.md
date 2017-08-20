@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2017-08-20, version 2.2.4
+
+- Fixed a debug issue: look for `--inspect` within argument strings,
+  instead of exact match. Thanks @jimsugg.
+
+
 ## 2017-08-19, version 2.2.3
 
 - Updated all examples to neatly include `.catch(...)` callbacks.
