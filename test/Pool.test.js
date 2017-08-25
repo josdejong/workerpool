@@ -519,15 +519,59 @@ describe('Pool', function () {
           assert.equal(result, 'ok');
 
           assert.equal(pool.workers.length, 0);
-
-          done();
         });
-
     assert.equal(pool.workers.length, 1);
 
-    pool.clear();
+    pool.terminateAndNotify(false, 1000)
+      .then(function() {
+        assert.equal(pool.workers.length, 0);
+        done();
+      });
+  });
+
+  it ('should clear all workers after multiple concurrent tasks are finished', function (done) {
+
+    var pool = new Pool({maxWorkers: 10});
 
     assert.equal(pool.workers.length, 0);
+
+    function test1() {
+      setTimeout(function() { console.log('test1'); }, 50);
+      return 'test 1 ok';
+    }
+    function test2() {
+      setTimeout(function() { console.log('test2'); }, 30);
+      return 'test 2 ok';
+    }
+    function test3() {
+      setTimeout(function() { console.log('test3'); }, 60);
+      return 'test 3 ok';
+    }
+    pool.exec(test1)
+      .then(function (result) {
+        assert.equal(result, 'test 1 ok');
+
+        assert.equal(pool.workers.length, 0);
+      });
+    pool.exec(test2)
+      .then(function (result) {
+        assert.equal(result, 'test 2 ok');
+
+        assert.equal(pool.workers.length, 0);
+      });
+    pool.exec(test3)
+      .then(function (result) {
+        assert.equal(result, 'test 3 ok');
+
+        assert.equal(pool.workers.length, 0);
+      });
+    assert.equal(pool.workers.length, 3);
+
+    pool.terminateAndNotify(false, 1000)
+      .then(function() {
+        assert.equal(pool.workers.length, 0);
+        done();
+      });
   });
 
 
