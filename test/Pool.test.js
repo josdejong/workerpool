@@ -522,7 +522,7 @@ describe('Pool', function () {
         });
     assert.equal(pool.workers.length, 1);
 
-    pool.terminateAndNotify(false, 1000)
+    pool.terminate(false, 1000)
       .then(function() {
         assert.equal(pool.workers.length, 0);
         done();
@@ -567,7 +567,7 @@ describe('Pool', function () {
       });
     assert.equal(pool.workers.length, 3);
 
-    pool.terminateAndNotify(false, 1000)
+    pool.terminate(false, 1000)
       .then(function() {
         assert.equal(pool.workers.length, 0);
         done();

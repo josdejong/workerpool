@@ -5,7 +5,7 @@
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
  * @version 2.2.4
- * @date    2017-08-24
+ * @date    2017-08-25
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -441,23 +441,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *                                  after finishing all tasks currently in
 	 *                                  progress. If true, the workers will be
 	 *                                  terminated immediately.
+	 * @param {number} [timeout]        If provided and non-zero, worker termination promise will be rejected
+	 *                                  after timeout if worker process has not been terminated.
+	 * @return {Promise.<void, Error>}
 	 */
-	Pool.prototype.terminate = function (force) {
-	  var f = function (worker) {
-	    this._removeWorkerFromList(worker);
-	  };
-	  const removeWorker = f.bind(this);
-
-	  this.workers.forEach(function (worker) {
-	    worker.terminate(force, removeWorker);
-	  });
-	};
-	// DEPRECATED
-	Pool.prototype.clear = function (force) {
-	  this.terminate(force);
-	};
-
-	Pool.prototype.terminateAndNotify = function (force, timeout) {
+	Pool.prototype.terminate = function (force, timeout) {
 	  var f = function (worker) {
 	    this._removeWorkerFromList(worker);
 	  };
@@ -467,12 +455,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  const workers = this.workers.slice();
 	  workers.forEach(function (worker) {
 	    const termPromise = worker.terminateAndNotify(force, timeout)
-	      .then(function(terminatedWorker) {
-	        removeWorker(terminatedWorker);
-	      });
+	      .then(removeWorker);
 	    promises.push(termPromise);
 	  });
 	  return Promise.all(promises);
+	};
+
+	// DEPRECATED
+	/**
+	 * Close all active workers. Unlike terminate, this function does not return a promise.
+	 * @param force
+	 */
+	Pool.prototype.clear = function (force) {
+	  this.terminate(force).then();
 	};
 
 	/**
@@ -1153,6 +1148,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	};
 
+	/**
+	 * Terminate the worker, returning a Promise that resolves when the termination has been done.
+	 * @param {boolean} [force=false]   If false (default), the worker is terminated
+	 *                                  after finishing all tasks currently in
+	 *                                  progress. If true, the worker will be
+	 *                                  terminated immediately.
+	 * @param {number} [timeout]        If provided and non-zero, worker termination promise will be rejected
+	 *                                  after timeout if worker process has not been terminated.
+	 * @return {Promise.<WorkerHandler, Error>}
+	 */
 	WorkerHandler.prototype.terminateAndNotify = function (force, timeout) {
 	  var resolver = Promise.defer();
 	  if (timeout) {
