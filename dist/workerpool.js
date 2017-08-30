@@ -5,7 +5,7 @@
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
  * @version 2.2.4
- * @date    2017-08-25
+ * @date    2017-08-29
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -449,12 +449,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var f = function (worker) {
 	    this._removeWorkerFromList(worker);
 	  };
-	  const removeWorker = f.bind(this);
+	  var removeWorker = f.bind(this);
 
-	  const promises = [];
-	  const workers = this.workers.slice();
+	  var promises = [];
+	  var workers = this.workers.slice();
 	  workers.forEach(function (worker) {
-	    const termPromise = worker.terminateAndNotify(force, timeout)
+	    var termPromise = worker.terminateAndNotify(force, timeout)
 	      .then(removeWorker);
 	    promises.push(termPromise);
 	  });
@@ -467,7 +467,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param force
 	 */
 	Pool.prototype.clear = function (force) {
-	  this.terminate(force).then();
+	  this.terminate(force);
 	};
 
 	/**
@@ -867,7 +867,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return window.URL.createObjectURL(blob);
 	  }
 	  else {
-	    // use exteral worker.js in current directory
+	    // use external worker.js in current directory
 	    return __dirname + '/worker.js';
 	  }
 	}
@@ -978,13 +978,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (task) {
 	        // remove the task from the queue
 	        delete me.processing[id];
-	       
+
 	        // test if we need to terminate
 	        if (me.terminating) {
 	          // complete worker termination if all tasks are finished
 	          me.terminate();
 	        }
-	       
+
 	        // resolve the task's promise
 	        if (response.error) {
 	          task.resolver.reject(objectToError(response.error));
@@ -999,6 +999,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // reject all running tasks on worker error
 	  function onError(error) {
 	    me.terminated = true;
+	    if (me.terminating && me.terminationHandler) {
+	      me.terminationHandler(me);
+	    }
+	    me.terminating = false;
 
 	    for (var id in me.processing) {
 	      if (me.processing.hasOwnProperty(id)) {
@@ -1072,7 +1076,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // send the request to the worker
 	    this.worker.send(request);
 	  } else {
-	    this.requestQueue.push(request);    
+	    this.requestQueue.push(request);
 	  }
 
 	  // on cancellation, force the worker to terminate
