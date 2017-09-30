@@ -1,6 +1,6 @@
 {
   "name": "workerpool",
-  "version": "2.2.4",
+  "version": "2.3.0",
   "description": "Offload tasks to a pool of workers on node.js and in the browser",
   "homepage": "https://github.com/josdejong/workerpool",
   "author": "Jos de Jong <wjosdejong@gmail.com> (https://github.com/josdejong)",

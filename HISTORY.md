@@ -2,6 +2,14 @@
 https://github.com/josdejong/workerpool
 
 
+## 2017-09-30, version 2.3.0
+
+- New method `Pool.terminate(force, timeout)` which will replace
+  `Pool.clear(force)`. Thanks @jimsugg.
+- Fixed issue with never terminating zombie child processes.
+  Thanks @jimsugg.
+
+
 ## 2017-08-20, version 2.2.4
 
 - Fixed a debug issue: look for `--inspect` within argument strings,
