@@ -5,7 +5,7 @@
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
  * @version 2.2.4
- * @date    2017-08-20
+ * @date    2017-08-29
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -419,7 +419,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	Pool.prototype._removeWorker = function(worker) {
 	  // terminate the worker (if not already terminated)
 	  worker.terminate();
+	  this._removeWorkerFromList(worker);
+	};
 
+	/**
+	 * Remove a worker from the pool list.
+	 * @param {WorkerHandler} worker
+	 * @protected
+	 */
+	Pool.prototype._removeWorkerFromList = function(worker) {
 	  // remove from the list with workers
 	  var index = this.workers.indexOf(worker);
 	  if (index != -1) {
@@ -433,16 +441,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *                                  after finishing all tasks currently in
 	 *                                  progress. If true, the workers will be
 	 *                                  terminated immediately.
+	 * @param {number} [timeout]        If provided and non-zero, worker termination promise will be rejected
+	 *                                  after timeout if worker process has not been terminated.
+	 * @return {Promise.<void, Error>}
 	 */
-	// TODO: rename clear to terminate
-	Pool.prototype.clear = function (force) {
-	  this.workers.forEach(function (worker) {
-	    // TODO: implement callbacks when a worker is actually terminated, only then clear the worker from our array
-	    //       else we get zombie child processes :)
-	    worker.terminate(force);
-	  });
+	Pool.prototype.terminate = function (force, timeout) {
+	  var f = function (worker) {
+	    this._removeWorkerFromList(worker);
+	  };
+	  var removeWorker = f.bind(this);
 
-	  this.workers = [];
+	  var promises = [];
+	  var workers = this.workers.slice();
+	  workers.forEach(function (worker) {
+	    var termPromise = worker.terminateAndNotify(force, timeout)
+	      .then(removeWorker);
+	    promises.push(termPromise);
+	  });
+	  return Promise.all(promises);
+	};
+
+	// DEPRECATED
+	/**
+	 * Close all active workers. Unlike terminate, this function does not return a promise.
+	 * @param force
+	 */
+	Pool.prototype.clear = function (force) {
+	  this.terminate(force);
 	};
 
 	/**
@@ -842,7 +867,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return window.URL.createObjectURL(blob);
 	  }
 	  else {
-	    // use exteral worker.js in current directory
+	    // use external worker.js in current directory
 	    return __dirname + '/worker.js';
 	  }
 	}
@@ -953,13 +978,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (task) {
 	        // remove the task from the queue
 	        delete me.processing[id];
-	       
+
 	        // test if we need to terminate
 	        if (me.terminating) {
 	          // complete worker termination if all tasks are finished
 	          me.terminate();
 	        }
-	       
+
 	        // resolve the task's promise
 	        if (response.error) {
 	          task.resolver.reject(objectToError(response.error));
@@ -974,6 +999,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // reject all running tasks on worker error
 	  function onError(error) {
 	    me.terminated = true;
+	    if (me.terminating && me.terminationHandler) {
+	      me.terminationHandler(me);
+	    }
+	    me.terminating = false;
 
 	    for (var id in me.processing) {
 	      if (me.processing.hasOwnProperty(id)) {
@@ -1001,6 +1030,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this.terminating = false;
 	  this.terminated = false;
+	  this.terminationHandler = null;
 	  this.lastId = 0;
 	}
 
@@ -1046,7 +1076,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // send the request to the worker
 	    this.worker.send(request);
 	  } else {
-	    this.requestQueue.push(request);    
+	    this.requestQueue.push(request);
 	  }
 
 	  // on cancellation, force the worker to terminate
@@ -1080,8 +1110,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *                                  after finishing all tasks currently in
 	 *                                  progress. If true, the worker will be
 	 *                                  terminated immediately.
+	 * @param {function} [callback=null] If provided, will be called when process terminates.
 	 */
-	WorkerHandler.prototype.terminate = function (force) {
+	WorkerHandler.prototype.terminate = function (force, callback) {
 	  if (force) {
 	    // cancel all tasks in progress
 	    for (var id in this.processing) {
@@ -1092,6 +1123,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.processing = {};
 	  }
 
+	  if (typeof callback === 'function') {
+	    this.terminationHandler = callback;
+	  }
 	  if (!this.busy()) {
 	    // all tasks are finished. kill the worker
 	    if (this.worker) {
@@ -1108,11 +1142,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    this.terminating = false;
 	    this.terminated = true;
+	    if (this.terminationHandler) {
+	      this.terminationHandler(this);
+	    }
 	  }
 	  else {
 	    // we can't terminate immediately, there are still tasks being executed
 	    this.terminating = true;
 	  }
+	};
+
+	/**
+	 * Terminate the worker, returning a Promise that resolves when the termination has been done.
+	 * @param {boolean} [force=false]   If false (default), the worker is terminated
+	 *                                  after finishing all tasks currently in
+	 *                                  progress. If true, the worker will be
+	 *                                  terminated immediately.
+	 * @param {number} [timeout]        If provided and non-zero, worker termination promise will be rejected
+	 *                                  after timeout if worker process has not been terminated.
+	 * @return {Promise.<WorkerHandler, Error>}
+	 */
+	WorkerHandler.prototype.terminateAndNotify = function (force, timeout) {
+	  var resolver = Promise.defer();
+	  if (timeout) {
+	    resolver.promise.timeout = timeout;
+	  }
+	  this.terminate(force, function(worker) {
+	    resolver.resolve(worker);
+	  });
+	  return resolver.promise;
 	};
 
 	module.exports = WorkerHandler;

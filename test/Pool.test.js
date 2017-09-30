@@ -519,17 +519,117 @@ describe('Pool', function () {
           assert.equal(result, 'ok');
 
           assert.equal(pool.workers.length, 0);
-
-          done();
         });
-
     assert.equal(pool.workers.length, 1);
 
-    pool.clear();
-
-    assert.equal(pool.workers.length, 0);
+    pool.terminate(false, 1000)
+      .then(function() {
+        assert.equal(pool.workers.length, 0);
+        done();
+      });
   });
 
+  it ('should wait for all workers if pool is terminated before multiple concurrent tasks are finished', function (done) {
+
+    var pool = new Pool({maxWorkers: 10});
+
+    assert.equal(pool.workers.length, 0);
+
+    function test1() {
+      var start = new Date().getTime();
+      for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > 500) {
+          break;
+        }
+      }
+      return 'test 1 ok';
+    }
+    function test2() {
+      var start = new Date().getTime();
+      for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > 1000) {
+          break;
+        }
+      }
+      return 'test 2 ok';
+    }
+    function test3() {
+      var start = new Date().getTime();
+      for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > 200) {
+          break;
+        }
+      }
+      return 'test 3 ok';
+    }
+
+    var promises = [
+      pool.exec(test1),
+      pool.exec(test2),
+      pool.exec(test3)
+    ];
+    Promise.all(promises)
+      .then(function (results) {
+        assert.equal(results[0], 'test 1 ok');
+        assert.equal(results[1], 'test 2 ok');
+        assert.equal(results[3], 'test 3 ok');
+      })
+      .catch(function(error) {
+        assert.fail(error);
+      });
+    assert.equal(pool.workers.length, 3);
+
+    pool.terminate(false, 2000)
+      .then(function() {
+        assert.equal(pool.workers.length, 0);
+        done();
+      });
+  });
+
+  it ('should wait for all workers if pool is terminated before tasks are finished, even if a task fails', function (done) {
+
+    var pool = new Pool({maxWorkers: 10});
+
+    assert.equal(pool.workers.length, 0);
+
+    function test1() {
+      var start = new Date().getTime();
+      for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > 1000) {
+          break;
+        }
+      }
+      return 'test 1 ok';
+    }
+    function test2() {
+      var start = new Date().getTime();
+      for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > 100) {
+          break;
+        }
+      }
+      throw new Error('test 2 error');
+    }
+
+    var promises = [
+      pool.exec(test1),
+      pool.exec(test2)
+    ];
+    Promise.all(promises)
+      .then(function (results) {
+        assert.fail('test2 should have been rejected');
+      })
+      .catch(function(error) {
+        assert.equal(error.message, 'test 2 error');
+      });
+    assert.equal(pool.workers.length, 2);
+
+    pool.terminate(false, 2000)
+      .then(function() {
+        assert.equal(pool.workers.length, 0);
+        done();
+      });
+  });
 
   it('should return statistics', function () {
     var pool = new Pool({maxWorkers: 4});
