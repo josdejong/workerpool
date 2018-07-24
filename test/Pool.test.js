@@ -303,8 +303,8 @@ describe('Pool', function () {
             return 1;
         }
 
-        let oneDone = false;
-        let twoDone = false;
+        var oneDone = false;
+        var twoDone = false;
         function checkDone() {
             if (oneDone && twoDone) {
                 done();
