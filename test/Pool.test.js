@@ -274,7 +274,84 @@ describe('Pool', function () {
     reachedTheEnd = true;
   });
 
-  // TODO: test whether a task in the queue can be neatly cancelled
+    it('should run following tasks if a previous queued task is cancelled', function (done) {
+
+        var pool = new Pool({maxWorkers: 1});
+        var reachedTheEnd = false;
+
+        function delayed() {
+            var Promise = require('../lib/Promise');
+
+            return new Promise(function (resolve, reject) {
+                setTimeout(function () {
+                    resolve(1);
+                }, 0);
+            });
+        }
+
+        function two() {
+            var Promise = require('../lib/Promise');
+
+            return new Promise(function (resolve, reject) {
+                setTimeout(function () {
+                    resolve(2);
+                }, 0);
+            });
+        }
+
+        function one() {
+            return 1;
+        }
+
+        let oneDone = false;
+        let twoDone = false;
+        function checkDone() {
+            if (oneDone && twoDone) {
+                done();
+            }
+        }
+
+        var p1 = pool.exec(delayed)
+        .then(function (result) {
+            assert.equal(result, 1);
+            assert.equal(reachedTheEnd, true);
+
+            oneDone = true;
+
+            assert.equal(pool.workers.length, 1);
+            assert.equal(pool.tasks.length, 1);
+
+            checkDone();
+        });
+
+        assert.equal(pool.workers.length, 1);
+        assert.equal(pool.tasks.length, 0);
+
+        var p2 = pool.exec(one); // will be queued
+        assert.equal(pool.workers.length, 1);
+        assert.equal(pool.tasks.length, 1);
+
+        var p3 = pool.exec(two)
+        .then(function (result) {
+            assert.equal(result, 2);
+            assert.equal(reachedTheEnd, true);
+
+            twoDone = true;
+
+            assert.equal(pool.workers.length, 1);
+            assert.equal(pool.tasks.length, 0);
+
+            checkDone();
+        });
+
+        p2.cancel();            // cancel immediately
+        assert.equal(pool.workers.length, 1);
+        assert.equal(pool.tasks.length, 2);
+
+        reachedTheEnd = true;
+    });
+
+    // TODO: test whether a task in the queue can be neatly cancelled
 
   it('should timeout a task', function (done) {
     var pool = new Pool({maxWorkers: 10});
