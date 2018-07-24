@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2018-07-24, version 2.3.1
+
+- Fixed bug where tasks that are cancelled in a Pool's queue
+  causes following tasks to not run. Thanks @greemo.
+
+
 ## 2017-09-30, version 2.3.0
 
 - New method `Pool.terminate(force, timeout)` which will replace

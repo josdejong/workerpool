@@ -5,7 +5,7 @@
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
  * @version 2.3.0
- * @date    2017-09-30
+ * @date    2018-07-24
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -268,7 +268,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // replace the timeout method of the Promise with our own,
 	    // which starts the timer as soon as the task is actually started
-	    var originalTimeout = resolver.promise.timeout
+	    var originalTimeout = resolver.promise.timeout;
 	    resolver.promise.timeout = function timeout (delay) {
 	      if (tasks.indexOf(task) !== -1) {
 	        // task is still queued -> start the timer later on
@@ -279,7 +279,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // task is already being executed -> start timer immediately
 	        return originalTimeout.call(resolver.promise, delay);
 	      }
-	    }
+	    };
 
 	    // trigger task execution
 	    this._next();
@@ -373,6 +373,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (typeof task.timeout === 'number') {
 	          promise.timeout(task.timeout);
 	        }
+	      } else {
+	        // The task taken was already complete (either rejected or resolved), so just trigger next task in the queue
+	        me._next();
 	      }
 	    }
 	  }
