@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2018-09-08, version 2.3.2
+
+- Add licence field to `package.json`. Thanks @greyd.
+
+
 ## 2018-07-24, version 2.3.1
 
 - Fixed bug where tasks that are cancelled in a Pool's queue
