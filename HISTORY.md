@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2018-09-12, version 2.3.3
+
+- Fixed space in license field in `package.json`. Thanks @sagotsky.
+
+
 ## 2018-09-08, version 2.3.2
 
 - Add licence field to `package.json`. Thanks @greyd.
