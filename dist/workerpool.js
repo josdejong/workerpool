@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 2.3.3
- * @date    2018-09-12
+ * @version 3.0.0
+ * @date    2018-12-11
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -25,14 +25,14 @@
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
+		module.exports = factory(require("os"), require("child_process"));
 	else if(typeof define === 'function' && define.amd)
-		define([], factory);
+		define(["os", "child_process"], factory);
 	else if(typeof exports === 'object')
-		exports["workerpool"] = factory();
+		exports["workerpool"] = factory(require("os"), require("child_process"));
 	else
-		root["workerpool"] = factory();
-})(this, function() {
+		root["workerpool"] = factory(root["os"], root["child_process"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_8__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -115,9 +115,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	// used to prevent webpack from resolving requires on node libs
-	var node = {require: __webpack_require__(2)};
-
 	// determines the JavaScript platform: browser or node
 	module.exports.platform = typeof Window !== 'undefined' || typeof WorkerGlobalScope !== 'undefined' ? 'browser' : 'node';
 
@@ -126,42 +123,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// determines the number of cpus available
 	module.exports.cpus = module.exports.platform === 'browser'
-	  ? self.navigator.hardwareConcurrency
-	  : node.require('os').cpus().length;  // call node.require to prevent `os` to be required when loading with AMD
+	    ? self.navigator.hardwareConcurrency
+	    : __webpack_require__(2).cpus().length;
+
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-	var map = {
-		"./Pool": 3,
-		"./Pool.js": 3,
-		"./Promise": 4,
-		"./Promise.js": 4,
-		"./WorkerHandler": 5,
-		"./WorkerHandler.js": 5,
-		"./environment": 1,
-		"./environment.js": 1,
-		"./generated/embeddedWorker": 7,
-		"./generated/embeddedWorker.js": 7,
-		"./header": 8,
-		"./header.js": 8,
-		"./worker": 9,
-		"./worker.js": 9
-	};
-	function webpackContext(req) {
-		return __webpack_require__(webpackContextResolve(req));
-	};
-	function webpackContextResolve(req) {
-		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
-	};
-	webpackContext.keys = function webpackContextKeys() {
-		return Object.keys(map);
-	};
-	webpackContext.resolve = webpackContextResolve;
-	module.exports = webpackContext;
-	webpackContext.id = 2;
-
+	module.exports = require("os");
 
 /***/ }),
 /* 3 */
@@ -851,9 +821,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	// determine environment
 	var environment = __webpack_require__(1);
 
-	// used to prevent webpack from resolving requires on node libs
-	var node = {require: __webpack_require__(2)};
-
 	// get the default worker script
 	function getDefaultWorker() {
 	  if (environment.platform == 'browser') {
@@ -953,8 +920,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // on node.js, create a child process
 	    forkOptions = resolveForkOptions(options);
 
-	    // call node.require to prevent child_process to be required when loading with AMD
-	    this.worker = node.require('child_process').fork(
+	    this.worker = __webpack_require__(8).fork(
 	      this.script,
 	      forkOptions.forkArgs,
 	      forkOptions.forkOpts
@@ -1291,31 +1257,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 8 */
 /***/ (function(module, exports) {
 
-	/**
-	 * workerpool.js
-	 * https://github.com/josdejong/workerpool
-	 *
-	 * Offload tasks to a pool of workers on node.js and in the browser.
-	 *
-	 * @version @@version
-	 * @date    @@date
-	 *
-	 * @license
-	 * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
-	 *
-	 * Licensed under the Apache License, Version 2.0 (the "License"); you may not
-	 * use this file except in compliance with the License. You may obtain a copy
-	 * of the License at
-	 *
-	 * http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-	 * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-	 * License for the specific language governing permissions and limitations under
-	 * the License.
-	 */
-
+	module.exports = require("child_process");
 
 /***/ }),
 /* 9 */

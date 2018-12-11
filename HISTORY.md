@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2018-12-11, version 3.0.0
+
+- Enable usage in ES6 Webpack projects.
+- Dropped support for AMD module system.
+
+
 ## 2018-09-12, version 2.3.3
 
 - Fixed space in license field in `package.json`. Thanks @sagotsky.
