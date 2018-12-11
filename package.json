@@ -21,7 +21,8 @@
     "build": "gulp",
     "watch": "gulp watch",
     "test": "mocha test --timeout 10000",
-    "coverage": "istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\""
+    "coverage": "istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\"",
+    "prepublishOnly": "npm run build && npm run test"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
