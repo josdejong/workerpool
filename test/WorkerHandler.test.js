@@ -284,4 +284,124 @@ describe('WorkerHandler', function () {
     // TODO: create a worker from a script, which really crashes itself
   });
 
+  describe('tryRequire', function() {
+    it('gracefully requires or returns null', function() {
+      assert.equal(WorkerHandler._tryRequire('nope-nope-missing---never-exists'), null);
+      assert.equal(WorkerHandler._tryRequire('fs'), require('fs'));
+    });
+  });
+
+  // some unit tests, ensuring we correctly  interact with the worker constructors
+  // these next tests are mock heavy, this is to ensure they can be tested cross platform with confidence
+  describe('setupProcessWorker', function() {
+    it('correctly configures a child_process', function() {
+      var SCRIPT = 'I AM SCRIPT';
+      var FORK_ARGS = {};
+      var FORK_OPTS = {};
+      var RESULT = {};
+      var forkCalls = 0;
+
+      var child_process = {
+        fork: function(script, forkArgs, forkOpts) {
+          forkCalls++;
+          assert.equal(script, SCRIPT);
+          assert.equal(forkArgs, FORK_ARGS);
+          assert.equal(forkOpts, forkOpts);
+          return RESULT;
+        }
+      };
+
+      assert.equal(WorkerHandler._setupProcessWorker(SCRIPT, {
+        forkArgs: FORK_ARGS,
+        forkOpts: FORK_OPTS
+      }, child_process), RESULT);
+
+      assert.equal(forkCalls, 1);
+    });
+  });
+
+  describe('setupBrowserWorker', function() {
+    it('correctly sets up the browser worker', function() {
+      var SCRIPT = 'the script';
+      var postMessage;
+      var addEventListener;
+
+      function Worker(script) {
+        assert.equal(script, SCRIPT);
+      }
+
+      Worker.prototype.addEventListener = function(eventName, callback) {
+        addEventListener = { eventName: eventName, callback: callback };
+      };
+
+      Worker.prototype.postMessage = function(message) {
+        postMessage = message;
+      };
+
+      var worker = WorkerHandler._setupBrowserWorker(SCRIPT, Worker);
+
+      assert.ok(worker instanceof Worker);
+      assert.ok(typeof worker.on === 'function');
+      assert.ok(typeof worker.send === 'function');
+
+      assert.equal(addEventListener, undefined);
+      worker.on('foo', function() {});
+      assert.equal(addEventListener.eventName, 'foo');
+      assert.ok(typeof addEventListener.callback === 'function');
+
+      assert.equal(postMessage, undefined);
+      worker.send('the message');
+      assert.equal(postMessage, 'the message');
+      worker.send('next message');
+      assert.equal(postMessage, 'next message');
+    })
+  });
+
+  describe('setupWorkerThreadWorker', function() {
+    it('works', function() {
+      var SCRIPT = 'the script';
+      var postMessage;
+      var addEventListener;
+      var terminate = 0;
+
+      function Worker(script, options) {
+        assert.equal(script, SCRIPT);
+        assert.equal(options.stdout, false);
+        assert.equal(options.stderr, false);
+      }
+
+      Worker.prototype.addEventListener = function(eventName, callback) {
+        addEventListener = { eventName: eventName, callback: callback };
+      };
+
+      Worker.prototype.postMessage = function(message) {
+        postMessage = message;
+      };
+
+      Worker.prototype.terminate = function() {
+        terminate++;
+      }
+
+      var worker = WorkerHandler._setupWorkerThreadWorker(SCRIPT, { Worker: Worker });
+
+      assert.ok(worker instanceof Worker);
+
+      // assert.ok(typeof worker.on === 'function');
+      assert.ok(typeof worker.send === 'function');
+      assert.ok(typeof worker.kill === 'function');
+      assert.ok(typeof worker.disconnect === 'function');
+
+      assert.equal(terminate, 0);
+      worker.kill();
+      assert.equal(terminate, 1);
+      worker.disconnect();
+      assert.equal(terminate, 2);
+
+      assert.equal(postMessage, undefined);
+      worker.send('the message');
+      assert.equal(postMessage, 'the message');
+      worker.send('next message');
+      assert.equal(postMessage, 'next message');
+    });
+  });
 });

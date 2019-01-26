@@ -6,7 +6,51 @@ function add(a, b) {
   return a + b;
 }
 
+
+function tryRequire(moduleName) {
+  try {
+    return require(moduleName);
+  } catch(error) {
+    if (typeof error === 'object' && error !== null && error.code == 'MODULE_NOT_FOUND') {
+      return null;
+      // no worker_threads, fallback to sub-process based workers
+    } else {
+      throw error;
+    }
+  }
+}
+
 describe('Pool', function () {
+
+  describe('nodeWorker', function() {
+    function add(a,b) {
+      return a+b;
+    }
+    it('supports process', function() {
+      var pool = new Pool({ nodeWorker: 'process' });
+      return pool.exec(add, [3, 4])
+    });
+
+    it('supports auto', function() {
+      var pool = new Pool({ nodeWorker: 'auto' });
+      return pool.exec(add, [3, 4])
+    });
+
+
+    var WorkerThreads = tryRequire('worker_threads');
+    if (WorkerThreads) {
+      it('supports thread', function() {
+        var pool = new Pool({ nodeWorker: 'thread' });
+        return pool.exec(add, [3, 4])
+      });
+    } else {
+      it('errors when not supporting worker thread', function() {
+        assert.throws(function() {
+          var pool = new Pool({ nodeWorker: 'thread' });
+        }, /WorkerPool: nodeWorkers = thread is not supported, Node >= 11\.7\.0 required/)
+      });
+    }
+  })
 
   it('should offload a function to a worker', function (done) {
     var pool = new Pool({maxWorkers: 10});

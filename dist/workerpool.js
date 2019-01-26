@@ -978,7 +978,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        me.processing[id].resolver.reject(error);
 	      }
 	    }
-	    me.processing = {};
+	    me.processing = Object.create(null);
 	  }
 
 	  // send all queued requests to worker
@@ -995,7 +995,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    onError(error);
 	  });
 
-	  this.processing = {}; // queue with tasks currently in progress
+	  this.processing = Object.create(null); // queue with tasks currently in progress
 
 	  this.terminating = false;
 	  this.terminated = false;
@@ -1089,7 +1089,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.processing[id].resolver.reject(new Error('Worker terminated'));
 	      }
 	    }
-	    this.processing = {};
+	    this.processing = Object.create(null);
 	  }
 
 	  if (typeof callback === 'function') {

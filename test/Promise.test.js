@@ -56,11 +56,10 @@ describe ('Promise', function () {
       });
     });
 
-    it('should throw an error when resolving a promise twice', function (done) {
+    it('should NOT throw an error when resolving a promise twice', function (done) {
       new Promise(function (resolve, reject) {
         resolve('foo');
-
-        assert.throws(function () {resolve('foo')}, Error);
+        resolve('foo');
 
         done();
       });
@@ -112,11 +111,10 @@ describe ('Promise', function () {
       });
     });
 
-    it('should throw an error when rejecting a promise twice', function (done) {
+    it('should NOT throw an error when rejecting a promise twice', function (done) {
       var promise = new Promise(function (resolve, reject) {
         reject('foo');
-
-        assert.throws(function() {reject('foo')}, Error);
+        reject('foo');
 
         done();
       });
