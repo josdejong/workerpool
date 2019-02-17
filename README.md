@@ -1,16 +1,5 @@
 # workerpool
 
-JavaScript is based upon a single event loop which handles one event at a time. Jeremy Epstein [explains this clearly](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
-
-> In Node.js everything runs in parallel, except your code.
-> What this means is that all I/O code that you write in Node.js is non-blocking,
-> while (conversely) all non-I/O code that you write in Node.js is blocking.
-
-This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any new request while executing a single, heavy request.
-
-For front-end processes, this is not a desired situation.
-Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](http://nodejs.org/api/child_process.html) are available. An application should be split in separate, decoupled parts, which can run independent of each other in a parallelized way. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
-
 **workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** basically implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern). There is a pool of workers to execute tasks. New tasks are put in a queue. A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
 **workerpool** runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
@@ -25,7 +14,21 @@ Therefore, CPU intensive tasks should be offloaded from the main event loop onto
 - Cancel running tasks
 - Set a timeout on tasks
 - Handles crashed workers
-- Small: less than 5 kB minified and gzipped
+- Small: 5 kB minified and gzipped
+
+
+## Why
+
+JavaScript is based upon a single event loop which handles one event at a time. Jeremy Epstein [explains this clearly](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
+
+> In Node.js everything runs in parallel, except your code.
+> What this means is that all I/O code that you write in Node.js is non-blocking,
+> while (conversely) all non-I/O code that you write in Node.js is blocking.
+
+This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any new request while executing a single, heavy request.
+
+For front-end processes, this is not a desired situation.
+Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](https://nodejs.org/api/child_process.html) and [worker_threads](https://nodejs.org/api/worker_threads.html) are available. An application should be split in separate, decoupled parts, which can run independent of each other in a parallelized way. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
 
 
 ## Install
@@ -355,7 +358,7 @@ Following properties are available for convenience:
   single worker, which can keep a state for the session.
 
 
-## Sources of inspiration
+## Related libraries
 
 - https://github.com/learnboost/cluster
 - https://github.com/adambom/parallel.js
@@ -364,6 +367,7 @@ Following properties are available for convenience:
 - https://github.com/Unitech/pm2
 - https://github.com/godaddy/node-cluster-service
 - https://github.com/ramesaliyev/EasyWebWorker
+- https://github.com/rvagg/node-worker-farm
 
 
 ## Build
@@ -406,7 +410,7 @@ To see the coverage results, open the generated report in your browser:
 
 ## License
 
-Copyright (C) 2014-2018 Jos de Jong <wjosdejong@gmail.com>
+Copyright (C) 2014-2019 Jos de Jong <wjosdejong@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
