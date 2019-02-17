@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2019-02-17, version 3.1.0
+
+- Implemented support for using `worker_threads` in Node.js, via the new option
+  `nodeWorker: 'thread'`. Thanks @stefanpenner.
+
+
 ## 2018-12-11, version 3.0.0
 
 - Enable usage in ES6 Webpack projects.
