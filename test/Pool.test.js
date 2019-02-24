@@ -31,17 +31,30 @@ describe('Pool', function () {
       return pool.exec(add, [3, 4])
     });
 
+    var WorkerThreads = tryRequire('worker_threads');
     it('supports auto', function() {
       var pool = new Pool({ nodeWorker: 'auto' });
-      return pool.exec(add, [3, 4])
+      var result = pool.exec(add, [3, 4]);
+      assert.equal(pool.workers.length, 1);
+      var worker = pool.workers[0].worker;
+
+      if (WorkerThreads) {
+        assert.equal(worker.isWorkerThread, true);
+      } else {
+        assert.equal(worker.isChildProcess, true);
+      }
+      return result;
     });
 
 
-    var WorkerThreads = tryRequire('worker_threads');
     if (WorkerThreads) {
       it('supports thread', function() {
         var pool = new Pool({ nodeWorker: 'thread' });
-        return pool.exec(add, [3, 4])
+        var work = pool.exec(add, [3, 4]);
+        assert.equal(pool.workers.length, 1);
+        var worker = pool.workers[0].worker;
+        assert.equal(worker.isWorkerThread, true);
+        return work;
       });
     } else {
       it('errors when not supporting worker thread', function() {
