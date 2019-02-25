@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2019-02-25, version 3.1.1
+
+- Fix option `nodeWorker: 'auto'` not using worker threads when available.
+  Thanks @stefanpenner.
+
+
 ## 2019-02-17, version 3.1.0
 
 - Implemented support for using `worker_threads` in Node.js, via the new option
