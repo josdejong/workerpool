@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 3.1.0
- * @date    2019-02-17
+ * @version 3.1.1
+ * @date    2019-02-25
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -875,6 +875,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // create the web worker
 	  var worker = new Worker(script);
 
+	  worker.isBrowserWorker = true;
 	  // add node.js API to the web worker
 	  worker.on = function (event, callback) {
 	    this.addEventListener(event, function (message) {
@@ -892,6 +893,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    stdout: false, // automatically pipe worker.STDOUT to process.STDOUT
 	    stderr: false  // automatically pipe worker.STDERR to process.STDERR
 	  });
+	  worker.isWorkerThread = true;
 	  // make the worker mimic a child_process
 	  worker.send = function(message) {
 	    this.postMessage(message);
@@ -910,11 +912,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function setupProcessWorker(script, options, child_process) {
 	  // no WorkerThreads, fallback to sub-process based workers
-	  return child_process.fork(
+	  var worker = child_process.fork(
 	    script,
 	    options.forkArgs,
 	    options.forkOpts
 	  );
+
+	  worker.isChildProcess = true;
+	  return worker;
 	}
 
 	// add debug flags to child processes if the node inspector is active
@@ -979,11 +984,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.worker = setupBrowserWorker(this.script, Worker);
 	  } else {
+	    var WorkerThreads;
 
 	    if (options.nodeWorker === 'thread') {
-	      var WorkerThreads = ensureWorkerThreads();
+	      WorkerThreads = ensureWorkerThreads();
 	      this.worker = setupWorkerThreadWorker(this.script, WorkerThreads);
 	    } else if (options.nodeWorker === 'auto') {
+	      WorkerThreads = tryRequire('worker_threads');
 	      if (WorkerThreads) {
 	        this.worker = setupWorkerThreadWorker(this.script, WorkerThreads);
 	      } else {
