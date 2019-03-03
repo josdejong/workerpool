@@ -1,13 +1,11 @@
 // a worker which does initialization asynchronously
-var workerpool = require('../../index');
+const workerpool = require('../../index');
 
 function add(a, b) {
   return a + b;
 }
 
-setTimeout(function() {
+setTimeout(() => {
   // create a worker and register some functions
-  workerpool.worker({
-    add: add
-  });
+  workerpool.worker({ add: add });
 }, 500);

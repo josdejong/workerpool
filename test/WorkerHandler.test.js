@@ -1,82 +1,80 @@
-var assert = require('assert'),
-    Promise = require('../lib/Promise'),
-    WorkerHandler = require('../lib/WorkerHandler');
+const assert = require('assert');
+const Promise = require('../lib/Promise');
+const WorkerHandler = require('../lib/WorkerHandler');
 
-function add(a, b) {
-  return a + b;
-}
-
-describe('WorkerHandler', function () {
-
-  it('should handle a request', function (done) {
-    var handler = new WorkerHandler();
+describe('WorkerHandler', function() {
+  it('should handle a request', function(done) {
+    const handler = new WorkerHandler();
 
     handler.exec('run', [String(add), [2, 4]])
-        .then(function (result) {
-          assert.equal(result, 6);
-          done();
-        })
+      .then((result) => {
+        assert.equal(result, 6);
+
+        done();
+      })
   });
 
-  it('should get all methods', function (done) {
-    var handler = new WorkerHandler();
+  it('should get all methods', function(done) {
+    const handler = new WorkerHandler();
 
     handler.methods()
-        .then(function (methods) {
-          assert.deepEqual(methods.sort(), ['methods', 'run']);
-          done();
-        })
+      .then((methods) => {
+        assert.deepEqual(methods.sort(), ['methods', 'run']);
+
+        done();
+      })
   });
 
-  it('should handle multiple requests at once', function (done) {
-    var handler = new WorkerHandler();
+  it('should handle multiple requests at once', function(done) {
+    const handler = new WorkerHandler();
 
-    var task1 = handler.exec('run', [add + '', [2, 4]]);
-    var task2 = handler.exec('run', [add + '', [4, 7]]);
+    const task1 = handler.exec('run', [add + '', [2, 4]]);
+    const task2 = handler.exec('run', [add + '', [4, 7]]);
 
     Promise.all([task1, task2])
-        .then(function (results) {
-          assert.deepEqual(results, [6, 11]);
-          done();
-        })
+      .then((results) => {
+        assert.deepEqual(results, [6, 11]);
+
+        done();
+      })
   });
 
-  it('should test whether a worker is available', function (done) {
-    var handler = new WorkerHandler();
+  it('should test whether a worker is available', function(done) {
+    const handler = new WorkerHandler();
 
     assert.equal(handler.busy(), false);
 
     handler.exec('run', [String(add), [2, 4]])
-        .then(function (result) {
-          assert.equal(result, 6);
-          assert.equal(handler.busy(), false);
-          done();
-        });
+      .then((result) => {
+        assert.equal(result, 6);
+        assert.equal(handler.busy(), false);
+
+        done();
+      });
 
     assert.equal(handler.busy(), true);
 
   });
 
-  it('should terminate', function () {
-    var handler = new WorkerHandler();
+  it('should terminate', function() {
+    const handler = new WorkerHandler();
 
     handler.terminate();
 
     assert.equal(handler.terminated, true);
   });
 
-  it('should terminate after finishing running requests', function (done) {
-    var handler = new WorkerHandler();
+  it('should terminate after finishing running requests', function(done) {
+    const handler = new WorkerHandler();
 
     handler.exec('run', [String(add), [2, 4]])
-        .then(function (result) {
-          assert.equal(result, 6);
+      .then((result) => {
+        assert.equal(result, 6);
+        assert.equal(handler.terminating, false);
+        assert.equal(handler.terminated, true);
 
-          assert.equal(handler.terminating, false);
-          assert.equal(handler.terminated, true);
-
-          done();
-        });
+        done();
+      });
 
     handler.terminate();
 
@@ -84,85 +82,87 @@ describe('WorkerHandler', function () {
     assert.equal(handler.terminated, false);
   });
 
-  it('should force termination without finishing running requests', function (done) {
-    var handler = new WorkerHandler();
+  it('should force termination without finishing running requests', function(done) {
+    const handler = new WorkerHandler();
 
     handler.exec('run', [String(add), [2, 4]])
-        /*
-        .then(function (result) {
-          assert('Should not complete request');
-        })
-        */
-        .catch(function (err) {
-          assert.ok(err.stack.match(/Error: Worker terminated/))
-          done();
-        });
+      /*
+      .then(function (result) {
+        assert('Should not complete request');
+      })
+      */
+      .catch((err) => {
+        assert.ok(err.stack.match(/Error: Worker terminated/))
 
-    var force = true;
+        done();
+      });
+
+    let force = true;
+
     handler.terminate(force);
 
     assert.equal(handler.terminated, true);
   });
 
-  it('handle a promise based result', function (done) {
-    var handler = new WorkerHandler();
+  it('handle a promise based result', function(done) {
+    const handler = new WorkerHandler();
 
     function asyncAdd(a, b) {
-      var Promise = require('../lib/Promise');
+      const Promise = require('../lib/Promise');
 
-      return new Promise(function (resolve, reject) {
+      return new Promise((resolve, reject) => {
         if (typeof a === 'number' && typeof b === 'number') {
           resolve(a + b);
-        }
-        else {
+        } else {
           reject(new TypeError('Invalid input, two numbers expected'))
         }
       });
     }
 
     handler.exec('run', [String(asyncAdd), [2, 4]])
-        .then(function (result) {
-          assert.equal(result, 6);
+      .then((result) => {
+        assert.equal(result, 6);
 
-          handler.exec('run', [String(asyncAdd), [2, 'oops']])
-              .catch(function (err) {
-                assert.ok(err.stack.match(/TypeError: Invalid input, two numbers expected/))
-                done();
-              });
-        });
+        handler.exec('run', [String(asyncAdd), [2, 'oops']])
+          .catch((err) => {
+            assert.ok(err.stack.match(/TypeError: Invalid input, two numbers expected/))
+
+            done();
+          });
+      });
   });
 
-  it('create a worker handler with custom script', function (done) {
-    var handler = new WorkerHandler(__dirname + '/workers/simple.js');
+  it('create a worker handler with custom script', function(done) {
+    const handler = new WorkerHandler(__dirname + '/workers/simple.js');
 
     // test build in function run
     handler.exec('run', [String(add), [2, 4]])
-        .then(function (result) {
-          assert.equal(result, 6);
+      .then((result) => {
+        assert.equal(result, 6);
 
-          // test one of the functions defined in the simple.js worker
-          handler.exec('multiply', [2, 4])
-              .then(function (result) {
-                assert.equal(result, 8);
+        // test one of the functions defined in the simple.js worker
+        handler.exec('multiply', [2, 4])
+          .then((result) => {
+            assert.equal(result, 8);
 
-                done();
-              });
-        });
+            done();
+          });
+      });
   });
 
-  it('should handle the asynchronous initialization of a worker', function (done) {
+  it('should handle the asynchronous initialization of a worker', function(done) {
+    const handler = new WorkerHandler(__dirname + '/workers/async.js');
 
-    var handler = new WorkerHandler(__dirname + '/workers/async.js');
+    handler.exec('add', [2, 4])
+      .then((result) => {
+        assert.equal(result, 6);
 
-      handler.exec('add', [2, 4])
-        .then(function (result) {
-          assert.equal(result, 6);
-          done();
-        });
+        done();
+      });
   });
 
-  it('should cancel a task', function (done) {
-    var handler = new WorkerHandler();
+  it('should cancel a task', function(done) {
+    const handler = new WorkerHandler();
 
     function forever() {
       while(1 > 0) {
@@ -170,26 +170,26 @@ describe('WorkerHandler', function () {
       }
     }
 
-    var promise = handler.exec('run', [String(forever)])
-        .then(function (result) {
-          assert('promise should never resolve');
-        })
-        //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
-        .catch(function (err) {
-          assert.ok(err.stack.match(/CancellationError/))
+    const promise = handler.exec('run', [String(forever)])
+      .then((result) => {
+        assert('promise should never resolve');
+      })
+      //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
+      .catch((err) => {
+        assert.ok(err.stack.match(/CancellationError/))
 
-          assert.equal(handler.worker, null);
-          assert.equal(handler.terminated, true);
+        assert.equal(handler.worker, null);
+        assert.equal(handler.terminated, true);
 
-          done();
-        });
+        done();
+      });
 
     // cancel the task
     promise.cancel();
   });
 
-  it('should timeout a task', function (done) {
-    var handler = new WorkerHandler();
+  it('should timeout a task', function(done) {
+    const handler = new WorkerHandler();
 
     function forever() {
       while(1 > 0) {
@@ -199,13 +199,12 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(forever)])
         .timeout(50)
-        .then(function (result) {
+        .then((result) => {
           assert('promise should never resolve');
         })
         //.catch(Promise.TimeoutError, function (err) { // TODO: not yet supported
-        .catch(function (err) {
+        .catch((err) => {
           assert(err instanceof Promise.TimeoutError);
-
           assert.equal(handler.worker, null);
           assert.equal(handler.terminated, true);
 
@@ -213,74 +212,73 @@ describe('WorkerHandler', function () {
         });
   });
 
-  it('should handle errors thrown by a worker (1)', function (done) {
-    var handler = new WorkerHandler();
+  it('should handle errors thrown by a worker (1)', function(done) {
+    const handler = new WorkerHandler();
 
     function test() {
       throw new TypeError('Test error');
     }
 
     handler.exec('run', [String(test)])
-        .catch(function (err) {
-          assert.ok(err.stack.match(/TypeError: Test error/))
+      .catch((err) => {
+        assert.ok(err.stack.match(/TypeError: Test error/))
 
-          done();
-        });
+        done();
+      });
   });
 
-  it('should handle errors thrown by a worker (2)', function (done) {
-    var handler = new WorkerHandler();
+  it('should handle errors thrown by a worker (2)', function(done) {
+    const handler = new WorkerHandler();
 
     function test() {
       return test();
     }
 
     handler.exec('run', [String(test)])
-        .catch(function (err) {
-          assert.ok(err.stack.match(/RangeError: Maximum call stack size exceeded/))
+      .catch((err) => {
+        assert.ok(err.stack.match(/RangeError: Maximum call stack size exceeded/))
 
-          done();
-        });
+        done();
+      });
   });
 
-  it('should handle crashing of a worker (1)', function (done) {
-    var handler = new WorkerHandler();
+  it('should handle crashing of a worker (1)', function(done) {
+    const handler = new WorkerHandler();
 
     handler.exec('run', [String(add), [2, 4]])
-        .then(function () {
-          assert('Promise should not be resolved');
-        })
-        .catch(function (err) {
-          assert(err instanceof Error);
-          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
+      .then(() => {
+        assert('Promise should not be resolved');
+      })
+      .catch((err) => {
+        assert(err instanceof Error);
+        assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
 
-          done();
-        });
+        done();
+      });
 
     // to fake a problem with a worker, we disconnect it
     handler.worker.disconnect();
   });
 
-  it('should handle crashing of a worker (2)', function (done) {
-    var handler = new WorkerHandler();
+  it('should handle crashing of a worker (2)', function(done) {
+    const handler = new WorkerHandler();
 
     handler.exec('run', [String(add), [2, 4]])
-        .then(function () {
-          assert('Promise should not be resolved');
-        })
-        .catch(function (err) {
-          assert(err instanceof Error);
-          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
+      .then(() => {
+        assert('Promise should not be resolved');
+      })
+      .catch((err) => {
+        assert(err instanceof Error);
+        assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
 
-          done();
-        });
+        done();
+      });
 
     // to fake a problem with a worker, we kill it
     handler.worker.kill();
-
   });
 
-  it.skip('should handle crashing of a worker (3)', function (done) {
+  it.skip('should handle crashing of a worker (3)', function(done) {
     // TODO: create a worker from a script, which really crashes itself
   });
 
@@ -295,18 +293,20 @@ describe('WorkerHandler', function () {
   // these next tests are mock heavy, this is to ensure they can be tested cross platform with confidence
   describe('setupProcessWorker', function() {
     it('correctly configures a child_process', function() {
-      var SCRIPT = 'I AM SCRIPT';
-      var FORK_ARGS = {};
-      var FORK_OPTS = {};
-      var RESULT = {};
-      var forkCalls = 0;
+      const SCRIPT = 'I AM SCRIPT';
+      const FORK_ARGS = {};
+      const FORK_OPTS = {};
+      let RESULT = {};
+      let forkCalls = 0;
 
-      var child_process = {
-        fork: function(script, forkArgs, forkOpts) {
+      const child_process = {
+        fork(script, forkArgs, forkOpts) {
           forkCalls++;
+
           assert.equal(script, SCRIPT);
           assert.equal(forkArgs, FORK_ARGS);
           assert.equal(forkOpts, forkOpts);
+
           return RESULT;
         }
       };
@@ -315,16 +315,15 @@ describe('WorkerHandler', function () {
         forkArgs: FORK_ARGS,
         forkOpts: FORK_OPTS
       }, child_process), RESULT);
-
       assert.equal(forkCalls, 1);
     });
   });
 
   describe('setupBrowserWorker', function() {
     it('correctly sets up the browser worker', function() {
-      var SCRIPT = 'the script';
-      var postMessage;
-      var addEventListener;
+      const SCRIPT = 'the script';
+      let postMessage;
+      let addEventListener;
 
       function Worker(script) {
         assert.equal(script, SCRIPT);
@@ -338,31 +337,36 @@ describe('WorkerHandler', function () {
         postMessage = message;
       };
 
-      var worker = WorkerHandler._setupBrowserWorker(SCRIPT, Worker);
+      const worker = WorkerHandler._setupBrowserWorker(SCRIPT, Worker);
 
       assert.ok(worker instanceof Worker);
       assert.ok(typeof worker.on === 'function');
       assert.ok(typeof worker.send === 'function');
 
       assert.equal(addEventListener, undefined);
+
       worker.on('foo', function() {});
+
       assert.equal(addEventListener.eventName, 'foo');
       assert.ok(typeof addEventListener.callback === 'function');
-
       assert.equal(postMessage, undefined);
+
       worker.send('the message');
+
       assert.equal(postMessage, 'the message');
+
       worker.send('next message');
+
       assert.equal(postMessage, 'next message');
     })
   });
 
   describe('setupWorkerThreadWorker', function() {
     it('works', function() {
-      var SCRIPT = 'the script';
-      var postMessage;
-      var addEventListener;
-      var terminate = 0;
+      const SCRIPT = 'the script';
+      let postMessage;
+      let addEventListener;
+      let terminate = 0;
 
       function Worker(script, options) {
         assert.equal(script, SCRIPT);
@@ -382,7 +386,7 @@ describe('WorkerHandler', function () {
         terminate++;
       }
 
-      var worker = WorkerHandler._setupWorkerThreadWorker(SCRIPT, { Worker: Worker });
+      const worker = WorkerHandler._setupWorkerThreadWorker(SCRIPT, { Worker: Worker });
 
       assert.ok(worker instanceof Worker);
 
@@ -390,18 +394,28 @@ describe('WorkerHandler', function () {
       assert.ok(typeof worker.send === 'function');
       assert.ok(typeof worker.kill === 'function');
       assert.ok(typeof worker.disconnect === 'function');
-
       assert.equal(terminate, 0);
-      worker.kill();
-      assert.equal(terminate, 1);
-      worker.disconnect();
-      assert.equal(terminate, 2);
 
+      worker.kill();
+
+      assert.equal(terminate, 1);
+
+      worker.disconnect();
+
+      assert.equal(terminate, 2);
       assert.equal(postMessage, undefined);
+
       worker.send('the message');
+
       assert.equal(postMessage, 'the message');
+
       worker.send('next message');
+
       assert.equal(postMessage, 'next message');
     });
   });
 });
+
+function add(a, b) {
+  return a + b;
+}
