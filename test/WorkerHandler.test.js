@@ -252,8 +252,15 @@ describe('WorkerHandler', function () {
         })
         .catch(function (err) {
           assert(err instanceof Error);
-          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
 
+          assert.ok(err.toString().match(/Error: Workerpool Worker terminated Unexpectedly/));
+          assert.ok(err.toString().match(/exitCode: `.*`/));
+          assert.ok(err.toString().match(/signalCode: `.*`/));
+          assert.ok(err.toString().match(/workerpool.script: `.*\.js`/));
+          assert.ok(err.toString().match(/spawnArgs: `.*\.js`/));
+          assert.ok(err.toString().match(/spawnfile: `.*node`/));
+          assert.ok(err.toString().match(/stdout: `null`/));
+          assert.ok(err.toString().match(/stderr: `null`/));
           done();
         });
 
@@ -270,7 +277,15 @@ describe('WorkerHandler', function () {
         })
         .catch(function (err) {
           assert(err instanceof Error);
-          assert.ok(err.stack.match(/Error: Worker terminated unexpectedly/));
+
+          assert.ok(err.stack.match(/Error: Workerpool Worker terminated Unexpectedly/));
+          assert.ok(err.stack.match(/exitCode: `.*`/));
+          assert.ok(err.stack.match(/signalCode: `.*`/));
+          assert.ok(err.stack.match(/workerpool.script: `.*\.js`/));
+          assert.ok(err.stack.match(/spawnArgs: `.*\.js`/));
+          assert.ok(err.stack.match(/spawnfile: `.*node`/));
+          assert.ok(err.stack.match(/stdout: `null`/));
+          assert.ok(err.stack.match(/stderr: `null`/));
 
           done();
         });

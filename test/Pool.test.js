@@ -501,8 +501,15 @@ describe('Pool', function () {
         .then(function () {
           assert('Promise should not be resolved');
         })
-        .catch(function (err) {
-          assert.equal(err.toString(), 'Error: Worker terminated unexpectedly');
+      .catch(function (err) {
+          assert.ok(err.toString().match(/Error: Workerpool Worker terminated Unexpectedly/));
+          assert.ok(err.toString().match(/exitCode: `.*`/));
+          assert.ok(err.toString().match(/signalCode: `.*`/));
+          assert.ok(err.toString().match(/workerpool.script: `.*\.js`/));
+          assert.ok(err.toString().match(/spawnArgs: `.*\.js`/));
+          assert.ok(err.toString().match(/spawnfile: `.*node`/));
+          assert.ok(err.toString().match(/stdout: `null`/));
+          assert.ok(err.toString().match(/stderr: `null`/));
 
           assert.equal(pool.workers.length, 0);
 
