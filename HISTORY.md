@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 3.1.2
+
+- Improved error message when a node.js worker unexpectedly exits (see #58).
+  Thanks @stefanpenner.
+
+
 ## 2019-02-25, version 3.1.1
 
 - Fix option `nodeWorker: 'auto'` not using worker threads when available.
