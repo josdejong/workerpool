@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 3.1.2
+## 2019-03-12, version 3.1.2
 
 - Improved error message when a node.js worker unexpectedly exits (see #58).
   Thanks @stefanpenner.
@@ -10,6 +10,7 @@ https://github.com/josdejong/workerpool
 - Allocate debug ports safely, this fixes an issue cause workers to exit
   unexpectedly if more then one worker pool is active, and the process is
   started with a debugger (`node debug` or `node --inspect`).
+  Thanks @stefanpenner.
 
 
 ## 2019-02-25, version 3.1.1

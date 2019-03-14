@@ -408,6 +408,19 @@ To see the coverage results, open the generated report in your browser:
     ./coverage/lcov-report/index.html
 
 
+## Publish
+
+- Describe changes in HISTORY.md
+- Update version in package.json, run `npm install` to update it in `package-lock.json` too.
+- Push to github
+- Deploy to npm via `npm publish`
+- Add a git tag with the version number like:
+  ```
+  git tag v1.2.3
+  git push --tags
+  ```
+
+
 ## License
 
 Copyright (C) 2014-2019 Jos de Jong <wjosdejong@gmail.com>
