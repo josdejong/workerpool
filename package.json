@@ -32,7 +32,7 @@
     "istanbul": "0.4.5",
     "mocha": "6.1.4",
     "uglify-js": "3.6.0",
-    "webpack": "^1.13.1"
+    "webpack": "4.33.0"
   },
   "dependencies": {
     "object-assign": "4.1.1"

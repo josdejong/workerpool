@@ -1,4 +1,5 @@
 var fs = require('fs');
+var path = require('path');
 var gulp = require('gulp');
 var webpack = require('webpack');
 var uglify = require('uglify-js');
@@ -15,22 +16,11 @@ function createBanner() {
       .replace('@@version', version);
 }
 
-var bannerPlugin = new webpack.BannerPlugin(createBanner(), {
+var bannerPlugin = new webpack.BannerPlugin({
+  banner: createBanner(),
   entryOnly: true,
   raw: true
 });
-
-var FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin');
-var NodeTargetPlugin     = require('webpack/lib/node/NodeTargetPlugin');
-var NodeTemplatePlugin   = require('webpack/lib/node/NodeTemplatePlugin');
-var LoaderTargetPlugin   = require('webpack/lib/LoaderTargetPlugin');
-
-var webpackOutput = {
-  library: 'workerpool',
-  libraryTarget: 'umd',
-  path: './dist',
-  filename: 'workerpool.js'
-};
 
 var webpackNode = {
   // do not include poly fills...
@@ -44,30 +34,35 @@ var webpackNode = {
 
 var webpackConfig = {
   entry: './index.js',
-  target: function(compiler) {
-    compiler.apply(
-        new FunctionModulePlugin(webpackOutput),
-        new NodeTemplatePlugin(webpackOutput),
-        new NodeTargetPlugin(webpackNode),
-        new LoaderTargetPlugin('web')
-    );
+  output: {
+    library: 'workerpool',
+    libraryTarget: 'umd',
+    path: path.join(__dirname, 'dist'),
+    filename: 'workerpool.js'
   },
-  output: webpackOutput,
   node: webpackNode,
   plugins: [
     bannerPlugin
   ],
+  optimization: {
+    // We no not want to minimize our code.
+    minimize: false
+  },
   cache: true
 };
 
 var webpackWorkerConfig = {
   entry: './lib/worker.js',
   output: {
-    path: './dist',
+    path: path.join(__dirname, 'dist'),
     filename: 'worker.js'
   },
   node: webpackNode,
-  plugins: []
+  plugins: [],
+  optimization: {
+    // We no not want to minimize our code.
+    minimize: false
+  }
 };
 
 var uglifyConfig = {
