@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 3.1.1
- * @date    2019-02-25
+ * @version 3.1.2
+ * @date    2019-03-14
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -32,7 +32,7 @@
 		exports["workerpool"] = factory(require("os"), (function webpackLoadOptionalExternalModule() { try { return require("worker_threads"); } catch(e) {} }()), require("child_process"));
 	else
 		root["workerpool"] = factory(root["os"], root["worker_threads"], root["child_process"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_11__, __WEBPACK_EXTERNAL_MODULE_12__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_12__, __WEBPACK_EXTERNAL_MODULE_13__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -97,7 +97,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} [methods]
 	 */
 	exports.worker = function worker(methods) {
-	  var worker = __webpack_require__(10);
+	  var worker = __webpack_require__(11);
 	  worker.add(methods);
 	};
 
@@ -140,7 +140,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Promise = __webpack_require__(4);
 	var WorkerHandler = __webpack_require__(5);
 	var environment = __webpack_require__(1);
-
+	var DebugPortAllocator = __webpack_require__(8);
+	var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
 	/**
 	 * A pool to manage workers
 	 * @param {String} [script]   Optional worker script
@@ -163,7 +164,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this.forkArgs = options.forkArgs || [];
 	  this.forkOpts = options.forkOpts || {};
-	  this.debugPortStart = options.debugPortStart || 43210;
+	  this.debugPortStart = (options.debugPortStart || 43210);
 	  this.nodeWorker = options.nodeWorker;
 
 	  // configuration
@@ -382,7 +383,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    worker = new WorkerHandler(this.script, {
 	      forkArgs: this.forkArgs,
 	      forkOpts: this.forkOpts,
-	      debugPort: this.debugPortStart + workers.length,
+	      debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
 	      nodeWorker: this.nodeWorker
 	    });
 	    workers.push(worker);
@@ -399,6 +400,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @protected
 	 */
 	Pool.prototype._removeWorker = function(worker) {
+	  DEBUG_PORT_ALLOCATOR.releasePort(worker.debugPort)
 	  // terminate the worker (if not already terminated)
 	  worker.terminate();
 	  this._removeWorkerFromList(worker);
@@ -482,7 +484,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.workers.push(new WorkerHandler(this.script, {
 	        forkArgs: this.forkArgs,
 	        forkOpts: this.forkOpts,
-	        debugPort: this.debugPortStart + i
+	        debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart)
 	      }));
 	    }
 	  }
@@ -862,7 +864,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    // use embedded worker.js
-	    var blob = new Blob([__webpack_require__(8)], {type: 'text/javascript'});
+	    var blob = new Blob([__webpack_require__(9)], {type: 'text/javascript'});
 	    return window.URL.createObjectURL(blob);
 	  }
 	  else {
@@ -974,6 +976,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function WorkerHandler(script, _options) {
 	  this.script = script || getDefaultWorker();
 	  var options = _options || {};
+	  this.debugPort = options.debugPort;
 
 	  if (environment.platform == 'browser') {
 	    // check whether Worker is supported by the browser
@@ -994,10 +997,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (WorkerThreads) {
 	        this.worker = setupWorkerThreadWorker(this.script, WorkerThreads);
 	      } else {
-	        this.worker = setupProcessWorker(this.script, resolveForkOptions(options), __webpack_require__(12));
+	        this.worker = setupProcessWorker(this.script, resolveForkOptions(options), __webpack_require__(13));
 	      }
 	    } else {
-	      this.worker = setupProcessWorker(this.script, resolveForkOptions(options), __webpack_require__(12));
+	      this.worker = setupProcessWorker(this.script, resolveForkOptions(options), __webpack_require__(13));
 	    }
 	  }
 
@@ -1062,11 +1065,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    me.requestQueue = [];
 	  }
 
+	  var worker = this.worker;
 	  // listen for worker messages error and exit
 	  this.worker.on('error', onError);
-	  this.worker.on('exit', function () {
-	    var error = new Error('Worker terminated unexpectedly');
-	    onError(error);
+	  this.worker.on('exit', function (exitCode, signalCode) {
+	    var message = 'Workerpool Worker terminated Unexpectedly\n';
+
+	    message += '    exitCode: `' + exitCode + '`\n';
+	    message += '    signalCode: `' + signalCode + '`\n';
+
+	    message += '    workerpool.script: `' +  me.script + '`\n';
+	    message += '    spawnArgs: `' +  worker.spawnargs + '`\n';
+	    message += '    spawnfile: `' + worker.spawnfile + '`\n'
+
+	    message += '    stdout: `' + worker.stdout + '`\n'
+	    message += '    stderr: `' + worker.stderr + '`\n'
+
+	    onError(new Error(message));
 	  });
 
 	  this.processing = Object.create(null); // queue with tasks currently in progress
@@ -1333,14 +1348,16 @@ return /******/ (function(modules) { // webpackBootstrap
 		"./Promise.js": 4,
 		"./WorkerHandler": 5,
 		"./WorkerHandler.js": 5,
+		"./debug-port-allocator": 8,
+		"./debug-port-allocator.js": 8,
 		"./environment": 1,
 		"./environment.js": 1,
-		"./generated/embeddedWorker": 8,
-		"./generated/embeddedWorker.js": 8,
-		"./header": 9,
-		"./header.js": 9,
-		"./worker": 10,
-		"./worker.js": 10
+		"./generated/embeddedWorker": 9,
+		"./generated/embeddedWorker.js": 9,
+		"./header": 10,
+		"./header.js": 10,
+		"./worker": 11,
+		"./worker.js": 11
 	};
 	function webpackContext(req) {
 		return __webpack_require__(webpackContextResolve(req));
@@ -1360,6 +1377,40 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 8 */
 /***/ (function(module, exports) {
 
+	'use strict';
+
+	var MAX_PORTS = 65535;
+	module.exports = DebugPortAllocator;
+	function DebugPortAllocator() {
+	  this.ports = Object.create(null);
+	  this.length = 0;
+	}
+
+	DebugPortAllocator.prototype.nextAvailableStartingAt = function(starting) {
+	  while (this.ports[starting] === true) {
+	    starting++;
+	  }
+
+	  if (starting >= MAX_PORTS) {
+	    throw new Error('WorkerPool debug port limit reached: ' + starting + '>= ' + MAX_PORTS );
+	  }
+
+	  this.ports[starting] = true;
+	  this.length++;
+	  return starting;
+	};
+
+	DebugPortAllocator.prototype.releasePort = function(port) {
+	  delete this.ports[port];
+	  this.length--;
+	};
+
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports) {
+
 	/**
 	 * embeddedWorker.js contains an embedded version of worker.js.
 	 * This file is automatically generated,
@@ -1369,7 +1420,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports) {
 
 	/**
@@ -1399,7 +1450,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -1426,7 +1477,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var WorkerThreads;
 	  try {
-	    WorkerThreads = __webpack_require__(11);
+	    WorkerThreads = __webpack_require__(12);
 	  } catch(error) {
 	    if (typeof error === 'object' && error !== null && error.code == 'MODULE_NOT_FOUND') {
 	      // no worker_threads, fallback to sub-process based workers
@@ -1563,13 +1614,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 	module.exports = require("worker_threads");
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports) {
 
 	module.exports = require("child_process");
