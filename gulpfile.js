@@ -76,7 +76,10 @@ var uglifyConfig = {
     url: 'workerpool.map'
   },
   output: {
-    comments: /@license/
+    comments: function (tree, comment) {
+      return /@license/.test(comment.value) &&
+          !(/@@version/.test(comment.value) && /@@date/.test(comment.value) && /workerpool.js/.test(comment.value))
+    }
   }
 };
 
