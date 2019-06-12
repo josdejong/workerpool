@@ -1,12 +1,13 @@
 var fs = require('fs');
 var gulp = require('gulp');
-var gutil = require('gulp-util');
 var webpack = require('webpack');
 var uglify = require('uglify-js');
+var log = require('fancy-log');
+var format = require('date-format');
 
 // generate banner with today's date and correct version
 function createBanner() {
-  var today = gutil.date(new Date(), 'yyyy-mm-dd'); // today, formatted as yyyy-mm-dd
+  var today = format.asString('yyyy-MM-dd', new Date()); // today, formatted as yyyy-MM-dd
   var version = require('./package.json').version;  // module version
 
   return String(fs.readFileSync('./lib/header.js'))
@@ -81,13 +82,13 @@ var uglifyConfig = {
 // create a single instance of the compiler to allow caching
 var compiler = webpack(webpackConfig);
 
-gulp.task('bundle-worker', function (cb) {
+gulp.task('bundle-worker', function (done) {
   webpack(webpackWorkerConfig).run(function (err, stats) {
     if (err) {
-      gutil.log(err);
+      log(err);
     }
 
-    gutil.log('bundled worker ./dist/worker.js');
+    log('bundled worker ./dist/worker.js');
 
     var result = uglify.minify(['./dist/worker.js']);
 
@@ -101,12 +102,12 @@ gulp.task('bundle-worker', function (cb) {
 
     fs.writeFileSync('./lib/generated/embeddedWorker.js', embedded);
 
-    gutil.log('generated embedded worker ./lib/generated/embeddedWorker.js');
-    cb();
+    log('generated embedded worker ./lib/generated/embeddedWorker.js');
+    done();
   });
 });
 
-gulp.task('bundle-workerpool', ['bundle-worker'], function (cb) {
+gulp.task('bundle-workerpool', function (done) {
   // update the banner contents (has a date in it which should stay up to date)
   bannerPlugin.banner = createBanner();
 
@@ -115,32 +116,33 @@ gulp.task('bundle-workerpool', ['bundle-worker'], function (cb) {
 
   compiler.run(function (err, stats) {
     if (err) {
-      gutil.log(err);
+      log(err);
     }
 
-    gutil.log('bundled ./dist/workerpool.js');
+    log('bundled ./dist/workerpool.js');
 
-    cb();
+    done();
   });
 });
 
-gulp.task('minify-workerpool', ['bundle-workerpool'], function () {
+gulp.task('minify-workerpool', function (done) {
   var result = uglify.minify(['./dist/workerpool.js'], uglifyConfig);
-  var fileMap = 'workerpool.map';
 
   fs.writeFileSync('./dist/workerpool.min.js', result.code);
   fs.writeFileSync('./dist/workerpool.map', result.map);
 
-  gutil.log('Minified ' + './dist/workerpool.min.js');
-  gutil.log('Mapped ' + './dist/workerpool.map');
+  log('Minified ' + './dist/workerpool.min.js');
+  log('Mapped ' + './dist/workerpool.map');
+
+  done()
 });
 
-var tasks = ['bundle-worker', 'bundle-workerpool', 'minify-workerpool'];
+var tasks = gulp.series('bundle-worker', 'bundle-workerpool', 'minify-workerpool');
 
 // The default task (called when you run `gulp`)
 gulp.task('default', tasks);
 
 // The watch task (to automatically rebuild when the source code changes)
-gulp.task('watch', tasks, function () {
+gulp.task('watch', gulp.series(tasks, function () {
   gulp.watch(['index.js', 'lib/**/*.js', '!lib/generated/**'], tasks);
-});
+}));
