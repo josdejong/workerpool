@@ -20,8 +20,6 @@ var bannerPlugin = new webpack.BannerPlugin(createBanner(), {
   raw: true
 });
 
-// TODO: webpack is quite compilicated to configure. Switch to browserify?
-
 var FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin');
 var NodeTargetPlugin     = require('webpack/lib/node/NodeTargetPlugin');
 var NodeTemplatePlugin   = require('webpack/lib/node/NodeTemplatePlugin');
