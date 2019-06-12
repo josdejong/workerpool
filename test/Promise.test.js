@@ -1,5 +1,5 @@
-var assert = require('assert'),
-    Promise = require('../lib/Promise');
+var assert = require('assert');
+var Promise = require('../lib/Promise');
 
 describe ('Promise', function () {
 
@@ -13,7 +13,7 @@ describe ('Promise', function () {
         resolve(2)
       })
           .then(function (result) {
-            assert.equal(result, 2);
+            assert.strictEqual(result, 2);
             done();
           });
     });
@@ -23,7 +23,7 @@ describe ('Promise', function () {
         reject(2)
       })
           .catch(function (error) {
-            assert.equal(error, 2);
+            assert.strictEqual(error, 2);
             done();
           });
     });
@@ -40,7 +40,7 @@ describe ('Promise', function () {
           resolve('foo');
         }, 0);
       }).then(function (result) {
-        assert.equal(result, 'foo');
+        assert.strictEqual(result, 'foo');
         done();
       });
     });
@@ -51,7 +51,7 @@ describe ('Promise', function () {
       });
 
       promise.then(function (result) {
-        assert.equal(result, 'foo');
+        assert.strictEqual(result, 'foo');
         done();
       });
     });
@@ -73,7 +73,7 @@ describe ('Promise', function () {
       });
 
       promise.then(function (result) {
-        assert.equal(result, 'foo');
+        assert.strictEqual(result, 'foo');
         done();
       }, function (err) {
         assert.ok(false, 'shouldn\'t throw an error');
@@ -90,7 +90,7 @@ describe ('Promise', function () {
       promise.then(function () {
         assert.ok(false, 'should not resolve');
       }, function (err) {
-        assert.equal(err, 'err');
+        assert.strictEqual(err.toString(), 'err');
         done();
       });
     });
@@ -106,7 +106,7 @@ describe ('Promise', function () {
       });
 
       promise.catch(function (err) {
-        assert.equal(err, 'err');
+        assert.strictEqual(err.toString(), 'err');
         done();
       });
     });
@@ -128,14 +128,14 @@ describe ('Promise', function () {
 
           reject(new Error('My Error'));
 
-          assert.deepEqual(log, ['catch', 'then']);
+          assert.deepStrictEqual(log, ['catch', 'then']);
 
           done();
         }, 0);
       });
 
       promise.catch(function (err) {
-        assert.equal(err, 'Error: My Error');
+        assert.strictEqual(err.toString(), 'Error: My Error');
         log.push('catch');
       })
           .then(function (result) {
@@ -157,11 +157,11 @@ describe ('Promise', function () {
       });
 
       promise.catch(function (err) {
-        assert.equal(err, 'Error: My Error');
+        assert.strictEqual(err.toString(), 'Error: My Error');
         throw new Error('My Error 2');
       })
           .catch(function (err) {
-            assert.equal(err, 'Error: My Error 2');
+            assert.strictEqual(err.toString(), 'Error: My Error 2');
             done();
           });
     });
@@ -176,7 +176,7 @@ describe ('Promise', function () {
             assert.ok(false, 'should not call onSuccess');
           })
           .catch(function (err) {
-            assert.equal(err, 'Error: My Error');
+            assert.strictEqual(err.toString(), 'Error: My Error');
             done();
           });
     });
@@ -192,7 +192,7 @@ describe ('Promise', function () {
       });
 
       promise.always(function (result) {
-        assert.equal(result, 'foo');
+        assert.strictEqual(result.toString(), 'foo');
         done();
       });
     });
@@ -205,7 +205,7 @@ describe ('Promise', function () {
       });
 
       promise.always(function (result) {
-        assert.equal(result, 'err');
+        assert.strictEqual(result, 'err');
         done();
       });
     });
@@ -217,17 +217,17 @@ describe ('Promise', function () {
         setTimeout(function () {
           resolve(1);
 
-          assert.equal(p.resolved, true);
-          assert.equal(p.rejected, false);
-          assert.equal(p.pending, false);
+          assert.strictEqual(p.resolved, true);
+          assert.strictEqual(p.rejected, false);
+          assert.strictEqual(p.pending, false);
 
           done();
         }, 0);
       });
 
-      assert.equal(p.resolved, false);
-      assert.equal(p.rejected, false);
-      assert.equal(p.pending, true);
+      assert.strictEqual(p.resolved, false);
+      assert.strictEqual(p.rejected, false);
+      assert.strictEqual(p.pending, true);
     });
 
     it('should have correct status before and after being rejected', function (done) {
@@ -235,17 +235,17 @@ describe ('Promise', function () {
         setTimeout(function () {
           reject(1);
  
-          assert.equal(p.resolved, false);
-          assert.equal(p.rejected, true);
-          assert.equal(p.pending, false);
+          assert.strictEqual(p.resolved, false);
+          assert.strictEqual(p.rejected, true);
+          assert.strictEqual(p.pending, false);
 
           done();
         }, 0);
       });
 
-      assert.equal(p.resolved, false);
-      assert.equal(p.rejected, false);
-      assert.equal(p.pending, true);
+      assert.strictEqual(p.resolved, false);
+      assert.strictEqual(p.rejected, false);
+      assert.strictEqual(p.pending, true);
     });
   });
 
@@ -254,13 +254,13 @@ describe ('Promise', function () {
       resolve(1)
     })
         .then(function (result) {
-          assert.equal(result, 1);
+          assert.strictEqual(result, 1);
           return new Promise(function (resolve, reject) {
             resolve(2);
           });
         })
         .then(function (result) {
-          assert.equal(result, 2);
+          assert.strictEqual(result, 2);
           done();
         });
   });
@@ -270,13 +270,13 @@ describe ('Promise', function () {
       reject(1)
     })
         .catch(function (err) {
-          assert.equal(err, 1);
+          assert.strictEqual(err, 1);
           return new Promise(function (resolve, reject) {
             resolve(2)
           });
         })
         .then(function (result) {
-          assert.equal(result, 2);
+          assert.strictEqual(result, 2);
           done();
         });
   });
@@ -286,13 +286,13 @@ describe ('Promise', function () {
       reject(1)
     })
         .catch(function (err) {
-          assert.equal(err, 1);
+          assert.strictEqual(err, 1);
           return new Promise(function (resolve, reject) {
             reject(2);
           });
         })
         .catch(function (err) {
-          assert.equal(err, 2);
+          assert.strictEqual(err, 2);
           done();
         });
   });
@@ -302,25 +302,25 @@ describe ('Promise', function () {
       resolve(1)
     })
         .then(function (result) {
-          assert.equal(result, 1);
+          assert.strictEqual(result, 1);
           throw new Error('2');
         })
         .catch(function (err) {
-          assert.equal(err.toString(), 'Error: 2');
+          assert.strictEqual(err.toString(), 'Error: 2');
           done();
         });
   });
 
   it('should catch an error thrown by an onFail callback', function (done) {
     new Promise(function (resolve, reject) {
-      reject(new Error(1))
+      reject(new Error('1'))
     })
         .catch(function (err) {
-          assert.equal(err.toString(), 'Error: 1');
+          assert.strictEqual(err.toString(), 'Error: 1');
           throw new Error('2');
         })
         .catch(function (err) {
-          assert.equal(err.toString(), 'Error: 2');
+          assert.strictEqual(err.toString(), 'Error: 2');
           done();
         });
   });
@@ -335,13 +335,13 @@ describe ('Promise', function () {
     promise
         .then(function (res){
           log.push(res);
-          assert.equal(res, 1);
+          assert.strictEqual(res, 1);
         });
 
     // second chain
     promise.then(function (res){
           log.push(res);
-          assert.equal(res, 1);
+          assert.strictEqual(res, 1);
           return new Promise(function (resolve, reject) {
             reject(2)
           });
@@ -350,33 +350,33 @@ describe ('Promise', function () {
           assert.ok(false, 'should not resolve')
         })
         .catch(function (res) {
-          assert.equal(res, 2);
+          assert.strictEqual(res, 2);
           log.push(res);
           throw 3;
         })
         .catch(function (err) {
           log.push(err);
-          assert.equal(err, 3);
+          assert.strictEqual(err, 3);
           return new Promise(function (resolve, reject) {
             reject(4)
           })
         })
         .then(null, function (err){
           log.push(err);
-          assert.equal(err, 4);
+          assert.strictEqual(err, 4);
           return new Promise(function (resolve, reject) {
             resolve(5)
           });
         })
         .then(function (res) {
           log.push(res);
-          assert.equal(res, 5);
+          assert.strictEqual(res, 5);
         })
         .catch(function (){
           log.push('fail')
         });
 
-    assert.equal(log.join(','), '1,1,2,3,4,5');
+    assert.strictEqual(log.join(','), '1,1,2,3,4,5');
     done();
   });
 
@@ -387,7 +387,7 @@ describe ('Promise', function () {
       setTimeout(function () {
         resolve(1)
 
-        assert.equal(log.join(','), '1,1,2,3,4,5');
+        assert.strictEqual(log.join(','), '1,1,2,3,4,5');
         done();
       }, 0)
     });
@@ -396,14 +396,14 @@ describe ('Promise', function () {
     promise
         .then(function (res){
           log.push(res);
-          assert.equal(res, 1);
+          assert.strictEqual(res, 1);
         });
 
     // second chain
     promise
         .then(function (res){
           log.push(res);
-          assert.equal(res, 1);
+          assert.strictEqual(res, 1);
           return new Promise(function (resolve, reject) {
             reject(2)
           })
@@ -412,27 +412,27 @@ describe ('Promise', function () {
           assert.ok(false, 'should not resolve')
         })
         .catch(function (res) {
-          assert.equal(res, 2);
+          assert.strictEqual(res, 2);
           log.push(res);
           throw 3;
         })
         .catch(function (err) {
           log.push(err);
-          assert.equal(err, 3);
+          assert.strictEqual(err, 3);
           return new Promise(function (resolve, reject) {
             reject(4)
           })
         })
         .then(null, function (err){
           log.push(err);
-          assert.equal(err, 4);
+          assert.strictEqual(err, 4);
           return new Promise(function (resolve, reject) {
             resolve(5)
           })
         })
         .then(function (res) {
           log.push(res);
-          assert.equal(res, 5);
+          assert.strictEqual(res, 5);
         })
         .catch(function (){
           log.push('fail')
@@ -512,7 +512,7 @@ describe ('Promise', function () {
       })
           .timeout(30)
           .then(function (result) {
-            assert.equal(result, 1);
+            assert.strictEqual(result, 1);
             done();
           })
           .catch(function (err) {
@@ -528,7 +528,7 @@ describe ('Promise', function () {
       })
           .timeout(30)
           .catch(function (err) {
-            assert.equal(err.toString(), 'Error: My Error');
+            assert.strictEqual(err.toString(), 'Error: My Error');
             done();
           });
     });
@@ -549,7 +549,7 @@ describe ('Promise', function () {
       var resolver = Promise.defer();
 
       resolver.promise.then(function (result) {
-        assert.equal(result, 3);
+        assert.strictEqual(result, 3);
         done();
       });
 
@@ -560,7 +560,7 @@ describe ('Promise', function () {
       var resolver = Promise.defer();
 
       resolver.promise.catch(function (err) {
-        assert.equal(err.toString(), 'Error: My Error');
+        assert.strictEqual(err.toString(), 'Error: My Error');
         done();
       });
 
@@ -591,7 +591,7 @@ describe ('Promise', function () {
       Promise.all([foo, bar, baz, qux])
           .then(function (results) {
             assert.ok(true, 'then');
-            assert.deepEqual(results, ['foo', 'bar', 'baz', 'qux']);
+            assert.deepStrictEqual(results, ['foo', 'bar', 'baz', 'qux']);
 
             done();
           })
@@ -624,7 +624,7 @@ describe ('Promise', function () {
           })
           .catch(function (err){
             assert.ok(true, 'catch');
-            assert.equal(err, 'The Error');
+            assert.strictEqual(err.toString(), 'The Error');
             done();
           });
     });
@@ -646,7 +646,7 @@ describe ('Promise', function () {
       Promise.all([foo, bar, baz, qux])
           .then(function (results) {
             assert.ok(true, 'then');
-            assert.deepEqual(results, ['foo', 'bar', 'baz', 'qux']);
+            assert.deepStrictEqual(results, ['foo', 'bar', 'baz', 'qux']);
 
             done();
           })
@@ -659,7 +659,7 @@ describe ('Promise', function () {
       Promise.all([])
           .then(function (results) {
             assert.ok(true, 'then');
-            assert.deepEqual(results, []);
+            assert.deepStrictEqual(results, []);
 
             done();
           })

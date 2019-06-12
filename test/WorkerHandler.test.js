@@ -13,7 +13,9 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
-          assert.equal(result, 6);
+          assert.strictEqual(result, 6);
+
+          handler.terminate();
           done();
         })
   });
@@ -23,7 +25,9 @@ describe('WorkerHandler', function () {
 
     handler.methods()
         .then(function (methods) {
-          assert.deepEqual(methods.sort(), ['methods', 'run']);
+          assert.deepStrictEqual(methods.sort(), ['methods', 'run']);
+
+          handler.terminate();
           done();
         })
   });
@@ -36,7 +40,9 @@ describe('WorkerHandler', function () {
 
     Promise.all([task1, task2])
         .then(function (results) {
-          assert.deepEqual(results, [6, 11]);
+          assert.deepStrictEqual(results, [6, 11]);
+
+          handler.terminate();
           done();
         })
   });
@@ -44,16 +50,18 @@ describe('WorkerHandler', function () {
   it('should test whether a worker is available', function (done) {
     var handler = new WorkerHandler();
 
-    assert.equal(handler.busy(), false);
+    assert.strictEqual(handler.busy(), false);
 
     handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
-          assert.equal(result, 6);
-          assert.equal(handler.busy(), false);
+          assert.strictEqual(result, 6);
+          assert.strictEqual(handler.busy(), false);
+
+          handler.terminate()
           done();
         });
 
-    assert.equal(handler.busy(), true);
+    assert.strictEqual(handler.busy(), true);
 
   });
 
@@ -62,7 +70,7 @@ describe('WorkerHandler', function () {
 
     handler.terminate();
 
-    assert.equal(handler.terminated, true);
+    assert.strictEqual(handler.terminated, true);
   });
 
   it('should terminate after finishing running requests', function (done) {
@@ -70,18 +78,18 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
-          assert.equal(result, 6);
+          assert.strictEqual(result, 6);
 
-          assert.equal(handler.terminating, false);
-          assert.equal(handler.terminated, true);
+          assert.strictEqual(handler.terminating, false);
+          assert.strictEqual(handler.terminated, true);
 
           done();
         });
 
     handler.terminate();
 
-    assert.equal(handler.terminating, true);
-    assert.equal(handler.terminated, false);
+    assert.strictEqual(handler.terminating, true);
+    assert.strictEqual(handler.terminated, false);
   });
 
   it('should force termination without finishing running requests', function (done) {
@@ -101,7 +109,7 @@ describe('WorkerHandler', function () {
     var force = true;
     handler.terminate(force);
 
-    assert.equal(handler.terminated, true);
+    assert.strictEqual(handler.terminated, true);
   });
 
   it('handle a promise based result', function (done) {
@@ -122,11 +130,13 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(asyncAdd), [2, 4]])
         .then(function (result) {
-          assert.equal(result, 6);
+          assert.strictEqual(result, 6);
 
           handler.exec('run', [String(asyncAdd), [2, 'oops']])
               .catch(function (err) {
-                assert.ok(err.stack.match(/TypeError: Invalid input, two numbers expected/))
+                assert.ok(err.stack.match(/TypeError: Invalid input, two numbers expected/));
+
+                handler.terminate();
                 done();
               });
         });
@@ -138,13 +148,14 @@ describe('WorkerHandler', function () {
     // test build in function run
     handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
-          assert.equal(result, 6);
+          assert.strictEqual(result, 6);
 
           // test one of the functions defined in the simple.js worker
           handler.exec('multiply', [2, 4])
               .then(function (result) {
-                assert.equal(result, 8);
+                assert.strictEqual(result, 8);
 
+                handler.terminate();
                 done();
               });
         });
@@ -156,7 +167,9 @@ describe('WorkerHandler', function () {
 
       handler.exec('add', [2, 4])
         .then(function (result) {
-          assert.equal(result, 6);
+          assert.strictEqual(result, 6);
+
+          handler.terminate();
           done();
         });
   });
@@ -171,15 +184,15 @@ describe('WorkerHandler', function () {
     }
 
     var promise = handler.exec('run', [String(forever)])
-        .then(function (result) {
+        .then(function () {
           assert('promise should never resolve');
         })
         //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
           assert.ok(err.stack.match(/CancellationError/))
 
-          assert.equal(handler.worker, null);
-          assert.equal(handler.terminated, true);
+          assert.strictEqual(handler.worker, null);
+          assert.strictEqual(handler.terminated, true);
 
           done();
         });
@@ -199,15 +212,15 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(forever)])
         .timeout(50)
-        .then(function (result) {
+        .then(function () {
           assert('promise should never resolve');
         })
         //.catch(Promise.TimeoutError, function (err) { // TODO: not yet supported
         .catch(function (err) {
           assert(err instanceof Promise.TimeoutError);
 
-          assert.equal(handler.worker, null);
-          assert.equal(handler.terminated, true);
+          assert.strictEqual(handler.worker, null);
+          assert.strictEqual(handler.terminated, true);
 
           done();
         });
@@ -224,6 +237,7 @@ describe('WorkerHandler', function () {
         .catch(function (err) {
           assert.ok(err.stack.match(/TypeError: Test error/))
 
+          handler.terminate();
           done();
         });
   });
@@ -231,6 +245,7 @@ describe('WorkerHandler', function () {
   it('should handle errors thrown by a worker (2)', function (done) {
     var handler = new WorkerHandler();
 
+    // noinspection InfiniteRecursionJS
     function test() {
       return test();
     }
@@ -239,6 +254,7 @@ describe('WorkerHandler', function () {
         .catch(function (err) {
           assert.ok(err.stack.match(/RangeError: Maximum call stack size exceeded/))
 
+          handler.terminate();
           done();
         });
   });
@@ -301,8 +317,8 @@ describe('WorkerHandler', function () {
 
   describe('tryRequire', function() {
     it('gracefully requires or returns null', function() {
-      assert.equal(WorkerHandler._tryRequire('nope-nope-missing---never-exists'), null);
-      assert.equal(WorkerHandler._tryRequire('fs'), require('fs'));
+      assert.strictEqual(WorkerHandler._tryRequire('nope-nope-missing---never-exists'), null);
+      assert.strictEqual(WorkerHandler._tryRequire('fs'), require('fs'));
     });
   });
 
@@ -319,19 +335,19 @@ describe('WorkerHandler', function () {
       var child_process = {
         fork: function(script, forkArgs, forkOpts) {
           forkCalls++;
-          assert.equal(script, SCRIPT);
-          assert.equal(forkArgs, FORK_ARGS);
-          assert.equal(forkOpts, forkOpts);
+          assert.strictEqual(script, SCRIPT);
+          assert.strictEqual(forkArgs, FORK_ARGS);
+          assert.strictEqual(forkOpts, forkOpts);
           return RESULT;
         }
       };
 
-      assert.equal(WorkerHandler._setupProcessWorker(SCRIPT, {
+      assert.strictEqual(WorkerHandler._setupProcessWorker(SCRIPT, {
         forkArgs: FORK_ARGS,
         forkOpts: FORK_OPTS
       }, child_process), RESULT);
 
-      assert.equal(forkCalls, 1);
+      assert.strictEqual(forkCalls, 1);
     });
   });
 
@@ -342,7 +358,7 @@ describe('WorkerHandler', function () {
       var addEventListener;
 
       function Worker(script) {
-        assert.equal(script, SCRIPT);
+        assert.strictEqual(script, SCRIPT);
       }
 
       Worker.prototype.addEventListener = function(eventName, callback) {
@@ -359,16 +375,16 @@ describe('WorkerHandler', function () {
       assert.ok(typeof worker.on === 'function');
       assert.ok(typeof worker.send === 'function');
 
-      assert.equal(addEventListener, undefined);
+      assert.strictEqual(addEventListener, undefined);
       worker.on('foo', function() {});
-      assert.equal(addEventListener.eventName, 'foo');
+      assert.strictEqual(addEventListener.eventName, 'foo');
       assert.ok(typeof addEventListener.callback === 'function');
 
-      assert.equal(postMessage, undefined);
+      assert.strictEqual(postMessage, undefined);
       worker.send('the message');
-      assert.equal(postMessage, 'the message');
+      assert.strictEqual(postMessage, 'the message');
       worker.send('next message');
-      assert.equal(postMessage, 'next message');
+      assert.strictEqual(postMessage, 'next message');
     })
   });
 
@@ -380,9 +396,9 @@ describe('WorkerHandler', function () {
       var terminate = 0;
 
       function Worker(script, options) {
-        assert.equal(script, SCRIPT);
-        assert.equal(options.stdout, false);
-        assert.equal(options.stderr, false);
+        assert.strictEqual(script, SCRIPT);
+        assert.strictEqual(options.stdout, false);
+        assert.strictEqual(options.stderr, false);
       }
 
       Worker.prototype.addEventListener = function(eventName, callback) {
@@ -406,17 +422,17 @@ describe('WorkerHandler', function () {
       assert.ok(typeof worker.kill === 'function');
       assert.ok(typeof worker.disconnect === 'function');
 
-      assert.equal(terminate, 0);
+      assert.strictEqual(terminate, 0);
       worker.kill();
-      assert.equal(terminate, 1);
+      assert.strictEqual(terminate, 1);
       worker.disconnect();
-      assert.equal(terminate, 2);
+      assert.strictEqual(terminate, 2);
 
-      assert.equal(postMessage, undefined);
+      assert.strictEqual(postMessage, undefined);
       worker.send('the message');
-      assert.equal(postMessage, 'the message');
+      assert.strictEqual(postMessage, 'the message');
       worker.send('next message');
-      assert.equal(postMessage, 'next message');
+      assert.strictEqual(postMessage, 'next message');
     });
   });
 });

@@ -1,17 +1,16 @@
-var assert = require('assert'),
-    Promise = require('../lib/Promise'),
-    Pool = require('../lib/Pool');
+var assert = require('assert');
+var Promise = require('../lib/Promise');
+var Pool = require('../lib/Pool');
 
 function add(a, b) {
   return a + b;
 }
 
-
 function tryRequire(moduleName) {
   try {
     return require(moduleName);
   } catch(error) {
-    if (typeof error === 'object' && error !== null && error.code == 'MODULE_NOT_FOUND') {
+    if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
       return null;
       // no worker_threads, fallback to sub-process based workers
     } else {
@@ -26,40 +25,58 @@ describe('Pool', function () {
     function add(a,b) {
       return a+b;
     }
+
     it('supports process', function() {
       var pool = new Pool({ nodeWorker: 'process' });
+
       return pool.exec(add, [3, 4])
+          .then(function (result) {
+            assert.strictEqual(result, 7);
+
+            pool.terminate();
+          });
     });
 
     var WorkerThreads = tryRequire('worker_threads');
+
     it('supports auto', function() {
       var pool = new Pool({ nodeWorker: 'auto' });
-      var result = pool.exec(add, [3, 4]);
-      assert.equal(pool.workers.length, 1);
+      var promise = pool.exec(add, [3, 4]);
+      assert.strictEqual(pool.workers.length, 1);
       var worker = pool.workers[0].worker;
 
       if (WorkerThreads) {
-        assert.equal(worker.isWorkerThread, true);
+        assert.strictEqual(worker.isWorkerThread, true);
       } else {
-        assert.equal(worker.isChildProcess, true);
+        assert.strictEqual(worker.isChildProcess, true);
       }
-      return result;
-    });
 
+      return promise.then(function (result) {
+        assert.strictEqual(result, 7);
+
+        pool.terminate();
+      });
+    });
 
     if (WorkerThreads) {
       it('supports thread', function() {
         var pool = new Pool({ nodeWorker: 'thread' });
-        var work = pool.exec(add, [3, 4]);
-        assert.equal(pool.workers.length, 1);
+        var promise = pool.exec(add, [3, 4]);
+
+        assert.strictEqual(pool.workers.length, 1);
         var worker = pool.workers[0].worker;
-        assert.equal(worker.isWorkerThread, true);
-        return work;
+        assert.strictEqual(worker.isWorkerThread, true);
+
+        return promise.then(function (result) {
+          assert.strictEqual(result, 7);
+
+          pool.terminate();
+        });
       });
     } else {
       it('errors when not supporting worker thread', function() {
         assert.throws(function() {
-          var pool = new Pool({ nodeWorker: 'thread' });
+          new Pool({ nodeWorker: 'thread' });
         }, /WorkerPool: nodeWorkers = thread is not supported, Node >= 11\.7\.0 required/)
       });
     }
@@ -72,21 +89,21 @@ describe('Pool', function () {
       return a + b;
     }
 
-    assert.equal(pool.workers.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
 
     pool.exec(add, [3, 4])
         .then(function (result) {
-          assert.equal(result, 7);
-          assert.equal(pool.workers.length, 1);
+          assert.strictEqual(result, 7);
+          assert.strictEqual(pool.workers.length, 1);
 
-          pool.clear();
+          pool.terminate();
 
-          assert.equal(pool.workers.length, 0);
+          assert.strictEqual(pool.workers.length, 0);
 
           done();
         });
 
-    assert.equal(pool.workers.length, 1);
+    assert.strictEqual(pool.workers.length, 1);
   });
 
   it('should offload functions to multiple workers', function (done) {
@@ -96,21 +113,21 @@ describe('Pool', function () {
       return a + b;
     }
 
-    assert.equal(pool.workers.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
 
     Promise.all([
           pool.exec(add, [3, 4]),
           pool.exec(add, [2, 3])
         ])
         .then(function (results) {
-          assert.deepEqual(results, [7, 5]);
-          assert.equal(pool.workers.length, 2);
+          assert.deepStrictEqual(results, [7, 5]);
+          assert.strictEqual(pool.workers.length, 2);
 
-          pool.clear();
+          pool.terminate();
           done();
         });
 
-    assert.equal(pool.workers.length, 2);
+    assert.strictEqual(pool.workers.length, 2);
   });
 
   it('should put tasks in queue when all workers are busy', function (done) {
@@ -120,20 +137,20 @@ describe('Pool', function () {
       return a + b;
     }
 
-    assert.equal(pool.tasks.length, 0);
-    assert.equal(pool.workers.length, 0);
+    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
 
     var task1 = pool.exec(add, [3, 4]);
     var task2 = pool.exec(add, [2, 3]);
 
-    assert.equal(pool.tasks.length, 0);
-    assert.equal(pool.workers.length, 2);
+    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.workers.length, 2);
 
     var task3 = pool.exec(add, [5, 7]);
     var task4 = pool.exec(add, [1, 1]);
 
-    assert.equal(pool.tasks.length, 2);
-    assert.equal(pool.workers.length, 2);
+    assert.strictEqual(pool.tasks.length, 2);
+    assert.strictEqual(pool.workers.length, 2);
 
     Promise.all([
         task1,
@@ -142,11 +159,11 @@ describe('Pool', function () {
         task4
         ])
         .then(function (results) {
-          assert.deepEqual(results, [7, 5, 12, 2]);
-          assert.equal(pool.tasks.length, 0);
-          assert.equal(pool.workers.length, 2);
+          assert.deepStrictEqual(results, [7, 5, 12, 2]);
+          assert.strictEqual(pool.tasks.length, 0);
+          assert.strictEqual(pool.workers.length, 2);
 
-          pool.clear();
+          pool.terminate();
           done();
         });
   });
@@ -155,14 +172,16 @@ describe('Pool', function () {
     var pool = new Pool();
 
     pool.proxy().then(function (proxy) {
-      assert.deepEqual(Object.keys(proxy).sort(), ['methods', 'run']);
+      assert.deepStrictEqual(Object.keys(proxy).sort(), ['methods', 'run']);
 
       proxy.methods()
           .then(function (methods) {
-            assert.deepEqual(methods.sort(), ['methods', 'run']);
+            assert.deepStrictEqual(methods.sort(), ['methods', 'run']);
+
+            pool.terminate();
             done();
           })
-          .catch(function (err) {
+          .catch(function () {
             assert('Should not throw an error');
           });
     });
@@ -172,8 +191,9 @@ describe('Pool', function () {
     var pool = new Pool(__dirname + '/workers/simple.js');
 
     pool.proxy().then(function (proxy) {
-      assert.deepEqual(Object.keys(proxy).sort(), ['add','methods','multiply','run','timeout']);
+      assert.deepStrictEqual(Object.keys(proxy).sort(), ['add','methods','multiply','run','timeout']);
 
+      pool.terminate();
       done();
     });
   });
@@ -184,7 +204,9 @@ describe('Pool', function () {
     pool.proxy().then(function (proxy) {
       proxy.multiply(4, 3)
           .then(function (result) {
-            assert.equal(result, 12);
+            assert.strictEqual(result, 12);
+
+            pool.terminate();
             done();
           })
           .catch(function (err) {
@@ -200,7 +222,9 @@ describe('Pool', function () {
     pool.proxy().then(function (proxy) {
       proxy.timeout(100)
           .then(function (result) {
-            assert.equal(result, 'done');
+            assert.strictEqual(result, 'done');
+
+            pool.terminate();
             done();
           })
           .catch(function (err) {
@@ -220,9 +244,9 @@ describe('Pool', function () {
     pool.exec(test)
         .catch(function (err) {
           assert.ok(err instanceof Error);
-          assert.equal(err.message, 'Test error')
+          assert.strictEqual(err.message, 'Test error')
 
-          pool.clear();
+          pool.terminate();
           done();
         });
   });
@@ -236,10 +260,12 @@ describe('Pool', function () {
 
     pool.exec(testAsync)
         .then(function (result) {
-          assert.equal(result, 'done');
+          assert.strictEqual(result, 'done');
+
+          pool.terminate();
           done();
         })
-        .catch(function (err) {
+        .catch(function () {
           assert('Should not throw an error');
         });
   });
@@ -252,12 +278,13 @@ describe('Pool', function () {
     }
 
     pool.exec(testAsync)
-        .then(function (result) {
+        .then(function () {
           assert('Should not resolve');
         })
         .catch(function (err) {
-          //assert.ok(err instanceof Error);  // FIXME: returned error should be an instanceof Error
-          assert.equal(err, err.toString('Error: I reject!'));
+          assert.strictEqual(err.toString(), 'Error: I reject!');
+
+          pool.terminate();
           done();
         });
   });
@@ -277,7 +304,7 @@ describe('Pool', function () {
         .catch(function (err) {
           assert(err instanceof Promise.CancellationError);
 
-          assert.equal(pool.workers.length, 0);
+          assert.strictEqual(pool.workers.length, 0);
 
           done();
         });
@@ -308,105 +335,107 @@ describe('Pool', function () {
 
     var p1 = pool.exec(delayed)
         .then(function (result) {
-          assert.equal(result, 1);
-          assert.equal(reachedTheEnd, true);
+          assert.strictEqual(result, 1);
+          assert.strictEqual(reachedTheEnd, true);
 
-          assert.equal(pool.workers.length, 1);
-          assert.equal(pool.tasks.length, 0);
+          assert.strictEqual(pool.workers.length, 1);
+          assert.strictEqual(pool.tasks.length, 0);
 
+          pool.terminate();
           done();
         });
 
-    assert.equal(pool.workers.length, 1);
-    assert.equal(pool.tasks.length, 0);
+    assert.strictEqual(pool.workers.length, 1);
+    assert.strictEqual(pool.tasks.length, 0);
 
     var p2 = pool.exec(one); // will be queued
-    assert.equal(pool.workers.length, 1);
-    assert.equal(pool.tasks.length, 1);
+    assert.strictEqual(pool.workers.length, 1);
+    assert.strictEqual(pool.tasks.length, 1);
 
     p2.cancel();            // cancel immediately
-    assert.equal(pool.workers.length, 1);
-    assert.equal(pool.tasks.length, 1);
+    assert.strictEqual(pool.workers.length, 1);
+    assert.strictEqual(pool.tasks.length, 1);
 
     reachedTheEnd = true;
   });
 
-    it('should run following tasks if a previous queued task is cancelled', function (done) {
+  it('should run following tasks if a previous queued task is cancelled', function (done) {
 
-        var pool = new Pool({maxWorkers: 1});
-        var reachedTheEnd = false;
+    var pool = new Pool({maxWorkers: 1});
+    var reachedTheEnd = false;
 
-        function delayed() {
-            var Promise = require('../lib/Promise');
+    function delayed() {
+      var Promise = require('../lib/Promise');
 
-            return new Promise(function (resolve, reject) {
-                setTimeout(function () {
-                    resolve(1);
-                }, 0);
-            });
-        }
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve(1);
+        }, 0);
+      });
+    }
 
-        function two() {
-            var Promise = require('../lib/Promise');
+    function two() {
+      var Promise = require('../lib/Promise');
 
-            return new Promise(function (resolve, reject) {
-                setTimeout(function () {
-                    resolve(2);
-                }, 0);
-            });
-        }
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve(2);
+        }, 0);
+      });
+    }
 
-        function one() {
-            return 1;
-        }
+    function one() {
+      return 1;
+    }
 
-        var oneDone = false;
-        var twoDone = false;
-        function checkDone() {
-            if (oneDone && twoDone) {
-                done();
-            }
-        }
+    var oneDone = false;
+    var twoDone = false;
+    function checkDone() {
+      if (oneDone && twoDone) {
+        pool.terminate();
+        done();
+      }
+    }
 
-        var p1 = pool.exec(delayed)
+    var p1 = pool.exec(delayed)
         .then(function (result) {
-            assert.equal(result, 1);
-            assert.equal(reachedTheEnd, true);
+          assert.strictEqual(result, 1);
+          assert.strictEqual(reachedTheEnd, true);
 
-            oneDone = true;
+          oneDone = true;
 
-            assert.equal(pool.workers.length, 1);
-            assert.equal(pool.tasks.length, 1);
+          assert.strictEqual(pool.workers.length, 1);
+          assert.strictEqual(pool.tasks.length, 1);
 
-            checkDone();
+          checkDone();
         });
 
-        assert.equal(pool.workers.length, 1);
-        assert.equal(pool.tasks.length, 0);
+    assert.strictEqual(pool.workers.length, 1);
+    assert.strictEqual(pool.tasks.length, 0);
 
-        var p2 = pool.exec(one); // will be queued
-        assert.equal(pool.workers.length, 1);
-        assert.equal(pool.tasks.length, 1);
+    var p2 = pool.exec(one); // will be queued
+    assert.strictEqual(pool.workers.length, 1);
+    assert.strictEqual(pool.tasks.length, 1);
 
-        var p3 = pool.exec(two)
+    var p3 = pool.exec(two)
         .then(function (result) {
-            assert.equal(result, 2);
-            assert.equal(reachedTheEnd, true);
+          assert.strictEqual(result, 2);
+          assert.strictEqual(reachedTheEnd, true);
 
-            twoDone = true;
+          twoDone = true;
 
-            assert.equal(pool.workers.length, 1);
-            assert.equal(pool.tasks.length, 0);
+          assert.strictEqual(pool.workers.length, 1);
+          assert.strictEqual(pool.tasks.length, 0);
 
-            checkDone();
+          checkDone();
         });
 
-        p2.cancel();            // cancel immediately
-        assert.equal(pool.workers.length, 1);
-        assert.equal(pool.tasks.length, 2);
+    p2.cancel();            // cancel immediately
+    assert.strictEqual(pool.workers.length, 1);
+    assert.strictEqual(pool.tasks.length, 2);
 
-        reachedTheEnd = true;
-    });
+    reachedTheEnd = true;
+  });
 
     // TODO: test whether a task in the queue can be neatly cancelled
 
@@ -426,7 +455,7 @@ describe('Pool', function () {
         .catch(function (err) {
           assert(err instanceof Promise.TimeoutError);
 
-          assert.equal(pool.workers.length, 0);
+          assert.strictEqual(pool.workers.length, 0);
 
           done();
         });
@@ -457,8 +486,9 @@ describe('Pool', function () {
     pool.exec(doNothing)
         .timeout(delay)
         .then(function (result) {
-          assert.equal(result, 'ready');
+          assert.strictEqual(result, 'ready');
 
+          pool.terminate();
           done();
         })
         .catch(function (err) {
@@ -511,28 +541,28 @@ describe('Pool', function () {
           assert.ok(err.toString().match(/stdout: `null`/));
           assert.ok(err.toString().match(/stderr: `null`/));
 
-          assert.equal(pool.workers.length, 0);
+          assert.strictEqual(pool.workers.length, 0);
 
           // validate whether a new worker is spawned
           pool.exec(add, [2,3])
               .then(function (result) {
-                assert.equal(result, 5);
+                assert.strictEqual(result, 5);
 
-                assert.equal(pool.workers.length, 1);
+                assert.strictEqual(pool.workers.length, 1);
 
-                pool.clear();
+                pool.terminate();
                 done();
               });
 
-          assert.equal(pool.workers.length, 1);
+          assert.strictEqual(pool.workers.length, 1);
         });
 
-    assert.equal(pool.workers.length, 1);
+    assert.strictEqual(pool.workers.length, 1);
 
     // kill the worker so it will be terminated
     pool.workers[0].worker.kill();
 
-    assert.equal(pool.workers.length, 1);
+    assert.strictEqual(pool.workers.length, 1);
   });
 
   describe('options', function () {
@@ -558,26 +588,30 @@ describe('Pool', function () {
     it('should limit to the configured number of max workers', function () {
       var pool = new Pool({maxWorkers: 2});
 
-      pool.exec(add, [1, 2]);
-      pool.exec(add, [3, 4]);
-      pool.exec(add, [5, 6]);
-      pool.exec(add, [7, 8]);
-      pool.exec(add, [9, 0]);
+      var tasks = [
+        pool.exec(add, [1, 2]),
+        pool.exec(add, [3, 4]),
+        pool.exec(add, [5, 6]),
+        pool.exec(add, [7, 8]),
+        pool.exec(add, [9, 0])
+      ]
 
-      assert.equal(pool.maxWorkers, 2);
-      assert.equal(pool.workers.length, 2);
-      assert.equal(pool.tasks.length, 3);
+      assert.strictEqual(pool.maxWorkers, 2);
+      assert.strictEqual(pool.workers.length, 2);
+      assert.strictEqual(pool.tasks.length, 3);
 
-      pool.clear();
+      return Promise.all(tasks).then(function () {
+        pool.terminate();
+      });
     });
 
     it('should take number of cpus minus one as default maxWorkers', function () {
       var pool = new Pool();
 
       var cpus = require('os').cpus();
-      assert.equal(pool.maxWorkers, cpus.length - 1);
+      assert.strictEqual(pool.maxWorkers, cpus.length - 1);
 
-      pool.clear();
+      return pool.terminate();
     });
 
     it('should throw an error on invalid type or number of minWorkers', function () {
@@ -598,22 +632,27 @@ describe('Pool', function () {
       var pool = new Pool({minWorkers:'max'});
 
       var cpus = require('os').cpus();
-      assert.equal(pool.workers.length, cpus.length - 1);
+      assert.strictEqual(pool.workers.length, cpus.length - 1);
 
-      pool.clear();
+      return pool.terminate();
     });
 
     it('should increase maxWorkers to match minWorkers', function () {
       var pool = new Pool({minWorkers: 16});
 
-      for(var i=0;i<20;i++) pool.exec(add, [i, i*2]);
+      var tasks = []
+      for(var i=0;i<20;i++) {
+        tasks.push(pool.exec(add, [i, i*2]));
+      }
 
-      assert.equal(pool.minWorkers, 16);
-      assert.equal(pool.maxWorkers, 16);
-      assert.equal(pool.workers.length, 16);
-      assert.equal(pool.tasks.length, 4);
+      assert.strictEqual(pool.minWorkers, 16);
+      assert.strictEqual(pool.maxWorkers, 16);
+      assert.strictEqual(pool.workers.length, 16);
+      assert.strictEqual(pool.tasks.length, 4);
 
-      pool.clear();
+      return Promise.all(tasks).then(function () {
+        pool.terminate();
+      });
     });
   });
 
@@ -624,7 +663,7 @@ describe('Pool', function () {
   it('should clear all workers', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
-    assert.equal(pool.workers.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
 
     function test() {
       return 'ok';
@@ -632,24 +671,24 @@ describe('Pool', function () {
 
     pool.exec(test)
         .then(function (result) {
-          assert.equal(result, 'ok');
+          assert.strictEqual(result, 'ok');
 
-          assert.equal(pool.workers.length, 1);
+          assert.strictEqual(pool.workers.length, 1);
 
-          pool.clear();
+          pool.terminate();
 
-          assert.equal(pool.workers.length, 0);
+          assert.strictEqual(pool.workers.length, 0);
 
           done();
         });
 
-    assert.equal(pool.workers.length, 1);
+    assert.strictEqual(pool.workers.length, 1);
   });
 
   it('should clear all workers after tasks are finished', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
-    assert.equal(pool.workers.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
 
     function test() {
       return 'ok';
@@ -657,15 +696,15 @@ describe('Pool', function () {
 
     pool.exec(test)
         .then(function (result) {
-          assert.equal(result, 'ok');
+          assert.strictEqual(result, 'ok');
 
-          assert.equal(pool.workers.length, 0);
+          assert.strictEqual(pool.workers.length, 0);
         });
-    assert.equal(pool.workers.length, 1);
+    assert.strictEqual(pool.workers.length, 1);
 
     pool.terminate(false, 1000)
       .then(function() {
-        assert.equal(pool.workers.length, 0);
+        assert.strictEqual(pool.workers.length, 0);
         done();
       });
   });
@@ -674,7 +713,7 @@ describe('Pool', function () {
 
     var pool = new Pool({maxWorkers: 10});
 
-    assert.equal(pool.workers.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
 
     function test1() {
       var start = new Date().getTime();
@@ -711,18 +750,18 @@ describe('Pool', function () {
     ];
     Promise.all(promises)
       .then(function (results) {
-        assert.equal(results[0], 'test 1 ok');
-        assert.equal(results[1], 'test 2 ok');
-        assert.equal(results[3], 'test 3 ok');
+        assert.strictEqual(results[0], 'test 1 ok');
+        assert.strictEqual(results[1], 'test 2 ok');
+        assert.strictEqual(results[3], 'test 3 ok');
       })
       .catch(function(error) {
         assert.fail(error);
       });
-    assert.equal(pool.workers.length, 3);
+    assert.strictEqual(pool.workers.length, 3);
 
     pool.terminate(false, 2000)
       .then(function() {
-        assert.equal(pool.workers.length, 0);
+        assert.strictEqual(pool.workers.length, 0);
         done();
       });
   });
@@ -731,7 +770,7 @@ describe('Pool', function () {
 
     var pool = new Pool({maxWorkers: 10});
 
-    assert.equal(pool.workers.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
 
     function test1() {
       var start = new Date().getTime();
@@ -761,13 +800,13 @@ describe('Pool', function () {
         assert.fail('test2 should have been rejected');
       })
       .catch(function(error) {
-        assert.equal(error.message, 'test 2 error');
+        assert.strictEqual(error.message, 'test 2 error');
       });
-    assert.equal(pool.workers.length, 2);
+    assert.strictEqual(pool.workers.length, 2);
 
     pool.terminate(false, 2000)
       .then(function() {
-        assert.equal(pool.workers.length, 0);
+        assert.strictEqual(pool.workers.length, 0);
         done();
       });
   });
@@ -787,11 +826,11 @@ describe('Pool', function () {
       });
     }
 
-    assert.deepEqual(pool.stats(), {totalWorkers: 0, busyWorkers: 0, idleWorkers: 0, pendingTasks: 0, activeTasks: 0});
+    assert.deepStrictEqual(pool.stats(), {totalWorkers: 0, busyWorkers: 0, idleWorkers: 0, pendingTasks: 0, activeTasks: 0});
 
     var promise = pool.exec(test)
         .then(function () {
-          assert.deepEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 0, idleWorkers: 1, pendingTasks: 0, activeTasks: 0 });
+          assert.deepStrictEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 0, idleWorkers: 1, pendingTasks: 0, activeTasks: 0 });
 
           // start six tasks (max workers is 4, so we should get pending tasks)
           var all = Promise.all([
@@ -803,22 +842,24 @@ describe('Pool', function () {
             pool.exec(test)
           ]);
 
-          assert.deepEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 4, idleWorkers: 0, pendingTasks: 2, activeTasks: 4});
+          assert.deepStrictEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 4, idleWorkers: 0, pendingTasks: 2, activeTasks: 4});
 
           return all;
         })
         .then(function () {
-          assert.deepEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0 });
+          assert.deepStrictEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0 });
 
           return pool.exec(testError)
         })
         .catch(function () {
-          assert.deepEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0});
+          assert.deepStrictEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0});
         });
 
-    assert.deepEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 1, idleWorkers: 0, pendingTasks: 0, activeTasks: 1});
+    assert.deepStrictEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 1, idleWorkers: 0, pendingTasks: 0, activeTasks: 1});
 
-    return promise;
+    return promise.then(function (result) {
+      pool.terminate();
+    });
   });
 
   it('should throw an error in case of wrong type of arguments in function exec', function () {
