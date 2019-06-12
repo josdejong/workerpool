@@ -71,7 +71,10 @@ var webpackWorkerConfig = {
 };
 
 var uglifyConfig = {
-  outSourceMap: 'workerpool.map',
+  warnings: 'verbose',
+  sourceMap: {
+    url: 'workerpool.map'
+  },
   output: {
     comments: /@license/
   }
@@ -88,7 +91,11 @@ gulp.task('bundle-worker', function (done) {
 
     log('bundled worker ./dist/worker.js');
 
-    var result = uglify.minify(['./dist/worker.js']);
+    var result = uglify.minify(String(fs.readFileSync('./dist/worker.js')));
+
+    if (result.error) {
+      throw result.error;
+    }
 
     // create embeddedWorker.js
     var embedded = '/**\n' +
@@ -124,7 +131,12 @@ gulp.task('bundle-workerpool', function (done) {
 });
 
 gulp.task('minify-workerpool', function (done) {
-  var result = uglify.minify(['./dist/workerpool.js'], uglifyConfig);
+  var code = String(fs.readFileSync('./dist/workerpool.js'));
+  var result = uglify.minify(code, uglifyConfig);
+
+  if (result.error) {
+    throw result.error;
+  }
 
   fs.writeFileSync('./dist/workerpool.min.js', result.code);
   fs.writeFileSync('./dist/workerpool.map', result.map);
