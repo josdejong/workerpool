@@ -315,10 +315,11 @@ describe('WorkerHandler', function () {
     // TODO: create a worker from a script, which really crashes itself
   });
 
-  describe('tryRequire', function() {
+  describe('tryRequireWorkerThreads', function() {
     it('gracefully requires or returns null', function() {
-      assert.strictEqual(WorkerHandler._tryRequire('nope-nope-missing---never-exists'), null);
-      assert.strictEqual(WorkerHandler._tryRequire('fs'), require('fs'));
+      var workerThreads = WorkerHandler._tryRequireWorkerThreads()
+
+      assert(workerThreads === null || workerThreads === require('worker_threads'));
     });
   });
 
