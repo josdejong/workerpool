@@ -871,4 +871,45 @@ describe('Pool', function () {
     assert.throws(function () {pool.exec(add, 'a string')}, TypeError);
   });
 
+  it('should throw an error when the tasks queue is full', function (done) {
+    var pool = new Pool({maxWorkers: 2, maxQueueSize: 3});
+
+    function add(a, b) {
+      return a + b;
+    }
+
+    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.workers.length, 0);
+
+    var task1 = pool.exec(add, [3, 4]);
+    var task2 = pool.exec(add, [2, 3]);
+
+    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.workers.length, 2);
+
+    var task3 = pool.exec(add, [5, 7]);
+    var task4 = pool.exec(add, [1, 1]);
+    var task5 = pool.exec(add, [6, 3]);
+
+    assert.strictEqual(pool.tasks.length, 3);
+    assert.strictEqual(pool.workers.length, 2);
+
+    assert.throws(function () {pool.exec(add, [9, 4])}, Error);
+
+    Promise.all([
+        task1,
+        task2,
+        task3,
+        task4,
+        task5
+        ])
+        .then(function (results) {
+          assert.strictEqual(pool.tasks.length, 0);
+          assert.strictEqual(pool.workers.length, 2);
+
+          pool.terminate();
+          done();
+        });
+  });
+
 });
