@@ -443,8 +443,6 @@ describe('WorkerHandler', function () {
   describe('workerGracefulExit', function () {
     it('worker exit after master is killed', function (done) {
       var child = childProcess.fork(path.join(__dirname, './forkToKill/common.js'));
-      child.on('error', function (err) {
-      })
       child.on('message', function (message) {
         // workerId is the worker process' id which should exit after master is killed
         var workerPid = message.workerPid;
