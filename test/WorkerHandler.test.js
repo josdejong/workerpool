@@ -1,6 +1,9 @@
 var assert = require('assert'),
     Promise = require('../lib/Promise'),
-    WorkerHandler = require('../lib/WorkerHandler');
+    WorkerHandler = require('../lib/WorkerHandler'),
+    path = require('path'),
+    childProcess = require('child_process'),
+    findProcess = require('find-process');
 
 function add(a, b) {
   return a + b;
@@ -434,6 +437,29 @@ describe('WorkerHandler', function () {
       assert.strictEqual(postMessage, 'the message');
       worker.send('next message');
       assert.strictEqual(postMessage, 'next message');
+    });
+  });
+
+  describe('workerGracefulExit', function () {
+    it('worker exit after master is killed', function (done) {
+      var child = childProcess.fork(path.join(__dirname, './forkToKill/common.js'));
+      child.on('error', function (err) {
+      })
+      child.on('message', function (message) {
+        // workerId is the worker process' id which should exit after master is killed
+        var workerPid = message.workerPid;
+        // kill pool
+        child.kill('SIGKILL');
+        setTimeout(function () {
+          findProcess('pid', workerPid).then(function (list) {
+            if (list && list.length > 0) {
+              done('Worker not exit');
+            } else {
+              done();
+            }
+          })
+        }, 100);
+      });
     });
   });
 });
