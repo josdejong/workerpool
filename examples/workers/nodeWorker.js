@@ -1,7 +1,7 @@
 // a simple worker for use in node.js (as a child process)
 
 // load workerpool
-var workerpool = require('../../index');
+var workerpool = require('../..');
 
 // a deliberately inefficient implementation of the fibonacci sequence
 function fibonacci(n) {

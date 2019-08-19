@@ -2,7 +2,7 @@
 // interacting with a database or a web service. The asynchronous function
 // returns a promise which resolves with the task's result.
 
-var workerpool = require('../../index');
+var workerpool = require('../..');
 
 // an async function returning a promise
 function asyncAdd (a, b) {

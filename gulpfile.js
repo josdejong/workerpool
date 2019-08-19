@@ -5,6 +5,7 @@ var webpack = require('webpack');
 var uglify = require('uglify-js');
 var log = require('fancy-log');
 var format = require('date-format');
+var del = require('del');
 
 // generate banner with today's date and correct version
 function createBanner() {
@@ -22,46 +23,44 @@ var bannerPlugin = new webpack.BannerPlugin({
   raw: true
 });
 
-var webpackNode = {
-  // do not include poly fills...
-  console: false,
-  process: false,
-  global: false,
-  buffer: false,
-  __filename: false,
-  __dirname: false
-};
-
 var webpackConfig = {
   entry: './index.js',
+  mode: 'production',
   output: {
     library: 'workerpool',
     libraryTarget: 'umd',
     path: path.join(__dirname, 'dist'),
-    filename: 'workerpool.js'
+    filename: 'workerpool.js',
+    umdNamedDefine: true,
+    globalObject: '(typeof self !== \'undefined\' ? self : this)'
   },
-  node: webpackNode,
   plugins: [
     bannerPlugin
   ],
+  externals: [
+    'child_process',
+    'worker_threads',
+    'os'
+  ],
+  node: {
+    // do not include node poly fills...
+    process: false,
+    __dirname: false,
+    child_process: false,
+    worker_threads: false
+  },
   optimization: {
     // We no not want to minimize our code.
     minimize: false
-  },
-  cache: true
+  }
 };
 
 var webpackWorkerConfig = {
+  ...webpackConfig,
   entry: './lib/worker.js',
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'worker.js'
-  },
-  node: webpackNode,
-  plugins: [],
-  optimization: {
-    // We no not want to minimize our code.
-    minimize: false
   }
 };
 
@@ -81,10 +80,27 @@ var uglifyConfig = {
 // create a single instance of the compiler to allow caching
 var compiler = webpack(webpackConfig);
 
+gulp.task('clean', function () {
+  return del([
+    'dist/**/*'
+  ])
+});
+
 gulp.task('bundle-worker', function (done) {
   webpack(webpackWorkerConfig).run(function (err, stats) {
     if (err) {
       log(err);
+    }
+
+    var info = stats.toJson();
+
+    if (stats.hasWarnings()) {
+      log('Webpack warnings:\n' + info.warnings.join('\n'));
+    }
+
+    if (stats.hasErrors()) {
+      log('Webpack errors:\n' + info.errors.join('\n'));
+      done(new Error('Compile failed'));
     }
 
     log('bundled worker ./dist/worker.js');
@@ -122,6 +138,17 @@ gulp.task('bundle-workerpool', function (done) {
       log(err);
     }
 
+    var info = stats.toJson();
+
+    if (stats.hasWarnings()) {
+      log('Webpack warnings:\n' + info.warnings.join('\n'));
+    }
+
+    if (stats.hasErrors()) {
+      log('Webpack errors:\n' + info.errors.join('\n'));
+      done(new Error('Compile failed'));
+    }
+
     log('bundled ./dist/workerpool.js');
 
     done();
@@ -145,7 +172,7 @@ gulp.task('minify-workerpool', function (done) {
   done()
 });
 
-var tasks = gulp.series('bundle-worker', 'bundle-workerpool', 'minify-workerpool');
+var tasks = gulp.series('clean', 'bundle-worker', 'bundle-workerpool', 'minify-workerpool');
 
 // The default task (called when you run `gulp`)
 gulp.task('default', tasks);

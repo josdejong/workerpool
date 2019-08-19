@@ -1,4 +1,4 @@
-var workerpool = require('./../index');
+var workerpool = require('..');
 
 // create a worker pool using an external worker script
 var pool = workerpool.pool(__dirname + '/workers/crossWorker.js');

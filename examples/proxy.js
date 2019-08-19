@@ -1,4 +1,4 @@
-var workerpool = require('./../index');
+var workerpool = require('..');
 
 // create a worker pool
 var pool = workerpool.pool(__dirname + '/workers/nodeWorker.js');

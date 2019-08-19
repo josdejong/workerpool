@@ -8,7 +8,7 @@ if (typeof importScripts === 'function') {
 }
 else {
   // node.js
-  var workerpool = require('../../index');
+  var workerpool = require('../..');
 }
 
 // a deliberately inefficient implementation of the fibonacci sequence

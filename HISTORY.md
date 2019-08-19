@@ -2,6 +2,16 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 4.0.0
+
+- Pass argument `--max-old-space-size` to child processes. Thanks @patte.
+- Removed redundant dependencies, upgraded all devDependencies.
+- Fixed Webpack issues of missing modules `child_process` and `worker_threads`.
+  See #43.
+- Bundled library changed due to the upgrade to Webpack 4. This could possibly
+  lead to breaking changes.
+
+
 ## 2019-03-12, version 3.1.2
 
 - Improved error message when a node.js worker unexpectedly exits (see #58).

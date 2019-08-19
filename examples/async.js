@@ -1,4 +1,4 @@
-var workerpool = require('./../index');
+var workerpool = require('..');
 
 // create a worker pool using an the asyncWorker. This worker contains
 // asynchronous functions.
