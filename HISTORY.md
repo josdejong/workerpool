@@ -10,6 +10,10 @@ https://github.com/josdejong/workerpool
   See #43.
 - Bundled library changed due to the upgrade to Webpack 4. This could possibly
   lead to breaking changes.
+- Fixed exiting workers when the parent process is killed. Thanks @RogerKang.
+- Fixed #81: Option `minWorkers: 'max'` not using the configured `maxWorkers`.
+- Fixed not passing `nodeWorker` to workers initialized when creating a pool.
+  Thanks @spacelan.
 
 
 ## 2019-03-12, version 3.1.2
