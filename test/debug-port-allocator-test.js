@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var DebugPortAllocator = require('../lib/debug-port-allocator');
+var DebugPortAllocator = require('../src/debug-port-allocator');
 
 describe('DebugPortAllocator', function () {
   it('works', function() {

@@ -15,6 +15,7 @@ https://github.com/josdejong/workerpool
 - Fixed #81: Option `minWorkers: 'max'` not using the configured `maxWorkers`.
 - Fixed not passing `nodeWorker` to workers initialized when creating a pool.
   Thanks @spacelan.
+- Internal restructure of the code: moved from `lib` to `src`.
 
 
 ## 2019-03-12, version 3.1.2

@@ -1,4 +1,4 @@
-var environment = require('./lib/environment');
+var environment = require('./environment');
 
 /**
  * Create a new worker pool
@@ -6,7 +6,7 @@ var environment = require('./lib/environment');
  * @returns {Pool} pool
  */
 exports.pool = function pool(script, options) {
-  var Pool = require('./lib/Pool');
+  var Pool = require('./Pool');
 
   return new Pool(script, options);
 };
@@ -16,7 +16,7 @@ exports.pool = function pool(script, options) {
  * @param {Object} [methods]
  */
 exports.worker = function worker(methods) {
-  var worker = require('./lib/worker');
+  var worker = require('./worker');
   worker.add(methods);
 };
 
@@ -24,7 +24,7 @@ exports.worker = function worker(methods) {
  * Create a promise.
  * @type {Promise} promise
  */
-exports.Promise = require('./lib/Promise');
+exports.Promise = require('./Promise');
 
 exports.platform = environment.platform;
 exports.isMainThread = environment.isMainThread;

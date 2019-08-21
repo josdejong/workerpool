@@ -16,7 +16,7 @@
     "pool",
     "isomorphic"
   ],
-  "main": "dist/workerpool.js",
+  "main": "dist/workerpool.min.js",
   "scripts": {
     "build": "gulp",
     "watch": "gulp watch",

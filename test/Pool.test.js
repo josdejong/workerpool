@@ -1,6 +1,6 @@
 var assert = require('assert');
-var Promise = require('../lib/Promise');
-var Pool = require('../lib/Pool');
+var Promise = require('../src/Promise');
+var Pool = require('../src/Pool');
 
 function add(a, b) {
   return a + b;
@@ -320,7 +320,7 @@ describe('Pool', function () {
     var reachedTheEnd = false;
 
     function delayed() {
-      var Promise = require('../lib/Promise');
+      var Promise = require('../src/Promise');
 
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
@@ -365,7 +365,7 @@ describe('Pool', function () {
     var reachedTheEnd = false;
 
     function delayed() {
-      var Promise = require('../lib/Promise');
+      var Promise = require('../src/Promise');
 
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
@@ -375,7 +375,7 @@ describe('Pool', function () {
     }
 
     function two() {
-      var Promise = require('../lib/Promise');
+      var Promise = require('../src/Promise');
 
       return new Promise(function (resolve, reject) {
         setTimeout(function () {

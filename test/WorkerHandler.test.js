@@ -1,6 +1,6 @@
 var assert = require('assert'),
-    Promise = require('../lib/Promise'),
-    WorkerHandler = require('../lib/WorkerHandler'),
+    Promise = require('../src/Promise'),
+    WorkerHandler = require('../src/WorkerHandler'),
     path = require('path'),
     childProcess = require('child_process'),
     findProcess = require('find-process');
@@ -119,7 +119,7 @@ describe('WorkerHandler', function () {
     var handler = new WorkerHandler();
 
     function asyncAdd(a, b) {
-      var Promise = require('../lib/Promise');
+      var Promise = require('../src/Promise');
 
       return new Promise(function (resolve, reject) {
         if (typeof a === 'number' && typeof b === 'number') {

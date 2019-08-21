@@ -12,7 +12,7 @@ function createBanner() {
   var today = format.asString('yyyy-MM-dd', new Date()); // today, formatted as yyyy-MM-dd
   var version = require('./package.json').version;  // module version
 
-  return String(fs.readFileSync('./lib/header.js'))
+  return String(fs.readFileSync('./src/header.js'))
       .replace('@@date', today)
       .replace('@@version', version);
 }
@@ -24,7 +24,7 @@ var bannerPlugin = new webpack.BannerPlugin({
 });
 
 var webpackConfig = {
-  entry: './index.js',
+  entry: './src/index.js',
   mode: 'production',
   output: {
     library: 'workerpool',
@@ -46,7 +46,7 @@ var webpackConfig = {
 
 var webpackWorkerConfig = {
   ...webpackConfig,
-  entry: './lib/worker.js',
+  entry: './src/worker.js',
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'worker.js'
@@ -108,9 +108,9 @@ gulp.task('bundle-worker', function (done) {
         ' */\n' +
         'module.exports = ' + JSON.stringify(result.code) + ';\n';
 
-    fs.writeFileSync('./lib/generated/embeddedWorker.js', embedded);
+    fs.writeFileSync('./src/generated/embeddedWorker.js', embedded);
 
-    log('generated embedded worker ./lib/generated/embeddedWorker.js');
+    log('generated embedded worker ./src/generated/embeddedWorker.js');
     done();
   });
 });
@@ -168,5 +168,5 @@ gulp.task('default', tasks);
 
 // The watch task (to automatically rebuild when the source code changes)
 gulp.task('watch', gulp.series(tasks, function () {
-  gulp.watch(['index.js', 'lib/**/*.js', '!lib/generated/**'], tasks);
+  gulp.watch(['index.js', 'src/**/*.js', '!src/generated/**'], tasks);
 }));
