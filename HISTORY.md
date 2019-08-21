@@ -5,6 +5,7 @@ https://github.com/josdejong/workerpool
 ## not yet published, version 4.0.0
 
 - Fixed exiting workers when the parent process is killed. Thanks @RogerKang.
+- Fix #81: Option `minWorkers: 'max'` not using the configured `maxWorkers`.
 
 
 ## 2019-03-12, version 3.1.2
