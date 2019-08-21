@@ -34,20 +34,20 @@ var webpackConfig = {
     umdNamedDefine: true,
     globalObject: '(typeof self !== \'undefined\' ? self : this)'
   },
+  module: {
+    unknownContextCritical: false // for requireFoolWebpack
+  },
   plugins: [
     bannerPlugin
   ],
   externals: [
     'child_process',
-    'worker_threads',
     'os'
   ],
   node: {
     // do not include node poly fills...
     process: false,
-    __dirname: false,
-    child_process: false,
-    worker_threads: false
+    __dirname: false
   },
   optimization: {
     // We no not want to minimize our code.
