@@ -1,4 +1,4 @@
-var workerpool = require('../../index');
+var workerpool = require('../../');
 
 function doNothing () {
 }

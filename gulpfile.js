@@ -34,21 +34,10 @@ var webpackConfig = {
     umdNamedDefine: true,
     globalObject: '(typeof self !== \'undefined\' ? self : this)'
   },
-  module: {
-    unknownContextCritical: false // for requireFoolWebpack
-  },
   plugins: [
     bannerPlugin
   ],
-  externals: [
-    'child_process',
-    'os'
-  ],
-  node: {
-    // do not include node poly fills...
-    process: false,
-    __dirname: false
-  },
+  node: false, // do not include node poly fills for process, __dirname, etc
   optimization: {
     // We no not want to minimize our code.
     minimize: false
