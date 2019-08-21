@@ -17,6 +17,14 @@
     "isomorphic"
   ],
   "main": "dist/workerpool.min.js",
+  "files": [
+    "dist",
+    "examples",
+    "src",
+    "HISTORY.md",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "build": "gulp",
     "watch": "gulp watch",
