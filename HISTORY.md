@@ -4,6 +4,7 @@ https://github.com/josdejong/workerpool
 
 ## not yet published, version 4.0.0
 
+- Implemented new option `maxQueueSize`. Thanks @colomboe.
 - Fixed exiting workers when the parent process is killed. Thanks @RogerKang.
 - Fixed #81: Option `minWorkers: 'max'` not using the configured `maxWorkers`.
 - Fixed not passing `nodeWorker` to workers initialized when creating a pool.
