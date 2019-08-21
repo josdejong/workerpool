@@ -193,6 +193,7 @@ The following options are available:
 
 - `minWorkers: number | 'max'`. The minimum number of workers that must be initialized and kept available. Setting this to `'max'` will create `maxWorkers` default workers (see below).
 - `maxWorkers: number`. The default number of maxWorkers is the number of CPU's minus one. When the number of CPU's could not be determined (for example in older browsers), `maxWorkers` is set to 3.
+- `maxQueueSize: number`. The maximum number of tasks allowed to be queued. Can be used to prevent running out of memory. If the maximum is exceeded, adding a new task will throw an error. The default value is `Infinity`.
 - `nodeWorker: 'process' | 'thread' | 'auto'`.
   - In case of `'process'` (default), `child_process` will be used.
   - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown.
