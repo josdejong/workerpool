@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 4.0.0
+## 2019-08-21, version 4.0.0
 
 - Pass argument `--max-old-space-size` to child processes. Thanks @patte.
 - Removed redundant dependencies, upgraded all devDependencies.
