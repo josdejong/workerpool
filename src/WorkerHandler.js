@@ -1,6 +1,5 @@
 'use strict';
 
-var assign = require('object-assign');
 var Promise = require('./Promise');
 var environment = require('./environment');
 var requireFoolWebpack = require('./requireFoolWebpack');
@@ -122,9 +121,9 @@ function resolveForkOptions(opts) {
     }
   })
 
-  return assign({}, opts, {
+  return Object.assign({}, opts, {
     forkArgs: opts.forkArgs,
-    forkOpts: assign({}, opts.forkOpts, {
+    forkOpts: Object.assign({}, opts.forkOpts, {
       execArgv: (opts.forkOpts && opts.forkOpts.execArgv || [])
       .concat(execArgv)
     })
