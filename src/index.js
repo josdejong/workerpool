@@ -2,7 +2,8 @@ var environment = require('./environment');
 
 /**
  * Create a new worker pool
- * @param {Object} [options]
+ * @param {string} script
+ * @param {WorkerPoolOptions} [options]
  * @returns {Pool} pool
  */
 exports.pool = function pool(script, options) {

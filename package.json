@@ -28,7 +28,7 @@
   "scripts": {
     "build": "gulp",
     "watch": "gulp watch",
-    "test": "npm run build && mocha test --timeout 10000",
+    "test": "npm run build && mocha test --timeout 2000",
     "test:debug": "npm run build && mocha debug test --timeout 10000",
     "coverage": "npm run build && istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\"",
     "prepublishOnly": "npm run test"

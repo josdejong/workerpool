@@ -192,10 +192,11 @@ The following options are available:
 - `minWorkers: number | 'max'`. The minimum number of workers that must be initialized and kept available. Setting this to `'max'` will create `maxWorkers` default workers (see below).
 - `maxWorkers: number`. The default number of maxWorkers is the number of CPU's minus one. When the number of CPU's could not be determined (for example in older browsers), `maxWorkers` is set to 3.
 - `maxQueueSize: number`. The maximum number of tasks allowed to be queued. Can be used to prevent running out of memory. If the maximum is exceeded, adding a new task will throw an error. The default value is `Infinity`.
-- `nodeWorker: 'process' | 'thread' | 'auto'`.
-  - In case of `'process'` (default), `child_process` will be used.
-  - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown.
-  - In case of `'auto'`, `worker_threads` will be used if available (Node.js >= 11.7.0), else `child_process` will be used as fallback.
+- `workerType: 'auto' | 'web' | 'process' | 'thread'`.
+  - In case of `'auto'`, workerpool will automatically pick a suitable type of worker: when in a browser environment, `'web'` will be used. When in a node.js environment, `worker_threads` will be used if available (Node.js >= 11.7.0), else `child_process` will be used.
+  - In case of `'web'`, a Web Worker will be used. Only available in a browser environment.
+  - In case of `'process'` (default), `child_process` will be used. Only available in a node.js environment.
+  - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown. Only available in a node.js environment.
 
 A worker pool contains the following functions:
 

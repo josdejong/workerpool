@@ -7,19 +7,27 @@ var requireFoolWebpack = require('./requireFoolWebpack');
 function ensureWorkerThreads() {
   var WorkerThreads = tryRequireWorkerThreads()
   if (!WorkerThreads) {
-    throw new Error('WorkerPool: nodeWorkers = thread is not supported, Node >= 11.7.0 required')
+    throw new Error('WorkerPool: workerType = \'thread\' is not supported, Node >= 11.7.0 required')
   }
 
   return WorkerThreads;
+}
+
+// check whether Worker is supported by the browser
+function ensureWebWorker() {
+  // Workaround for a bug in PhantomJS (Or QtWebkit): https://github.com/ariya/phantomjs/issues/14534
+  if (typeof Worker !== 'function' && (typeof Worker !== 'object' || typeof Worker.prototype.constructor !== 'function')) {
+    throw new Error('WorkerPool: Web Workers not supported');
+  }
 }
 
 function tryRequireWorkerThreads() {
   try {
     return requireFoolWebpack('worker_threads');
   } catch(error) {
-    if (typeof error === 'object' && error !== null && error.code == 'MODULE_NOT_FOUND') {
+    if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
+      // no worker_threads available (old version of node.js)
       return null;
-      // no worker_threads, fallback to sub-process based workers
     } else {
       throw error;
     }
@@ -28,7 +36,7 @@ function tryRequireWorkerThreads() {
 
 // get the default worker script
 function getDefaultWorker() {
-  if (environment.platform == 'browser') {
+  if (environment.platform === 'browser') {
     // test whether the browser supports all features that we need
     if (typeof Blob === 'undefined') {
       throw new Error('Blob not supported by the browser');
@@ -44,6 +52,31 @@ function getDefaultWorker() {
   else {
     // use external worker.js in current directory
     return __dirname + '/worker.js';
+  }
+}
+
+function setupWorker(script, options) {
+  if (options.workerType === 'web') { // browser only
+    ensureWebWorker();
+    return setupBrowserWorker(script, Worker);
+  } else if (options.workerType === 'thread') { // node.js only
+    WorkerThreads = ensureWorkerThreads();
+    return setupWorkerThreadWorker(script, WorkerThreads);
+  } else if (options.workerType === 'process' || !options.workerType) { // node.js only
+    return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
+  } else { // options.workerType === 'auto' or undefined
+    if (environment.platform === 'browser') {
+      ensureWebWorker();
+      return setupBrowserWorker(script, Worker);
+    }
+    else { // environment.platform === 'node'
+      var WorkerThreads = tryRequireWorkerThreads();
+      if (WorkerThreads) {
+        return setupWorkerThreadWorker(script, WorkerThreads);
+      } else {
+        return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
+      }
+    }
   }
 }
 
@@ -151,40 +184,16 @@ function objectToError (obj) {
  * on node.js or a WebWorker in a browser environment.
  * @param {String} [script] If no script is provided, a default worker with a
  *                          function run will be created.
+ * @param {WorkerPoolOptions} _options See docs
  * @constructor
  */
 function WorkerHandler(script, _options) {
-  this.script = script || getDefaultWorker();
-  var options = _options || {};
-  this.debugPort = options.debugPort;
-
-  if (environment.platform == 'browser') {
-    // check whether Worker is supported by the browser
-    // Workaround for a bug in PhantomJS (Or QtWebkit): https://github.com/ariya/phantomjs/issues/14534
-    if (typeof Worker !== 'function' && (typeof Worker !== 'object' || typeof Worker.prototype.constructor !== 'function')) {
-      throw new Error('WorkerPool: Web workers not supported by the browser');
-    }
-
-    this.worker = setupBrowserWorker(this.script, Worker);
-  } else {
-    var WorkerThreads;
-
-    if (options.nodeWorker === 'thread') {
-      WorkerThreads = ensureWorkerThreads();
-      this.worker = setupWorkerThreadWorker(this.script, WorkerThreads);
-    } else if (options.nodeWorker === 'auto') {
-      WorkerThreads = tryRequireWorkerThreads();
-      if (WorkerThreads) {
-        this.worker = setupWorkerThreadWorker(this.script, WorkerThreads);
-      } else {
-        this.worker = setupProcessWorker(this.script, resolveForkOptions(options), requireFoolWebpack('child_process'));
-      }
-    } else {
-      this.worker = setupProcessWorker(this.script, resolveForkOptions(options), requireFoolWebpack('child_process'));
-    }
-  }
-
   var me = this;
+  var options = _options || {};
+
+  this.script = script || getDefaultWorker();
+  this.worker = setupWorker(this.script, options);
+  this.debugPort = options.debugPort;
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {

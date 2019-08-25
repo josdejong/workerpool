@@ -6,7 +6,7 @@ var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
 /**
  * A pool to manage workers
  * @param {String} [script]   Optional worker script
- * @param {Object} [options]  Available options: maxWorkers: Number
+ * @param {WorkerPoolOptions} [options]  See docs
  * @constructor
  */
 function Pool(script, options) {
@@ -23,10 +23,18 @@ function Pool(script, options) {
 
   options = options || {};
 
+  // TODO: deprecated since v5.0.0, 2019-08-25. Cleanup in v6.0.0
+  if (options.nodeWorker) {
+    console.warn(
+        'WARNING: Option "nodeWorker" is deprecated since workerpool@5.0.0. ' +
+        'Please use "workerType" instead.');
+  }
+
   this.forkArgs = options.forkArgs || [];
   this.forkOpts = options.forkOpts || {};
   this.debugPortStart = (options.debugPortStart || 43210);
   this.nodeWorker = options.nodeWorker;
+  this.workerType = options.workerType || options.nodeWorker || 'auto'
   this.maxQueueSize = options.maxQueueSize || Infinity;
 
   // configuration
@@ -52,7 +60,7 @@ function Pool(script, options) {
   this._boundNext = this._next.bind(this);
 
 
-  if (this.nodeWorker === 'thread') {
+  if (this.workerType === 'thread') {
     WorkerHandler.ensureWorkerThreads();
   }
 }
@@ -246,12 +254,7 @@ Pool.prototype._getWorker = function() {
 
   if (workers.length < this.maxWorkers) {
     // create a new worker
-    worker = new WorkerHandler(this.script, {
-      forkArgs: this.forkArgs,
-      forkOpts: this.forkOpts,
-      debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
-      nodeWorker: this.nodeWorker
-    });
+    worker = this._createWorkerHandler();
     workers.push(worker);
     return worker;
   }
@@ -280,7 +283,7 @@ Pool.prototype._removeWorker = function(worker) {
 Pool.prototype._removeWorkerFromList = function(worker) {
   // remove from the list with workers
   var index = this.workers.indexOf(worker);
-  if (index != -1) {
+  if (index !== -1) {
     this.workers.splice(index, 1);
   }
 };
@@ -347,15 +350,24 @@ Pool.prototype.stats = function () {
 Pool.prototype._ensureMinWorkers = function() {
   if (this.minWorkers) {
     for(var i = this.workers.length; i < this.minWorkers; i++) {
-      this.workers.push(new WorkerHandler(this.script, {
-        forkArgs: this.forkArgs,
-        forkOpts: this.forkOpts,
-        debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
-        nodeWorker: this.nodeWorker
-      }));
+      this.workers.push(this._createWorkerHandler());
     }
   }
 };
+
+/**
+ * Helper function to create a new WorkerHandler and pass all options.
+ * @return {WorkerHandler}
+ * @private
+ */
+Pool.prototype._createWorkerHandler = function () {
+  return new WorkerHandler(this.script, {
+    forkArgs: this.forkArgs,
+    forkOpts: this.forkOpts,
+    debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
+    workerType: this.workerType
+  });
+}
 
 /**
  * Ensure that the maxWorkers option is an integer >= 1

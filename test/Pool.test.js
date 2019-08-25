@@ -27,7 +27,7 @@ describe('Pool', function () {
     }
 
     it('supports process', function() {
-      var pool = new Pool({ nodeWorker: 'process' });
+      var pool = new Pool({ workerType: 'process' });
 
       return pool.exec(add, [3, 4])
           .then(function (result) {
@@ -40,7 +40,7 @@ describe('Pool', function () {
     var WorkerThreads = tryRequire('worker_threads');
 
     it('supports auto', function() {
-      var pool = new Pool({ nodeWorker: 'auto' });
+      var pool = new Pool({ workerType: 'auto' });
       var promise = pool.exec(add, [3, 4]);
       assert.strictEqual(pool.workers.length, 1);
       var worker = pool.workers[0].worker;
@@ -60,7 +60,7 @@ describe('Pool', function () {
 
     if (WorkerThreads) {
       it('supports thread', function() {
-        var pool = new Pool({ nodeWorker: 'thread' });
+        var pool = new Pool({ workerType: 'thread' });
         var promise = pool.exec(add, [3, 4]);
 
         assert.strictEqual(pool.workers.length, 1);
@@ -76,8 +76,8 @@ describe('Pool', function () {
     } else {
       it('errors when not supporting worker thread', function() {
         assert.throws(function() {
-          new Pool({ nodeWorker: 'thread' });
-        }, /WorkerPool: nodeWorkers = thread is not supported, Node >= 11\.7\.0 required/)
+          new Pool({ workerType: 'thread' });
+        }, /WorkerPool: workerType = 'thread' is not supported, Node >= 11\.7\.0 required/)
       });
     }
   })
@@ -536,10 +536,6 @@ describe('Pool', function () {
           assert.ok(err.toString().match(/exitCode: `.*`/));
           assert.ok(err.toString().match(/signalCode: `.*`/));
           assert.ok(err.toString().match(/workerpool.script: `.*\.js`/));
-          assert.ok(err.toString().match(/spawnArgs: `.*\.js`/));
-          assert.ok(err.toString().match(/spawnfile: `.*node`/));
-          assert.ok(err.toString().match(/stdout: `null`/));
-          assert.ok(err.toString().match(/stderr: `null`/));
 
           assert.strictEqual(pool.workers.length, 0);
 

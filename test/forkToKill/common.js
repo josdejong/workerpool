@@ -3,7 +3,7 @@ var path = require('path');
 
 var pool = workerpool.pool(path.join(__dirname, '../workers/interval.js'), {
   maxWorkers: 1,
-  nodeWorker: 'process'
+  workerType: 'process'
 });
 
 process.send && process.send({

@@ -1,9 +1,9 @@
-var assert = require('assert'),
-    Promise = require('../src/Promise'),
-    WorkerHandler = require('../src/WorkerHandler'),
-    path = require('path'),
-    childProcess = require('child_process'),
-    findProcess = require('find-process');
+var assert = require('assert');
+var Promise = require('../src/Promise');
+var WorkerHandler = require('../src/WorkerHandler');
+var path = require('path');
+var childProcess = require('child_process');
+var findProcess = require('find-process');
 
 function add(a, b) {
   return a + b;
