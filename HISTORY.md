@@ -2,13 +2,13 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 5.0.0
+## 2019-08-25, version 5.0.0
 
 - Deprecated option `nodeWorker` and created a new, more extensive option
   `workerType` giving full control over the selected type of worker.
   Added new option `'web'` to enforce use a Web Worker. See #85, #74.
 - In a node.js environment, the default `workerType` is changed from
-  `'process'` to `'thread'`.
+  `'process'` to `'thread'`. See #85, #50.
 - Improved detection of environment (`browser` or `node`), fixing wrong
   detection in a Jest test environment. See #85.
 
