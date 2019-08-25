@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 5.0.0
+
+- Improved detection of environment (`browser` or `node`), fixing wrong
+  detection in a Jest test environment. See #85.
+
+
 ## 2019-08-21, version 4.0.0
 
 - Pass argument `--max-old-space-size` to child processes. Thanks @patte.
