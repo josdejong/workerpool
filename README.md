@@ -84,7 +84,7 @@ pool.exec(add, [3, 4])
       console.error(err);
     })
     .then(function () {
-      pool.terminate(); // terminate all workers when done
+      return pool.terminate(); // terminate all workers when done
     });
 ```
 
@@ -129,7 +129,7 @@ pool.exec('fibonacci', [10])
       console.error(err);
     })
     .then(function () {
-      pool.terminate(); // terminate all workers when done
+      return pool.terminate(); // terminate all workers when done
     });
 
 // or run registered functions on the worker via a proxy:
@@ -144,7 +144,7 @@ pool.proxy()
       console.error(err);
     })
     .then(function () {
-      pool.terminate(); // terminate all workers when done
+      return pool.terminate(); // terminate all workers when done
     });
 ```
 
@@ -223,9 +223,9 @@ A worker pool contains the following functions:
    }
    ```
 
-- `Pool.terminate([force: boolean [, timeout: number]])`
+- `Pool.terminate([force: boolean [, timeout: number]]) : Promise.<*, Error>`<br>
 
-  If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks. If `timeout` is provided, worker will be forced to terminal when the timeout expires and the worker has not finished.
+  If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks. If `timeout` is provided, worker will be forced to terminate when the timeout expires and the worker has not finished.
 
 - `Pool.clear([force: boolean])`<br>
   *Deprecated: use `Pool.terminate` instead*<br>.

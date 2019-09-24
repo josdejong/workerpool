@@ -17,5 +17,5 @@ pool.exec(add, [3, 4])
       console.error(err);
     })
     .then(function () {
-      pool.terminate(); // terminate all workers when done
+      return pool.terminate(); // terminate all workers when done
     });
