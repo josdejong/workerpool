@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2019-10-13, version 5.0.1
+
+- Fixed #96: WorkerPool not cancelling any pending tasks on termination.
+
+
 ## 2019-08-25, version 5.0.0
 
 - Deprecated option `nodeWorker` and created a new, more extensive option

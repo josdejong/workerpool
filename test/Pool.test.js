@@ -807,6 +807,45 @@ describe('Pool', function () {
       });
   });
 
+  it ('should cancel any pending tasks when terminating a pool', function (done) {
+    var pool = new Pool({maxWorkers: 1});
+
+    assert.strictEqual(pool.workers.length, 0);
+
+    function test1 () {
+      return 'test 1 ok';
+    }
+    function test2 () {
+      return 'test 2 ok';
+    }
+
+    var promise1 = pool.exec(test1);
+    var promise2 = pool.exec(test2);
+
+    assert.strictEqual(pool.workers.length, 1);
+    assert.strictEqual(pool.tasks.length, 1);
+
+    pool.terminate(false)
+      .then(function() {
+        assert.strictEqual(pool.workers.length, 0);
+        assert.strictEqual(pool.tasks.length, 0);
+
+        return Promise.all([
+          promise1.then(function (result) {
+            assert.strictEqual(result, 'test 1 ok');
+          }),
+          promise2.catch(function (err) {
+            assert.strictEqual(err.message, 'Pool terminated');
+          })
+        ]).then(function () {
+            done();
+          });
+      })
+      .catch(function (err) {
+        console.error(err);
+      });
+  });
+
   it('should return statistics', function () {
     var pool = new Pool({maxWorkers: 4});
 

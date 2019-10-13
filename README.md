@@ -225,11 +225,7 @@ A worker pool contains the following functions:
 
 - `Pool.terminate([force: boolean [, timeout: number]])`
 
-  If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks. If `timeout` is provided, worker will be forced to terminal when the timeout expires and the worker has not finished.
-
-- `Pool.clear([force: boolean])`<br>
-  *Deprecated: use `Pool.terminate` instead*<br>.
-  Clear all workers from the pool. If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. When `force` is true, all workers are terminated immediately without finishing running tasks.
+  If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. Any pending tasks will be rejected with an error 'Pool terminated'. When `force` is true, all workers are terminated immediately without finishing running tasks. If `timeout` is provided, worker will be forced to terminate when the timeout expires and the worker has not finished.
 
 The function `Pool.exec` and the proxy functions all return a `Promise`. The promise has the following functions available:
 

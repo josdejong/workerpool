@@ -299,6 +299,12 @@ Pool.prototype._removeWorkerFromList = function(worker) {
  * @return {Promise.<void, Error>}
  */
 Pool.prototype.terminate = function (force, timeout) {
+  // cancel any pending tasks
+  this.tasks.forEach(function (task) {
+    task.resolver.reject(new Error('Pool terminated'));
+  });
+  this.tasks.length = 0;
+
   var f = function (worker) {
     this._removeWorkerFromList(worker);
   };
@@ -314,12 +320,13 @@ Pool.prototype.terminate = function (force, timeout) {
   return Promise.all(promises);
 };
 
-// DEPRECATED
 /**
  * Close all active workers. Unlike terminate, this function does not return a promise.
  * @param force
+ * @deprecated
  */
 Pool.prototype.clear = function (force) {
+  console.warn('Pool.clear() is deprecated. Use Pool.terminate() instead.');
   this.terminate(force);
 };
 
