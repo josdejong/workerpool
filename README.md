@@ -88,7 +88,7 @@ pool.exec(add, [3, 4])
     });
 ```
 
-Note that both function and arguments must be static and stringifiable, as they need to be send to the worker in a serialized form. In case of large functions or function arguments, the overhead of sending the data to the worker can be significant.
+Note that both function and arguments must be static and stringifiable, as they need to be sent to the worker in a serialized form. In case of large functions or function arguments, the overhead of sending the data to the worker can be significant.
 
 
 ### Dedicated workers
