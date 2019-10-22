@@ -40,8 +40,8 @@
     "find-process": "1.4.2",
     "gulp": "4.0.2",
     "istanbul": "0.4.5",
-    "mocha": "6.2.1",
-    "uglify-js": "3.6.2",
+    "mocha": "6.2.2",
+    "uglify-js": "3.6.3",
     "webpack": "4.41.2"
   },
   "dependencies": {}
