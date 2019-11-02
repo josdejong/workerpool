@@ -3,7 +3,7 @@ var requireFoolWebpack = require('./requireFoolWebpack');
 // source: https://github.com/flexdinesh/browser-or-node
 var isNode = (
     typeof process !== 'undefined' &&
-    typeof process.versions != null &&
+    process.versions != null &&
     process.versions.node != null);
 
 // determines the JavaScript platform: browser or node
