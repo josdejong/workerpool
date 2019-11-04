@@ -1,27 +1,17 @@
 const assert = require('assert')
-const requireUncached = id => {
-    delete require.cache[require.resolve(id)]
-    return require(id)
-}
+const isNode = require('../src/environment').isNode
 
-const test = (process, test) => {
-    const backup = { process: global.process, self: global.self }
-    global.process = process
-    global.self = { navigator: { hardwareConcurrency: 8 } }
-    const environment = requireUncached('../src/environment')
-    Object.assign(global, backup)
-    test(environment, process)
-}
+const test = (process, should) => should(isNode(process))
 
-const shouldBeBrowser = env => {
+const shouldBeBrowser = isNode => {
     it('is platform assigned to be browser', function () {
-        assert.strictEqual(env.platform, 'browser')
+        assert.strictEqual(isNode, false)
     })
 }
 
-const shouldBeNode = env => {
+const shouldBeNode = isNode => {
     it('is platform assigned to be node', function () {
-        assert.strictEqual(env.platform, 'node')
+        assert.strictEqual(isNode, true)
     })
 }
 
