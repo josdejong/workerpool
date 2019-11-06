@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2019-11-06, version 5.0.2
+
+- Fixed environment detection in browser. See #106. Thanks @acgrid.
+
+
 ## 2019-10-13, version 5.0.1
 
 - Fixed #96: WorkerPool not cancelling any pending tasks on termination.

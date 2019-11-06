@@ -1,7 +1,7 @@
 {
   "name": "workerpool",
   "license": "Apache-2.0",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Offload tasks to a pool of workers on node.js and in the browser",
   "homepage": "https://github.com/josdejong/workerpool",
   "author": "Jos de Jong <wjosdejong@gmail.com> (https://github.com/josdejong)",
@@ -42,7 +42,8 @@
     "istanbul": "0.4.5",
     "mocha": "6.2.2",
     "uglify-js": "3.6.8",
-    "webpack": "4.41.2"
+    "webpack": "4.41.2",
+    "handlebars": "4.5.1"
   },
   "dependencies": {}
 }
