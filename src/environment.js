@@ -11,12 +11,12 @@ var isNode = function (nodeProcess) {
 module.exports.isNode = isNode
 
 // determines the JavaScript platform: browser or node
-module.exports.platform = isNode(process)
+module.exports.platform = typeof process !== 'undefined' && isNode(process)
     ? 'node'
     : 'browser';
 
 // determines whether the code is running in main thread or not
-module.exports.isMainThread = isNode
+module.exports.isMainThread = module.exports.platform === 'node'
     ? !process.connected
     : typeof Window !== 'undefined';
 

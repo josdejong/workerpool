@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2019-12-23, version 5.0.3
+
+- Fixed library not working in the browser. See #106.
+
+
 ## 2019-11-06, version 5.0.2
 
 - Fixed environment detection in browser. See #106. Thanks @acgrid.
