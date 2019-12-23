@@ -37,13 +37,13 @@
     "date-format": "3.0.0",
     "del": "5.1.0",
     "fancy-log": "1.3.3",
-    "find-process": "1.4.2",
+    "find-process": "1.4.3",
     "gulp": "4.0.2",
     "istanbul": "0.4.5",
     "mocha": "6.2.2",
-    "uglify-js": "3.6.8",
-    "webpack": "4.41.2",
-    "handlebars": "4.5.1"
+    "uglify-js": "3.7.2",
+    "webpack": "4.41.4",
+    "handlebars": "4.5.3"
   },
   "dependencies": {}
 }
