@@ -12,7 +12,6 @@ function tryRequire(moduleName) {
   } catch(error) {
     if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
       return null;
-      // no worker_threads, fallback to sub-process based workers
     } else {
       throw error;
     }
