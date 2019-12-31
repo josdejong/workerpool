@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 5.0.4
+## 2019-12-31, version 5.0.4
 
 - Fixed #121: `isMainThread` not working when using `worker_threads`.
 - Drop official support for node.js 8 (end of life).
