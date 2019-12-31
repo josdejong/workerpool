@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 5.0.4
+
+- Fixed #121: `isMainThread` not working when using `worker_threads`.
+
+
 ## 2019-12-23, version 5.0.3
 
 - Fixed library not working in the browser. See #106.

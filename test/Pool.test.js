@@ -1,21 +1,10 @@
 var assert = require('assert');
 var Promise = require('../src/Promise');
 var Pool = require('../src/Pool');
+var tryRequire = require('./utils').tryRequire
 
 function add(a, b) {
   return a + b;
-}
-
-function tryRequire(moduleName) {
-  try {
-    return require(moduleName);
-  } catch(error) {
-    if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
-      return null;
-    } else {
-      throw error;
-    }
-  }
 }
 
 describe('Pool', function () {
