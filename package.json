@@ -43,7 +43,7 @@
     "mocha": "6.2.2",
     "uglify-js": "3.7.3",
     "webpack": "4.41.5",
-    "handlebars": "4.5.3"
+    "handlebars": "4.6.0"
   },
   "dependencies": {}
 }
