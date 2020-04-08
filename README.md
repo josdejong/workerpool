@@ -197,6 +197,9 @@ The following options are available:
   - In case of `'web'`, a Web Worker will be used. Only available in a browser environment.
   - In case of `'process'`, `child_process` will be used. Only available in a node.js environment.
   - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown. Only available in a node.js environment.
+- `autoStart: boolean`. Define whether the worker pool should start processing tasks by default, or if it should be paused initially.
+  - In case of `true` (default), the worker pool will start processing tasks as soon as they are added/given to the pool
+  - In case of `false`, the worker pool will default to paused, and can be resumed using `Pool.resume()`
 
 A worker pool contains the following functions:
 
@@ -207,6 +210,40 @@ A worker pool contains the following functions:
 
 - `Pool.proxy() : Promise.<Object, Error>`<br>
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
+
+- `Pool.enqueue([ { method: Function | string, params: Array | null } ])`<br>
+  Enqueue an array of tasks into the pool with given methods and arguments.
+  - When `method` is a string, a method with this name must exist at the worker and must be registered to make it accessible via the pool. The function will be executed on the worker with given parameters.
+  - When `method` is a function, the provided function `fn` will be stringified, send to the worker, and executed there with the provided parameters. The provided function must be static, it must not depend on variables in a surrounding scope.
+
+  Example usage:
+
+  ```js
+  var workerpool = require('workerpool');
+
+  var pool = workerpool.pool();
+
+  function add(a, b) {
+    return a + b;
+  }
+
+  pool.enqueue([
+    { method: add, params: [1, 2] },
+    { method: add, params: [3, 4] },
+    { method: add, params: [5, 6] },
+    { method: add, params: [7, 8] }
+  ]);
+  ```
+
+- `Pool.pause()`<br>
+  Pause the worker pool to stop it from running any further tasks in its queue<br>
+  ****Any currently active/running tasks will still finish**
+
+- `Pool.resume()`<br>
+  Resume the worker pool to start it running tasks in its queue
+
+- `Pool.isPaused() : Boolean`<br>
+  Get the paused status of the worker pool
 
 - `Pool.stats() : Object`<br>
    Retrieve statistics on workers, and active and pending tasks.

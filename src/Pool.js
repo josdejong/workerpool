@@ -36,6 +36,8 @@ function Pool(script, options) {
   this.nodeWorker = options.nodeWorker;
   this.workerType = options.workerType || options.nodeWorker || 'auto'
   this.maxQueueSize = options.maxQueueSize || Infinity;
+  this.autoStart = options.autoStart === undefined ? true : options.autoStart;
+  this.paused = !this.autoStart;
 
   // configuration
   if (options && 'maxWorkers' in options) {
@@ -196,8 +198,8 @@ Pool.prototype.map = function (array, callback) {
  * @protected
  */
 Pool.prototype._next = function () {
-  if (this.tasks.length > 0) {
-    // there are tasks in the queue
+  if (this.tasks.length > 0 && !this.paused) {
+    // there are tasks in the queue and the pool is running
 
     // find an available worker
     var worker = this._getWorker();
@@ -328,6 +330,71 @@ Pool.prototype.terminate = function (force, timeout) {
 Pool.prototype.clear = function (force) {
   console.warn('Pool.clear() is deprecated. Use Pool.terminate() instead.');
   this.terminate(force);
+};
+
+/**
+ * Pause the pool, tasks will stop running after workers finish their current task.
+ */
+Pool.prototype.pause = function () {
+  this.paused = true;
+};
+
+Pool.prototype.isPaused = function () {
+  return this.paused;
+};
+
+/**
+ * Resume the pool.
+ */
+Pool.prototype.resume = function () {
+  this.paused = false;
+  this._next();
+};
+
+/**
+ * Enqueue multiple tasks to the pools queue
+ * @param {Array} newTasks
+ */
+Pool.prototype.enqueue = function (newTasks) {
+
+  if (this.tasks.length >= this.maxQueueSize) {
+    throw new Error('Max queue size of ' + this.maxQueueSize + ' reached');
+  }
+
+  var tasks = this.tasks;
+
+  newTasks.forEach(function(t) {
+    var resolver = Promise.defer();
+    var task = {
+      method: String(t.method),
+      params: t.params,
+      resolver: resolver,
+      timeout: null
+    };
+
+    tasks.push(task);
+
+    // replace the timeout method of the Promise with our own,
+    // which starts the timer as soon as the task is actually started
+    var originalTimeout = resolver.promise.timeout;
+    resolver.promise.timeout = function timeout (delay) {
+      if (tasks.indexOf(task) !== -1) {
+        // task is still queued -> start the timer later on
+        task.timeout = delay;
+        return resolver.promise;
+      }
+      else {
+        // task is already being executed -> start timer immediately
+        return originalTimeout.call(resolver.promise, delay);
+      }
+    };
+
+  });
+
+  if(!this.paused) {
+    this._next();
+  }
+
 };
 
 /**

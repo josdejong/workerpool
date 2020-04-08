@@ -70,6 +70,200 @@ describe('Pool', function () {
     }
   })
 
+  it('should default to paused if autoStart equals false in options', function () {
+    var pool = new Pool({maxWorkers: 2, autoStart: false});
+    assert.strictEqual(pool.paused, true);
+  });
+
+  it('should default to NOT be paused if autoStart is not defined in options', function () {
+    var pool = new Pool({maxWorkers: 2});
+    assert.strictEqual(pool.paused, false);
+  });
+
+  it('should default to NOT be paused if autoStart is true in options', function () {
+    var pool = new Pool({maxWorkers: 2, autoStart: true});
+    assert.strictEqual(pool.paused, false);
+  });
+
+  it('should be able to be paused manually', function () {
+    var pool = new Pool({maxWorkers: 2});
+    assert.strictEqual(pool.paused, false);
+    pool.pause();
+    assert.strictEqual(pool.paused, true);
+  });
+
+  it('should have correct value for isPaused', function () {
+    var pool = new Pool({maxWorkers: 1, autoStart: false});
+    assert.strictEqual(pool.isPaused(), true);
+    pool.resume();
+    assert.strictEqual(pool.isPaused(), false);
+  });
+
+  it('should be able to be resumed manually', function () {
+    var pool = new Pool({maxWorkers: 2, autoStart: false});
+    assert.strictEqual(pool.paused, true);
+    pool.resume();
+    assert.strictEqual(pool.paused, false);
+  });
+
+  it('should be able to enqueue tasks ( methods are functions )', function () {
+    var pool = new Pool({maxWorkers: 2, autoStart: false});
+
+    function add(a, b) {
+      return a + b;
+    }
+
+    assert.strictEqual(pool.workers.length, 0);
+    assert.strictEqual(pool.tasks.length, 0);
+
+    pool.enqueue([
+      { method: add, params: [3, 4] },
+      { method: add, params: [3, 4] },
+      { method: add, params: [3, 4] },
+      { method: add, params: [3, 4] }
+    ]);
+
+    assert.strictEqual(pool.workers.length, 0);
+    assert.strictEqual(pool.tasks.length, 4);
+  });
+
+  it('should be able to enqueue tasks ( methods are strings )', function () {
+    var pool = new Pool(__dirname + '/workers/simple.js', {maxWorkers: 2, autoStart: false});
+
+    assert.strictEqual(pool.workers.length, 0);
+    assert.strictEqual(pool.tasks.length, 0);
+
+    pool.enqueue([
+      { method: 'add', params: [3, 4] },
+      { method: 'add', params: [3, 4] },
+      { method: 'add', params: [3, 4] },
+      { method: 'add', params: [3, 4] }
+    ]);
+
+    assert.strictEqual(pool.workers.length, 0);
+    assert.strictEqual(pool.tasks.length, 4);
+  });
+
+  it('should be able to complete enqueued tasks ( methods are functions )', async function () {
+    var pool = new Pool({maxWorkers: 4});
+
+    function doTask(message) {
+      return message;
+    }
+
+    pool.pause();
+
+    pool.enqueue([
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] }
+    ]);
+
+    assert.strictEqual(pool.tasks.length, 4);
+
+    pool.resume();
+
+    await sleep(3000);
+
+    assert.strictEqual(pool.tasks.length, 0);
+
+  }).timeout(5000);
+
+  it('should be able to complete enqueued tasks ( methods are strings )', async function () {
+    var pool = new Pool(__dirname + '/workers/simple.js', {maxWorkers: 4});
+
+    pool.pause();
+
+    pool.enqueue([
+      { method: 'add', params: [1, 2] },
+      { method: 'add', params: [3, 4] },
+      { method: 'add', params: [5, 6] },
+      { method: 'add', params: [7, 8] }
+    ]);
+
+    assert.strictEqual(pool.tasks.length, 4);
+
+    pool.resume();
+
+    await sleep(3000);
+
+    assert.strictEqual(pool.tasks.length, 0);
+
+  }).timeout(5000);
+
+  it('should automatically run enqueued tasks if pool is not paused', async function () {
+    var pool = new Pool({maxWorkers: 4});
+
+    function doTask(message) {
+      return message;
+    }
+
+    pool.enqueue([
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] }
+    ]);
+
+    await sleep(2000);
+
+    assert.strictEqual(pool.tasks.length, 0);
+
+  }).timeout(5000);
+
+  it('should NOT run enqueued tasks if pool is paused', async function () {
+    var pool = new Pool({maxWorkers: 4});
+
+    function doTask(message) {
+      return message;
+    }
+
+    pool.pause();
+
+    pool.enqueue([
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] }
+    ]);
+
+    await sleep(2000);
+
+    assert.strictEqual(pool.tasks.length, 4);
+
+  }).timeout(5000);
+
+  it('should start completing tasks if pool is resumed', async function () {
+    var pool = new Pool({maxWorkers: 4});
+
+    function doTask(message) {
+      return message;
+    }
+
+    pool.pause();
+
+    pool.enqueue([
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] },
+      { method: doTask, params: ["done"] }
+    ]);
+
+    assert.strictEqual(pool.tasks.length, 4);
+
+    await sleep(2000);
+
+    assert.strictEqual(pool.tasks.length, 4);
+
+    pool.resume();
+
+    await sleep(2000);
+
+    assert.strictEqual(pool.tasks.length, 0);
+
+  }).timeout(10000);
+
   it('should offload a function to a worker', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
@@ -936,3 +1130,7 @@ describe('Pool', function () {
   });
 
 });
+
+function sleep(t) {
+  return new Promise(resolve => setTimeout(resolve, t));
+}
