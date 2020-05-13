@@ -23,13 +23,6 @@ function Pool(script, options) {
 
   options = options || {};
 
-  // TODO: deprecated since v5.0.0, 2019-08-25. Cleanup in v6.0.0
-  if (options.nodeWorker) {
-    console.warn(
-        'WARNING: Option "nodeWorker" is deprecated since workerpool@5.0.0. ' +
-        'Please use "workerType" instead.');
-  }
-
   this.forkArgs = options.forkArgs || [];
   this.forkOpts = options.forkOpts || {};
   this.debugPortStart = (options.debugPortStart || 43210);
@@ -318,16 +311,6 @@ Pool.prototype.terminate = function (force, timeout) {
     promises.push(termPromise);
   });
   return Promise.all(promises);
-};
-
-/**
- * Close all active workers. Unlike terminate, this function does not return a promise.
- * @param force
- * @deprecated
- */
-Pool.prototype.clear = function (force) {
-  console.warn('Pool.clear() is deprecated. Use Pool.terminate() instead.');
-  this.terminate(force);
 };
 
 /**

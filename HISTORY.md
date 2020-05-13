@@ -10,6 +10,8 @@ This may have impact on your project depending on your setup.
 - Created separate library entry points in package.json for node.js and browser.
   Thanks @boneskull.
 - Generated source maps for both minified and non-minified bundles.
+- Removed deprecation warnings for `options.nodeWorker` (renamed to 
+  `options.workerType`) and `pool.clear()` (renamed to `pool.terminate()`).
 
 
 ## 2019-12-31, version 5.0.4
