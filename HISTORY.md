@@ -4,6 +4,9 @@ https://github.com/josdejong/workerpool
 
 ## not yet published, version 6.0.0
 
+WARNING: the entry points are changed and new source maps are added. 
+This may have impact on your project depending on your setup.
+
 - Created separate library entry points in package.json for node.js and browser.
   Thanks @boneskull.
 - Generated source maps for both minified and non-minified bundles.
