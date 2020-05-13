@@ -4,11 +4,10 @@
     "build-app": "npx webpack app.js -o dist/app.bundle.js --mode=production",
     "build": "npm run build-embedded-worker && npm run build-app"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "btoa": "1.2.1",
-    "webpack": "4.39.2",
-    "webpack-cli": "3.3.7"
+    "webpack": "4.43.0",
+    "webpack-cli": "3.3.11"
   }
 }

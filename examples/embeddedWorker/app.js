@@ -10,7 +10,7 @@ var pool = workerpool.pool(workerUrl);
 pool.exec('fibonacci', [10])
     .then(function (result) {
       log('Result: ' + result); // outputs 55
-      pool.clear();
+      pool.terminate();
     })
     .catch(function (err) {
       log('Error: ' + err);
