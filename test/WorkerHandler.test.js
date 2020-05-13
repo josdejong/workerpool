@@ -277,7 +277,7 @@ describe('WorkerHandler', function () {
           assert.ok(err.toString().match(/signalCode: `.*`/));
           assert.ok(err.toString().match(/workerpool.script: `.*\.js`/));
           assert.ok(err.toString().match(/spawnArgs: `.*\.js`/));
-          assert.ok(err.toString().match(/spawnfile: `.*node`/));
+          assert.ok(err.toString().match(/spawnfile: `.*(node|node\.exe)`/));
           assert.ok(err.toString().match(/stdout: `null`/));
           assert.ok(err.toString().match(/stderr: `null`/));
           done();
@@ -302,7 +302,7 @@ describe('WorkerHandler', function () {
           assert.ok(err.stack.match(/signalCode: `.*`/));
           assert.ok(err.stack.match(/workerpool.script: `.*\.js`/));
           assert.ok(err.stack.match(/spawnArgs: `.*\.js`/));
-          assert.ok(err.stack.match(/spawnfile: `.*node`/));
+          assert.ok(err.toString().match(/spawnfile: `.*(node|node\.exe)`/));
           assert.ok(err.stack.match(/stdout: `null`/));
           assert.ok(err.stack.match(/stderr: `null`/));
 
