@@ -31,7 +31,7 @@ else if (typeof process !== 'undefined') {
   try {
     WorkerThreads = requireFoolWebpack('worker_threads');
   } catch(error) {
-    if (typeof error === 'object' && error !== null && error.code == 'MODULE_NOT_FOUND') {
+    if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
       // no worker_threads, fallback to sub-process based workers
     } else {
       throw error;

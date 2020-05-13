@@ -2,6 +2,13 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 6.0.0
+
+- Created separate library entry points in package.json for node.js and browser.
+  Thanks @boneskull.
+- Generated source maps for both minified and non-minified bundles.
+
+
 ## 2019-12-31, version 5.0.4
 
 - Fixed #121: `isMainThread` not working when using `worker_threads`.

@@ -7,6 +7,9 @@ var log = require('fancy-log');
 var format = require('date-format');
 var del = require('del');
 
+var bundleFileName = 'workerpool.js'
+var minifiedFileName = 'workerpool.min.js'
+
 // generate banner with today's date and correct version
 function createBanner() {
   var today = format.asString('yyyy-MM-dd', new Date()); // today, formatted as yyyy-MM-dd
@@ -30,7 +33,7 @@ var webpackConfig = {
     library: 'workerpool',
     libraryTarget: 'umd',
     path: path.join(__dirname, 'dist'),
-    filename: 'workerpool.js',
+    filename: bundleFileName,
     umdNamedDefine: true,
     globalObject: '(typeof self !== \'undefined\' ? self : this)'
   },
@@ -41,8 +44,20 @@ var webpackConfig = {
   optimization: {
     // We no not want to minimize our code.
     minimize: false
-  }
+  },
+  devtool: 'source-map'
 };
+
+var webpackMinifyConfig = {
+  ...webpackConfig,
+  optimization: {
+    minimize: true
+  },
+  output: {
+    ...webpackConfig.output,
+    filename: minifiedFileName
+  }
+}
 
 var webpackWorkerConfig = {
   ...webpackConfig,
@@ -53,21 +68,9 @@ var webpackWorkerConfig = {
   }
 };
 
-var uglifyConfig = {
-  warnings: 'verbose',
-  sourceMap: {
-    url: 'workerpool.map'
-  },
-  output: {
-    comments: function (tree, comment) {
-      return /@license/.test(comment.value) &&
-          !(/@@version/.test(comment.value) && /@@date/.test(comment.value) && /workerpool.js/.test(comment.value))
-    }
-  }
-};
-
 // create a single instance of the compiler to allow caching
 var compiler = webpack(webpackConfig);
+var compilerMinify = webpack(webpackMinifyConfig);
 
 gulp.task('clean', function () {
   return del([
@@ -138,27 +141,36 @@ gulp.task('bundle-workerpool', function (done) {
       done(new Error('Compile failed'));
     }
 
-    log('bundled ./dist/workerpool.js');
+    log(`bundled ./dist/${bundleFileName}`);
 
     done();
   });
 });
 
 gulp.task('minify-workerpool', function (done) {
-  var code = String(fs.readFileSync('./dist/workerpool.js'));
-  var result = uglify.minify(code, uglifyConfig);
+  // update the banner contents (has a date in it which should stay up to date)
+  bannerPlugin.banner = createBanner();
 
-  if (result.error) {
-    throw result.error;
-  }
+  compilerMinify.run(function (err, stats) {
+    if (err) {
+      log(err);
+    }
 
-  fs.writeFileSync('./dist/workerpool.min.js', result.code);
-  fs.writeFileSync('./dist/workerpool.map', result.map);
+    var info = stats.toJson();
 
-  log('Minified ' + './dist/workerpool.min.js');
-  log('Mapped ' + './dist/workerpool.map');
+    if (stats.hasWarnings()) {
+      log('Webpack warnings:\n' + info.warnings.join('\n'));
+    }
 
-  done()
+    if (stats.hasErrors()) {
+      log('Webpack errors:\n' + info.errors.join('\n'));
+      done(new Error('Compile failed'));
+    }
+
+    log(`bundled ./dist/${bundleFileName}`);
+
+    done();
+  });
 });
 
 var tasks = gulp.series('clean', 'bundle-worker', 'bundle-workerpool', 'minify-workerpool');
