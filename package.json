@@ -16,7 +16,8 @@
     "pool",
     "isomorphic"
   ],
-  "main": "dist/workerpool.min.js",
+  "main": "src/index.js",
+  "browser": "dist/workerpool.js",
   "files": [
     "dist",
     "examples",
