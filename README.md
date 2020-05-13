@@ -45,7 +45,7 @@ Install via npm:
 To load workerpool in a node.js application (both main application as well as workers):
 
 ```js
-var workerpool = require('workerpool');
+const workerpool = require('workerpool');
 ```
 
 To load workerpool in the browser:
@@ -69,8 +69,8 @@ In the following example there is a function `add`, which is offloaded dynamical
 
 **myApp.js**
 ```js
-var workerpool = require('workerpool');
-var pool = workerpool.pool();
+const workerpool = require('workerpool');
+const pool = workerpool.pool();
 
 function add(a, b) {
   return a + b;
@@ -97,7 +97,7 @@ A dedicated worker can be created in a separate script, and then used via a work
 
 **myWorker.js**
 ```js
-var workerpool = require('workerpool');
+const workerpool = require('workerpool');
 
 // a deliberately inefficient implementation of the fibonacci sequence
 function fibonacci(n) {
@@ -115,10 +115,10 @@ This worker can be used by a worker pool:
 
 **myApp.js**
 ```js
-var workerpool = require('workerpool');
+const workerpool = require('workerpool');
 
 // create a worker pool using an external worker script
-var pool = workerpool.pool(__dirname + '/myWorker.js');
+const pool = workerpool.pool(__dirname + '/myWorker.js');
 
 // run registered functions on the worker via exec
 pool.exec('fibonacci', [10])
@@ -213,7 +213,7 @@ A worker pool contains the following functions:
 
    Returns an object containing the following properties:
 
-   ```js
+   ```
    {
      totalWorkers: 0,
      busyWorkers: 0,
@@ -244,13 +244,13 @@ The function `Pool.exec` and the proxy functions all return a `Promise`. The pro
 Example usage:
 
 ```js
-var workerpool = require('workerpool');
+const workerpool = require('workerpool');
 
 function add(a, b) {
   return a + b;
 }
 
-var pool1 = workerpool.pool();
+const pool1 = workerpool.pool();
 
 // offload a function to a worker
 pool1.exec(add, [2, 4])
@@ -262,7 +262,7 @@ pool1.exec(add, [2, 4])
     });
 
 // create a dedicated worker
-var pool2 = workerpool.pool(__dirname + '/myWorker.js');
+const pool2 = workerpool.pool(__dirname + '/myWorker.js');
 
 // supposed myWorker.js contains a function 'fibonacci'
 pool2.exec('fibonacci', [10])
@@ -286,7 +286,7 @@ pool2.proxy()
     });
 
 // create a pool with a specified maximum number of workers
-var pool3 = workerpool.pool({maxWorkers: 7});
+const pool3 = workerpool.pool({maxWorkers: 7});
 ```
 
 
@@ -302,7 +302,7 @@ Example usage:
 
 ```js
 // file myWorker.js
-var workerpool = require('workerpool');
+const workerpool = require('workerpool');
 
 function add(a, b) {
   return a + b;
@@ -323,7 +323,7 @@ Asynchronous results can be handled by returning a Promise from a function in th
 
 ```js
 // file myWorker.js
-var workerpool = require('workerpool');
+const workerpool = require('workerpool');
 
 function timeout(delay) {
   return new Promise(function (resolve, reject) {
