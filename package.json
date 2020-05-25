@@ -42,7 +42,7 @@
     "gulp": "4.0.2",
     "handlebars": "4.7.6",
     "istanbul": "0.4.5",
-    "mocha": "7.1.2",
+    "mocha": "7.2.0",
     "uglify-js": "3.9.3",
     "webpack": "4.43.0"
   },
