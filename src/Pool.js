@@ -315,15 +315,17 @@ Pool.prototype.terminate = function (force, timeout) {
 
 /**
  * Retrieve statistics on tasks and workers.
- * @return {{totalWorkers: number, busyWorkers: number, idleWorkers: number, pendingTasks: number, activeTasks: number}} Returns an object with statistics
+ * @return {{processID: number, totalWorkers: number, busyWorkers: number, idleWorkers: number, pendingTasks: number, activeTasks: number}} Returns an object with statistics
  */
 Pool.prototype.stats = function () {
+  var processID = process.pid;
   var totalWorkers = this.workers.length;
   var busyWorkers = this.workers.filter(function (worker) {
     return worker.busy();
   }).length;
 
   return {
+    processID:     processID,
     totalWorkers:  totalWorkers,
     busyWorkers:   busyWorkers,
     idleWorkers:   totalWorkers - busyWorkers,
