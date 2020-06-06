@@ -849,11 +849,11 @@ describe('Pool', function () {
       });
     }
 
-    assert.deepStrictEqual(pool.stats(), {totalWorkers: 0, busyWorkers: 0, idleWorkers: 0, pendingTasks: 0, activeTasks: 0});
+    assert.deepStrictEqual(pool.stats(), {processID: process.pid, totalWorkers: 0, busyWorkers: 0, idleWorkers: 0, pendingTasks: 0, activeTasks: 0});
 
     var promise = pool.exec(test)
         .then(function () {
-          assert.deepStrictEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 0, idleWorkers: 1, pendingTasks: 0, activeTasks: 0 });
+          assert.deepStrictEqual(pool.stats(), {processID: process.pid, totalWorkers: 1, busyWorkers: 0, idleWorkers: 1, pendingTasks: 0, activeTasks: 0 });
 
           // start six tasks (max workers is 4, so we should get pending tasks)
           var all = Promise.all([
@@ -865,20 +865,20 @@ describe('Pool', function () {
             pool.exec(test)
           ]);
 
-          assert.deepStrictEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 4, idleWorkers: 0, pendingTasks: 2, activeTasks: 4});
+          assert.deepStrictEqual(pool.stats(), {processID: process.pid, totalWorkers: 4, busyWorkers: 4, idleWorkers: 0, pendingTasks: 2, activeTasks: 4});
 
           return all;
         })
         .then(function () {
-          assert.deepStrictEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0 });
+          assert.deepStrictEqual(pool.stats(), {processID: process.pid, totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0 });
 
           return pool.exec(testError)
         })
         .catch(function () {
-          assert.deepStrictEqual(pool.stats(), {totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0});
+          assert.deepStrictEqual(pool.stats(), {processID: process.pid, totalWorkers: 4, busyWorkers: 0, idleWorkers: 4, pendingTasks: 0, activeTasks: 0});
         });
 
-    assert.deepStrictEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 1, idleWorkers: 0, pendingTasks: 0, activeTasks: 1});
+    assert.deepStrictEqual(pool.stats(), {processID: process.pid, totalWorkers: 1, busyWorkers: 1, idleWorkers: 0, pendingTasks: 0, activeTasks: 1});
 
     return promise.then(function (result) {
       pool.terminate();
