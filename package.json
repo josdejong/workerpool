@@ -31,6 +31,7 @@
     "watch": "gulp watch",
     "test": "npm run build && mocha test --timeout 2000",
     "test:debug": "npm run build && mocha debug test --timeout 10000",
+    "test:promises": "promises-aplus-tests test/utils",
     "coverage": "npm run build && istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\"",
     "prepublishOnly": "npm run test"
   },
@@ -43,6 +44,7 @@
     "handlebars": "4.7.6",
     "istanbul": "0.4.5",
     "mocha": "7.2.0",
+    "promises-aplus-tests": ">= 2.1.2",
     "uglify-js": "3.9.4",
     "webpack": "4.43.0"
   },

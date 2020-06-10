@@ -1,3 +1,4 @@
+var Promise = require('../src/Promise');
 exports.tryRequire = function (moduleName) {
   try {
     return require(moduleName);
@@ -8,4 +9,8 @@ exports.tryRequire = function (moduleName) {
       throw error;
     }
   }
+}
+
+exports.deferred = function() {
+  return Promise.defer();
 }
