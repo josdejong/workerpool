@@ -44,7 +44,7 @@
     "istanbul": "0.4.5",
     "mocha": "8.0.1",
     "uglify-js": "3.10.0",
-    "webpack": "4.44.0"
+    "webpack": "4.44.1"
   },
   "dependencies": {}
 }
