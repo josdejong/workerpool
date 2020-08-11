@@ -207,10 +207,13 @@ Pool.prototype._next = function () {
           .catch(function () {
             // if the worker crashed and terminated, remove it from the pool
             if (worker.terminated) {
-              me._removeWorker(worker);
+              // _removeWorker will call this, but we need it to be removed synchronously
+              me._removeWorkerFromList(worker);
               // If minWorkers set, spin up new workers to replace the crashed ones
               me._ensureMinWorkers();
+              return me._removeWorker(worker);
             }
+          }).then(function() {
             me._next(); // trigger next task in the queue
           });
 
@@ -264,8 +267,16 @@ Pool.prototype._getWorker = function() {
 Pool.prototype._removeWorker = function(worker) {
   DEBUG_PORT_ALLOCATOR.releasePort(worker.debugPort)
   // terminate the worker (if not already terminated)
-  worker.terminate();
-  this._removeWorkerFromList(worker);
+  return new Promise(function(resolve, reject) {
+    worker.terminate(false, function(err) {
+      me._removeWorkerFromList(worker);
+      if (err) {
+        reject(err);
+      } else {
+        resolve(worker);
+      }
+    });
+  });
 };
 
 /**

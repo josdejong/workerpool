@@ -21,7 +21,7 @@ describe('Pool', function () {
           .then(function (result) {
             assert.strictEqual(result, 7);
 
-            pool.terminate();
+            return pool.terminate();
           });
     });
 
@@ -42,7 +42,7 @@ describe('Pool', function () {
       return promise.then(function (result) {
         assert.strictEqual(result, 7);
 
-        pool.terminate();
+        return pool.terminate();
       });
     });
 
@@ -58,7 +58,7 @@ describe('Pool', function () {
         return promise.then(function (result) {
           assert.strictEqual(result, 7);
 
-          pool.terminate();
+          return pool.terminate();
         });
       });
     } else {
@@ -83,13 +83,13 @@ describe('Pool', function () {
         .then(function (result) {
           assert.strictEqual(result, 7);
           assert.strictEqual(pool.workers.length, 1);
-
-          pool.terminate();
-
+          return pool.terminate();
+        })
+        .then(function() {
           assert.strictEqual(pool.workers.length, 0);
-
           done();
-        });
+        })
+        .catch(done);
 
     assert.strictEqual(pool.workers.length, 1);
   });
@@ -285,15 +285,14 @@ describe('Pool', function () {
     }
 
     var promise = pool.exec(forever)
-        .then(function (result) {
-          assert('promise should never resolve');
+        .then(function () {
+          done(new Error('promise should not resolve!'));
         })
       //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
           assert(err instanceof Promise.CancellationError);
-
-          assert.strictEqual(pool.workers.length, 0);
-
+          // we cannot assert that no workers remain in the pool, because that happens
+          // on a different promise chain (termination is now async)
           done();
         });
 
@@ -329,9 +328,12 @@ describe('Pool', function () {
           assert.strictEqual(pool.workers.length, 1);
           assert.strictEqual(pool.tasks.length, 0);
 
-          pool.terminate();
+          return pool.terminate();
+        })
+        .then(function() {
           done();
-        });
+        })
+        .catch(done);
 
     assert.strictEqual(pool.workers.length, 1);
     assert.strictEqual(pool.tasks.length, 0);
@@ -380,8 +382,11 @@ describe('Pool', function () {
     var twoDone = false;
     function checkDone() {
       if (oneDone && twoDone) {
-        pool.terminate();
-        done();
+        return pool.terminate()
+          .then(function() {
+            done();
+          })
+          .catch(done);
       }
     }
 
@@ -427,14 +432,14 @@ describe('Pool', function () {
 
     // TODO: test whether a task in the queue can be neatly cancelled
 
-  it('should timeout a task', function (done) {
+  it('should timeout a task', function () {
     var pool = new Pool({maxWorkers: 10});
 
     function forever() {
       while (1 > 0) {} // runs forever
     }
 
-    var promise = pool.exec(forever)
+    return pool.exec(forever)
         .timeout(50)
         .then(function (result) {
           assert('promise should never resolve');
@@ -442,10 +447,8 @@ describe('Pool', function () {
       //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
           assert(err instanceof Promise.TimeoutError);
-
-          assert.strictEqual(pool.workers.length, 0);
-
-          done();
+          // we cannot assert that no workers remain in the pool, because that happens
+          // on a different promise chain (termination is now async)
         });
   });
 
@@ -476,8 +479,11 @@ describe('Pool', function () {
         .then(function (result) {
           assert.strictEqual(result, 'ready');
 
-          pool.terminate();
-          done();
+          return pool.terminate()
+            .then(function() {
+              done();
+            })
+            .catch(done);
         })
         .catch(function (err) {
           assert('promise should not throw');
@@ -512,34 +518,40 @@ describe('Pool', function () {
         });
   });
 
-  it('should handle crashed workers (1)', function (done) {
+  it('should handle crashed workers (1)', function () {
     var pool = new Pool({maxWorkers: 1});
 
-    pool.exec(add)
-        .then(function () {
-          assert('Promise should not be resolved');
-        })
+    var promise = pool.exec(add)
+      .then(function () {
+        throw new Error('Promise should not be resolved');
+      })
       .catch(function (err) {
-          assert.ok(err.toString().match(/Error: Workerpool Worker terminated Unexpectedly/));
-          assert.ok(err.toString().match(/exitCode: `.*`/));
-          assert.ok(err.toString().match(/signalCode: `.*`/));
-          assert.ok(err.toString().match(/workerpool.script: `.*\.js`/));
+        assert.ok(err.toString().match(/Error: Workerpool Worker terminated Unexpectedly/));
+        assert.ok(err.toString().match(/exitCode: `.*`/));
+        assert.ok(err.toString().match(/signalCode: `.*`/));
+        assert.ok(err.toString().match(/workerpool.script: `.*\.js`/));
 
-          assert.strictEqual(pool.workers.length, 0);
+        assert.strictEqual(pool.workers.length, 0);
 
-          // validate whether a new worker is spawned
-          pool.exec(add, [2,3])
-              .then(function (result) {
-                assert.strictEqual(result, 5);
+        // validate whether a new worker is spawned
+        var promise2 = pool.exec(add, [2,3])
+        assert.strictEqual(pool.workers.length, 1);
+        return promise2;
+      })
+      .then(function (result) {
+        assert.strictEqual(result, 5);
 
-                assert.strictEqual(pool.workers.length, 1);
+        assert.strictEqual(pool.workers.length, 1);
 
-                pool.terminate();
-                done();
-              });
-
-          assert.strictEqual(pool.workers.length, 1);
-        });
+        return pool.terminate();
+      })
+      .catch(function (err) {
+        // Promise library lacks a "finally"
+        return pool.terminate()
+          .then(function() {
+            return err;
+          });
+      });
 
     assert.strictEqual(pool.workers.length, 1);
 
@@ -547,6 +559,8 @@ describe('Pool', function () {
     pool.workers[0].worker.kill();
 
     assert.strictEqual(pool.workers.length, 1);
+
+    return promise;
   });
 
   describe('options', function () {
@@ -585,7 +599,7 @@ describe('Pool', function () {
       assert.strictEqual(pool.tasks.length, 3);
 
       return Promise.all(tasks).then(function () {
-        pool.terminate();
+        return pool.terminate();
       });
     });
 
@@ -635,7 +649,7 @@ describe('Pool', function () {
       assert.strictEqual(pool.tasks.length, 4);
 
       return Promise.all(tasks).then(function () {
-        pool.terminate();
+        return pool.terminate();
       });
     });
   });
@@ -644,7 +658,7 @@ describe('Pool', function () {
     // TODO: create a worker from a script, which really crashes itself
   });
 
-  it('should clear all workers', function (done) {
+  it('should clear all workers upon explicit termination', function (done) {
     var pool = new Pool({maxWorkers: 10});
 
     assert.strictEqual(pool.workers.length, 0);
@@ -658,18 +672,57 @@ describe('Pool', function () {
           assert.strictEqual(result, 'ok');
 
           assert.strictEqual(pool.workers.length, 1);
-
-          pool.terminate();
+          workerPid = pool.workers[0].worker.pid;
+          return pool.terminate();
+        })
+        .then(function() {
 
           assert.strictEqual(pool.workers.length, 0);
-
           done();
-        });
+        })
+        .catch(done);
 
     assert.strictEqual(pool.workers.length, 1);
   });
 
-  it('should clear all workers after tasks are finished', function (done) {
+
+  it('should wait until subprocesses have ended', function (done) {
+    var pool = new Pool({maxWorkers: 10, workerType: 'process'});
+
+    assert.strictEqual(pool.workers.length, 0);
+
+    function test() {
+      return 'ok';
+    }
+
+    pool.exec(test)
+        .then(function (result) {
+          assert.strictEqual(result, 'ok');
+
+          assert.strictEqual(pool.workers.length, 1);
+          workerPid = pool.workers[0].worker.pid;
+          assert.ok(workerPid);
+          return pool.terminate()
+            .then(function() {
+              return workerPid;
+            });
+        })
+        .then(function(workerPid) {
+          assert.strictEqual(pool.workers.length, 0);
+
+          assert.throws(function() {
+            // this will throw if the process with pid `workerPid` does not exist
+            process.kill(workerPid, 0);
+          });
+        
+          done();
+        })
+        .catch(done);
+
+    assert.strictEqual(pool.workers.length, 1);
+  });
+
+  it('should clear all workers after tasks are finished', function () {
     var pool = new Pool({maxWorkers: 10});
 
     assert.strictEqual(pool.workers.length, 0);
@@ -684,12 +737,12 @@ describe('Pool', function () {
 
           assert.strictEqual(pool.workers.length, 0);
         });
+
     assert.strictEqual(pool.workers.length, 1);
 
-    pool.terminate(false, 1000)
+    return pool.terminate(false, 1000)
       .then(function() {
         assert.strictEqual(pool.workers.length, 0);
-        done();
       });
   });
 
@@ -795,7 +848,7 @@ describe('Pool', function () {
       });
   });
 
-  it ('should cancel any pending tasks when terminating a pool', function (done) {
+  it ('should cancel any pending tasks when terminating a pool', function () {
     var pool = new Pool({maxWorkers: 1});
 
     assert.strictEqual(pool.workers.length, 0);
@@ -813,7 +866,7 @@ describe('Pool', function () {
     assert.strictEqual(pool.workers.length, 1);
     assert.strictEqual(pool.tasks.length, 1);
 
-    pool.terminate(false)
+    return pool.terminate(false)
       .then(function() {
         assert.strictEqual(pool.workers.length, 0);
         assert.strictEqual(pool.tasks.length, 0);
@@ -825,12 +878,7 @@ describe('Pool', function () {
           promise2.catch(function (err) {
             assert.strictEqual(err.message, 'Pool terminated');
           })
-        ]).then(function () {
-            done();
-          });
-      })
-      .catch(function (err) {
-        console.error(err);
+        ])
       });
   });
 
@@ -880,8 +928,8 @@ describe('Pool', function () {
 
     assert.deepStrictEqual(pool.stats(), {totalWorkers: 1, busyWorkers: 1, idleWorkers: 0, pendingTasks: 0, activeTasks: 1});
 
-    return promise.then(function (result) {
-      pool.terminate();
+    return promise.then(function () {
+      return pool.terminate();
     });
   });
 
@@ -894,7 +942,7 @@ describe('Pool', function () {
     assert.throws(function () {pool.exec(add, 'a string')}, TypeError);
   });
 
-  it('should throw an error when the tasks queue is full', function (done) {
+  it('should throw an error when the tasks queue is full', function () {
     var pool = new Pool({maxWorkers: 2, maxQueueSize: 3});
 
     function add(a, b) {
@@ -919,19 +967,18 @@ describe('Pool', function () {
 
     assert.throws(function () {pool.exec(add, [9, 4])}, Error);
 
-    Promise.all([
+    return Promise.all([
         task1,
         task2,
         task3,
         task4,
         task5
         ])
-        .then(function (results) {
+        .then(function () {
           assert.strictEqual(pool.tasks.length, 0);
           assert.strictEqual(pool.workers.length, 2);
 
-          pool.terminate();
-          done();
+          return pool.terminate();
         });
   });
 
