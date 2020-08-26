@@ -43,7 +43,7 @@
     "handlebars": "4.7.6",
     "istanbul": "0.4.5",
     "mocha": "8.1.1",
-    "uglify-js": "3.10.1",
+    "uglify-js": "3.10.2",
     "webpack": "4.44.1"
   },
   "dependencies": {}
