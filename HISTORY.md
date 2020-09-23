@@ -1,6 +1,10 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+## 2020-09-23, version 6.0.1
+
+- Removed examples from the npm package. Thanks @madbence.
+
 
 ## 2020-05-13, version 6.0.0
 
