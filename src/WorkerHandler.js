@@ -391,12 +391,13 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     if (this.worker) {
       if (typeof this.worker.kill === 'function') {
         // child process
-        // cleanup once the child process has exited
-        this.worker.once('exit', function() {
-          cleanup();
-        });
         if (!this.worker.killed && !this.worker.kill()) {
           cleanup(new Error('Failed to send SIGTERM to worker'));
+        } else {          
+          // cleanup once the child process has exited
+          this.worker.once('exit', function() {
+            cleanup();
+          });
         }
         return;
       }
