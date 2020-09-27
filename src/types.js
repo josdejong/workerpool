@@ -4,6 +4,8 @@
  * @property {number} [maxWorkers]
  * @property {number} [maxQueueSize]
  * @property {'auto' | 'web' | 'process' | 'thread'} [workerType]
+ * @property {boolean} [stdout]
+ * @property {boolean} [stderr]
  * @property {*} [forkArgs]
  * @property {*} [forkOpts]
  * @property {number} [debugPortStart]
