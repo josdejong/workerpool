@@ -1,6 +1,12 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+## not yet published, version 6.0.2
+
+- Fix #32, #175: the promise returned by `Pool.terminate()` now waits until 
+  subprocesses are dead before resolving. Thanks @boneskull.
+
+
 ## 2020-09-23, version 6.0.1
 
 - Removed examples from the npm package. Thanks @madbence.
