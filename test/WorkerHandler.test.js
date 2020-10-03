@@ -4,6 +4,7 @@ var WorkerHandler = require('../src/WorkerHandler');
 var path = require('path');
 var childProcess = require('child_process');
 var findProcess = require('find-process');
+const { CancellationError } = require('../src/Promise');
 
 function add(a, b) {
   return a + b;
@@ -68,28 +69,33 @@ describe('WorkerHandler', function () {
 
   });
 
-  it('should terminate', function () {
+  it('should terminate', function (done) {
     var handler = new WorkerHandler();
 
-    handler.terminate();
+    handler.terminate(false, function() {
 
-    assert.strictEqual(handler.terminated, true);
+      assert.strictEqual(handler.terminated, true);
+      done();
+    })
   });
 
   it('should terminate after finishing running requests', function (done) {
     var handler = new WorkerHandler();
 
+    var runComplete = false;
     handler.exec('run', [String(add), [2, 4]])
         .then(function (result) {
           assert.strictEqual(result, 6);
-
-          assert.strictEqual(handler.terminating, false);
-          assert.strictEqual(handler.terminated, true);
-
-          done();
+          runComplete = true;
         });
 
-    handler.terminate();
+    handler.terminate(false, function() {
+      assert.ok(runComplete);
+      assert.strictEqual(handler.terminating, false);
+      assert.strictEqual(handler.terminated, true);
+
+      done();
+    });
 
     assert.strictEqual(handler.terminating, true);
     assert.strictEqual(handler.terminated, false);
@@ -177,7 +183,7 @@ describe('WorkerHandler', function () {
         });
   });
 
-  it('should cancel a task', function (done) {
+  it('should cancel a task', function () {
     var handler = new WorkerHandler();
 
     function forever() {
@@ -192,16 +198,16 @@ describe('WorkerHandler', function () {
         })
         //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
-          assert.ok(err.stack.match(/CancellationError/))
+          assert.ok(err instanceof CancellationError);
 
           assert.strictEqual(handler.worker, null);
           assert.strictEqual(handler.terminated, true);
-
-          done();
         });
 
     // cancel the task
     promise.cancel();
+
+    return promise;
   });
 
   it('should timeout a task', function (done) {
