@@ -4,6 +4,18 @@ var Promise = require('./Promise');
 var environment = require('./environment');
 var requireFoolWebpack = require('./requireFoolWebpack');
 
+/**
+ * Special message sent by parent which causes a child process worker to terminate itself.
+ * Not a "message object"; this string is the entire message.
+ */
+var TERMINATE_METHOD_ID = '__workerpool-terminate__';
+
+/**
+ * If sending `TERMINATE_METHOD_ID` does not cause the child process to exit in this many milliseconds,
+ * force-kill the child process.
+ */
+var CHILD_PROCESS_EXIT_TIMEOUT = 1000;
+
 function ensureWorkerThreads() {
   var WorkerThreads = tryRequireWorkerThreads()
   if (!WorkerThreads) {
@@ -390,14 +402,32 @@ WorkerHandler.prototype.terminate = function (force, callback) {
 
     if (this.worker) {
       if (typeof this.worker.kill === 'function') {
-        // child process
-        if (!this.worker.killed && !this.worker.kill()) {
-          cleanup(new Error('Failed to send SIGTERM to worker'));
-        } else {          
-          // cleanup once the child process has exited
+        if (this.worker.killed) {
+          cleanup(new Error('worker already killed!'));
+          return;
+        }
+
+        if (this.worker.isChildProcess) {
+          var cleanExitTimeout = setTimeout(function() {
+            me.worker.kill();
+          }, CHILD_PROCESS_EXIT_TIMEOUT);
+
           this.worker.once('exit', function() {
+            clearTimeout(cleanExitTimeout);
+            me.worker.killed = true;
             cleanup();
           });
+
+          if (this.worker.ready) {
+            this.worker.send(TERMINATE_METHOD_ID);
+          } else {
+            this.worker.requestQueue.push(TERMINATE_METHOD_ID)
+          }
+        } else {
+          // worker_thread
+          this.worker.kill();
+          this.worker.killed = true;
+          cleanup();
         }
         return;
       }
