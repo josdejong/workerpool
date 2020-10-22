@@ -3,6 +3,8 @@ var WorkerHandler = require('./WorkerHandler');
 var environment = require('./environment');
 var DebugPortAllocator = require('./debug-port-allocator');
 var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
+var FastList = require('fast-list');
+
 /**
  * A pool to manage workers
  * @param {String} [script]   Optional worker script
@@ -19,7 +21,7 @@ function Pool(script, options) {
   }
 
   this.workers = [];  // queue with all workers
-  this.tasks = [];    // queue with tasks awaiting execution
+  this.tasks = new FastList();    // queue with tasks awaiting execution
 
   options = options || {};
 

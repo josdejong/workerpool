@@ -45,5 +45,7 @@
     "uglify-js": "3.11.1",
     "webpack": "4.44.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "fast-list": "^1.0.3"
+  }
 }
