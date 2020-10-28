@@ -10,9 +10,19 @@ var requireFoolWebpack = eval(
     ' : function (module) { throw new Error(\'Module " + module + " not found.\') }'
 );
 
+/**
+ * Special message sent by parent which causes the worker to terminate itself.
+ * Not a "message object"; this string is the entire message.
+ */
+var TERMINATE_METHOD_ID = '__workerpool-terminate__';
+
+// var nodeOSPlatform = require('./environment').nodeOSPlatform;
+
 // create a worker API for sending and receiving messages which works both on
 // node.js and in the browser
-var worker = {};
+var worker = {
+  exit: function() {}
+};
 if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
   // worker in the browser
   worker.on = function (event, callback) {
@@ -51,6 +61,7 @@ else if (typeof process !== 'undefined') {
     worker.on('disconnect', function () {
       process.exit(1);
     });
+    worker.exit = process.exit.bind(process);
   }
 }
 else {
@@ -99,6 +110,9 @@ worker.methods.methods = function methods() {
 };
 
 worker.on('message', function (request) {
+  if (request === TERMINATE_METHOD_ID) {
+    return worker.exit(0);
+  }
   try {
     var method = worker.methods[request.method];
 
