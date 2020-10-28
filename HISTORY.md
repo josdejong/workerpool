@@ -1,6 +1,11 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+## 2020-10-28, version 6.0.3
+
+- Fixes and more robustness in terminating workers. Thanks @boneskull.
+
+
 ## 2020-10-03, version 6.0.2
 
 - Fix #32, #175: the promise returned by `Pool.terminate()` now waits until 
