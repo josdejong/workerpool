@@ -2,7 +2,10 @@ var Promise = require('./Promise');
 var WorkerHandler = require('./WorkerHandler');
 var environment = require('./environment');
 var DebugPortAllocator = require('./debug-port-allocator');
+var EventEmitter = require('./eventEmitter');
+
 var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
+
 /**
  * A pool to manage workers
  * @param {String} [script]   Optional worker script
@@ -104,13 +107,21 @@ Pool.prototype.exec = function (method, params) {
     }
 
     // add a new task to the queue
+    var eventEmitter = new EventEmitter();
+    eventEmitter._emit = eventEmitter.emit
+    eventEmitter.emit = function (event, data) {
+      eventEmitter._emit('__EVENT__', { name: event, data: data })
+    }
+
     var tasks = this.tasks;
     var task = {
       method:  method,
       params:  params,
       resolver: resolver,
-      timeout: null
+      timeout: null,
+      eventEmitter: eventEmitter
     };
+
     tasks.push(task);
 
     // replace the timeout method of the Promise with our own,
@@ -131,7 +142,61 @@ Pool.prototype.exec = function (method, params) {
     // trigger task execution
     this._next();
 
-    return resolver.promise;
+    // extend promises with EventEmitter methods to allow chaining
+
+    function bindEventEmmiter(obj) {
+      ['on', 'emit', 'once', 'removeListener'].map(function(key) {
+        if (obj[key] && obj[key].__EMITTER__) return;
+
+        function emitter() {
+          eventEmitter[key].apply(eventEmitter, arguments);
+          return obj;
+        }
+
+        Object.defineProperty(emitter, '__EMITTER__', {
+          enumerable: false,
+          value: true
+        });
+
+        Object.defineProperty(obj, key, {
+          enumerable: true,
+          value: emitter
+        });
+      });
+      return obj;
+    }
+
+    function bindChaining(obj) {
+      ['then', 'catch', 'cancel', 'timeout'].map(function(key) {
+        
+        if(!obj[key]) return;
+        if(obj[key].__CHAIN__) return;
+
+        var originalMethod = obj[key];
+        function chain() {
+          const fn = originalMethod.apply(resolver.promise, arguments);
+          bindEventEmmiter(fn);
+          bindChaining(fn);
+          return fn;
+        }
+
+        Object.defineProperty(chain, '__CHAIN__', {
+          enumerable: false,
+          value: true
+        });
+
+        Object.defineProperty(obj, key, {
+          enumerable: true,
+          value: chain
+        });
+      });
+
+      return obj;
+    }
+
+    
+   
+    return bindChaining(bindEventEmmiter(resolver.promise));
   }
   else if (typeof method === 'function') {
     // send stringified function and function arguments to worker
@@ -202,7 +267,7 @@ Pool.prototype._next = function () {
       // check if the task is still pending (and not cancelled -> promise rejected)
       if (task.resolver.promise.pending) {
         // send the request to the worker
-        var promise = worker.exec(task.method, task.params, task.resolver)
+        var promise = worker.exec(task.method, task.params, task.resolver, task.eventEmitter)
           .then(me._boundNext)
           .catch(function () {
             // if the worker crashed and terminated, remove it from the pool
