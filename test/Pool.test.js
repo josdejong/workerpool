@@ -70,6 +70,95 @@ describe('Pool', function () {
     }
   })
 
+  it('Pool should have two way communication with workers through EventEmitters pattern', function (done) {
+    var pool = new Pool({maxWorkers: 10});
+
+    function progressBar(time) {
+      var task = this;
+            // suite test
+      function assert(cond, errorMessage) {
+        if (!cond) throw new Error(errorMessage);
+      }
+
+      task.on('message', function(data) {
+        assert(data.message === 'hello world', 'error at message event');
+      });
+
+      task.emit('custom-event', { message: 'hello world'});
+      task.emit('just-once-event');
+      task.emit('just-once-event'); // it should not be triggered twice
+
+
+      return Promise.resolve()
+        .then(function () {
+          task.emit('continue', 1);
+          return new Promise(function(resolve) {
+            return task.once('step1', function(message) {
+              assert(message.step === 1, 'the message received is wrong');
+              resolve();
+            });
+          });
+        }).then(function() {
+          task.emit('continue', 2);
+          return new Promise(function(resolve) {
+            return task.once('step2', function(message) {
+              assert(message.step === 2, 'the message received is wrong');
+              resolve();
+            });
+          });
+        }).then(function() {
+          task.emit('continue', 3);
+          return new Promise(function(resolve) {
+            return task.once('step3', function(message) {
+              assert(message.step === 3, 'the message received is wrong');
+              resolve();
+            });
+          });
+        }).then(function() {
+          return true;
+        });
+    }
+
+    assert.strictEqual(pool.workers.length, 0);
+    let justOnceCounter = 0;
+
+    var poolController = pool.exec(progressBar, [3000])
+        .once('just-once-event', function() {
+          assert.ok(++justOnceCounter < 2);
+        })
+        .emit('message', { message: 'hello world' })
+        .on('continue', function(step) {
+          poolController.emit('step'+step, { step })
+        })
+        .on('custom-event', function(data) {
+          assert.ok(data.message === 'hello world');
+        })
+        .then(function first(result) {
+          assert.strictEqual(result, true);
+          assert.strictEqual(pool.workers.length, 1);
+          return pool.terminate();
+        })
+        .then(function() {
+          assert.strictEqual(pool.workers.length, 0);
+          return 2;
+        })
+        .then(function(result) {
+          assert.ok(2 == result); // this assert ensures the correct execution in promises after the EventEmitter methods overload
+        })
+        .then(() => {
+          return new Promise(function(resolve) {
+            return resolve();
+          });
+        })
+        .then(done)
+        .catch(done);
+
+    assert.ok(typeof poolController.emit === 'function');
+    assert.ok(typeof poolController.on === 'function');
+    assert.ok(typeof poolController.once === 'function');
+    assert.strictEqual(pool.workers.length, 1);
+  });
+
   it('should offload a function to a worker', function (done) {
     var pool = new Pool({maxWorkers: 10});
 

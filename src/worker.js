@@ -10,6 +10,9 @@ var requireFoolWebpack = eval(
     ' : function (module) { throw new Error(\'Module " + module + " not found.\') }'
 );
 
+var EventEmitter = require('./eventEmitter');
+
+
 /**
  * Special message sent by parent which causes the worker to terminate itself.
  * Not a "message object"; this string is the entire message.
@@ -21,7 +24,8 @@ var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 // create a worker API for sending and receiving messages which works both on
 // node.js and in the browser
 var worker = {
-  exit: function() {}
+  exit: function() {},
+  eventEmitter: new EventEmitter()
 };
 if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
   // worker in the browser
@@ -47,7 +51,7 @@ else if (typeof process !== 'undefined') {
       throw error;
     }
   }
-
+  
   if (WorkerThreads &&
     /* if there is a parentPort, we are in a WorkerThread */
     WorkerThreads.parentPort !== null) {
@@ -94,11 +98,12 @@ worker.methods = {};
  * Execute a function with provided arguments
  * @param {String} fn     Stringified function
  * @param {Array} [args]  Function arguments
+ * @param {Object} [context]  Function Context
  * @returns {*}
  */
 worker.methods.run = function run(fn, args) {
   var f = eval('(' + fn + ')');
-  return f.apply(f, args);
+  return f.apply(Object.assign(f, this), args); // extends the fn with EventEmitter methods
 };
 
 /**
@@ -110,15 +115,37 @@ worker.methods.methods = function methods() {
 };
 
 worker.on('message', function (request) {
+  function emit(eventName, eventData) {
+    worker.send({
+      eventName: eventName,
+      eventData: eventData,
+      id: request.id
+    });
+  };
+
+  function on(event, cb) {
+    worker.eventEmitter.on(event, cb);
+  }
+
+  function once(event, cb) {
+    worker.eventEmitter.once(event, cb);
+  }
+
+
   if (request === TERMINATE_METHOD_ID) {
     return worker.exit(0);
   }
+
+  if (request.eventName) {
+    return worker.eventEmitter.emit(request.eventName, request.eventData);
+  }
+
   try {
     var method = worker.methods[request.method];
 
     if (method) {
       // execute the function
-      var result = method.apply(method, request.params);
+      var result = method.apply(Object.assign(method, { emit: emit, on: on, once: once  }), request.params);
 
       if (isPromise(result)) {
         // promise returned, resolve this and then return

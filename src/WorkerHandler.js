@@ -3,6 +3,7 @@
 var Promise = require('./Promise');
 var environment = require('./environment');
 var requireFoolWebpack = require('./requireFoolWebpack');
+const EventEmitter = require('./eventEmitter');
 
 /**
  * Special message sent by parent which causes a child process worker to terminate itself.
@@ -219,6 +220,12 @@ function WorkerHandler(script, _options) {
     if (typeof response === 'string' && response === 'ready') {
       me.worker.ready = true;
       dispatchQueuedRequests();
+    } else  if (typeof response === 'object' && response.eventName) {
+      var id = response.id;
+      var task = me.processing[id];
+      if (task !== undefined && task.eventEmitter) {
+        task.eventEmitter._emit(response.eventName, response.eventData);
+      }
     } else {
       // find the task from the processing queue, and run the tasks callback
       var id = response.id;
@@ -305,18 +312,28 @@ WorkerHandler.prototype.methods = function () {
  * @param {{resolve: Function, reject: Function}} [resolver]
  * @return {Promise.<*, Error>} result
  */
-WorkerHandler.prototype.exec = function(method, params, resolver) {
+WorkerHandler.prototype.exec = function(method, params, resolver, eventEmitter) {
+  var self = this;
+
   if (!resolver) {
     resolver = Promise.defer();
   }
 
+  if (!eventEmitter) {
+    eventEmitter = new EventEmitter();
+  }
+
+  eventEmitter.on('__EVENT__', function(event) {
+    self.worker.send({ eventName: event.name, eventData: event.data });
+  })
   // generate a unique id for the task
   var id = ++this.lastId;
 
   // register a new task as being in progress
   this.processing[id] = {
     id: id,
-    resolver: resolver
+    resolver: resolver,
+    eventEmitter: eventEmitter
   };
 
   // build a JSON-RPC request
