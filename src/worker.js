@@ -97,7 +97,7 @@ worker.methods = {};
  * @returns {*}
  */
 worker.methods.run = function run(fn, args) {
-  var f = eval('(' + fn + ')');
+  var f = new Function('return (' + fn + ').apply(null, arguments);');
   return f.apply(f, args);
 };
 
