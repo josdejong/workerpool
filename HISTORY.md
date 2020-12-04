@@ -1,6 +1,12 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+## not yet published, version 6.0.4
+
+- Make evaluation of offloaded functions a bit more secure by using 
+   `new Function` instead of `eval`. Thanks @tjenkinson.
+
+
 ## 2020-10-28, version 6.0.3
 
 - Fixes and more robustness in terminating workers. Thanks @boneskull.
