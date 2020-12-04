@@ -307,8 +307,6 @@ describe('Pool', function () {
     var reachedTheEnd = false;
 
     function delayed() {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           resolve(1);
@@ -355,8 +353,6 @@ describe('Pool', function () {
     var reachedTheEnd = false;
 
     function delayed() {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           resolve(1);
@@ -365,8 +361,6 @@ describe('Pool', function () {
     }
 
     function two() {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           resolve(2);

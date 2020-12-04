@@ -125,8 +125,6 @@ describe('WorkerHandler', function () {
     var handler = new WorkerHandler();
 
     function asyncAdd(a, b) {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         if (typeof a === 'number' && typeof b === 'number') {
           resolve(a + b);
