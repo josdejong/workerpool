@@ -41,9 +41,9 @@
     "gulp": "4.0.2",
     "handlebars": "4.7.6",
     "istanbul": "0.4.5",
-    "mocha": "8.2.0",
-    "uglify-js": "3.11.4",
-    "webpack": "4.44.2"
+    "mocha": "8.2.1",
+    "uglify-js": "3.12.3",
+    "webpack": "5.11.0"
   },
   "dependencies": {}
 }
