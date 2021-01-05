@@ -73,7 +73,7 @@ function setupWorker(script, options) {
     return setupBrowserWorker(script, Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
-    return setupWorkerThreadWorker(script, WorkerThreads);
+    return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
   } else if (options.workerType === 'process' || !options.workerType) { // node.js only
     return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
   } else { // options.workerType === 'auto' or undefined
@@ -109,11 +109,16 @@ function setupBrowserWorker(script, Worker) {
   return worker;
 }
 
-function setupWorkerThreadWorker(script, WorkerThreads) {
-  var worker = new WorkerThreads.Worker(script, {
+function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOpts) {
+  
+  var default_opts = {
     stdout: false, // automatically pipe worker.STDOUT to process.STDOUT
     stderr: false  // automatically pipe worker.STDERR to process.STDERR
-  });
+  };
+  
+  workerThreadOpts = workerThreadOpts || default_opts;
+  
+  var worker = new WorkerThreads.Worker(script, workerThreadOpts);
   worker.isWorkerThread = true;
   // make the worker mimic a child_process
   worker.send = function(message) {
