@@ -109,6 +109,8 @@ worker.methods.methods = function methods() {
   return Object.keys(worker.methods);
 };
 
+var currentRequestId = null;
+
 worker.on('message', function (request) {
   if (request === TERMINATE_METHOD_ID) {
     return worker.exit(0);
@@ -117,6 +119,8 @@ worker.on('message', function (request) {
     var method = worker.methods[request.method];
 
     if (method) {
+      currentRequestId = request.id;
+      
       // execute the function
       var result = method.apply(method, request.params);
 
@@ -129,6 +133,7 @@ worker.on('message', function (request) {
                 result: result,
                 error: null
               });
+              currentRequestId = null;
             })
             .catch(function (err) {
               worker.send({
@@ -136,6 +141,7 @@ worker.on('message', function (request) {
                 result: null,
                 error: convertError(err)
               });
+              currentRequestId = null;
             });
       }
       else {
@@ -145,6 +151,8 @@ worker.on('message', function (request) {
           result: result,
           error: null
         });
+
+        currentRequestId = null;
       }
     }
     else {
@@ -178,6 +186,17 @@ worker.register = function (methods) {
 
 };
 
+worker.emit = function (eventType, payload) {
+  if (currentRequestId) {
+    worker.send({
+      id: currentRequestId,
+      eventType,
+      payload
+    });
+  }
+};
+
 if (typeof exports !== 'undefined') {
   exports.add = worker.register;
+  exports.emit = worker.emit;
 }

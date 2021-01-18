@@ -976,4 +976,30 @@ describe('Pool', function () {
         });
   });
 
+  it('should receive events from worker', function (done) {
+    var pool = new Pool(__dirname + '/workers/emit.js');
+
+    var receivedEvent
+
+    pool.exec('sendEvent', [], {
+            on: function (eventType, payload) {
+              receivedEvent = [eventType, payload]
+            }
+          })
+          .then(function (result) {
+            assert.strictEqual(result, 'done');
+            assert.strictEqual(receivedEvent[0], 'test-event');
+            assert.deepStrictEqual(receivedEvent[1], {
+              foo: 'bar'
+            });
+
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+            done(err);
+          });
+  });
 });

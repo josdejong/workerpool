@@ -8,3 +8,8 @@
  * @property {*} [forkOpts]
  * @property {number} [debugPortStart]
  */
+
+/**
+ * @typedef {Object} ExecOptions
+ * @property {(eventType: string, payload: unknown) => unknown} [on]
+ */

@@ -88,9 +88,10 @@ function Pool(script, options) {
  *                                    will be stringified and executed via the
  *                                    workers built-in function `run(fn, args)`.
  * @param {Array} [params]  Function arguments applied when calling the function
+ * @param {ExecOptions} [options]  Options object
  * @return {Promise.<*, Error>} result
  */
-Pool.prototype.exec = function (method, params) {
+Pool.prototype.exec = function (method, params, options) {
   // validate type of arguments
   if (params && !Array.isArray(params)) {
     throw new TypeError('Array expected as argument "params"');
@@ -109,7 +110,8 @@ Pool.prototype.exec = function (method, params) {
       method:  method,
       params:  params,
       resolver: resolver,
-      timeout: null
+      timeout: null,
+      options: options
     };
     tasks.push(task);
 
@@ -202,7 +204,7 @@ Pool.prototype._next = function () {
       // check if the task is still pending (and not cancelled -> promise rejected)
       if (task.resolver.promise.pending) {
         // send the request to the worker
-        var promise = worker.exec(task.method, task.params, task.resolver)
+        var promise = worker.exec(task.method, task.params, task.resolver, task.options)
           .then(me._boundNext)
           .catch(function () {
             // if the worker crashed and terminated, remove it from the pool
