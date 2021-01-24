@@ -73,7 +73,7 @@ function setupWorker(script, options) {
     return setupBrowserWorker(script, Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
-    return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
+    return setupWorkerThreadWorker(script, WorkerThreads, options.processOrWorkerOpts);
   } else if (options.workerType === 'process' || !options.workerType) { // node.js only
     return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
   } else { // options.workerType === 'auto' or undefined
@@ -109,16 +109,16 @@ function setupBrowserWorker(script, Worker) {
   return worker;
 }
 
-function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOpts) {
+function setupWorkerThreadWorker(script, WorkerThreads, processOrWorkerOpts) {
   
   var default_opts = {
     stdout: false, // automatically pipe worker.STDOUT to process.STDOUT
     stderr: false  // automatically pipe worker.STDERR to process.STDERR
   };
   
-  workerThreadOpts = workerThreadOpts || default_opts;
+  processOrWorkerOpts = processOrWorkerOpts || default_opts;
   
-  var worker = new WorkerThreads.Worker(script, workerThreadOpts);
+  var worker = new WorkerThreads.Worker(script, processOrWorkerOpts);
   worker.isWorkerThread = true;
   // make the worker mimic a child_process
   worker.send = function(message) {
@@ -152,6 +152,8 @@ function setupProcessWorker(script, options, child_process) {
 // add debug flags to child processes if the node inspector is active
 function resolveForkOptions(opts) {
   opts = opts || {};
+  
+  var processOrWorkerOpts = opts.workerType === 'process' ? opts.processOrWorkerOpts : {};
 
   var processExecArgv = process.execArgv.join(' ');
   var inspectorActive = processExecArgv.indexOf('--inspect') !== -1;
@@ -174,7 +176,7 @@ function resolveForkOptions(opts) {
 
   return Object.assign({}, opts, {
     forkArgs: opts.forkArgs,
-    forkOpts: Object.assign({}, opts.forkOpts, {
+    forkOpts: Object.assign({}, processOrWorkerOpts, opts.forkOpts, {
       execArgv: (opts.forkOpts && opts.forkOpts.execArgv || [])
       .concat(execArgv)
     })
