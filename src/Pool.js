@@ -30,6 +30,7 @@ function Pool(script, options) {
   this.workerType = options.workerType || options.nodeWorker || 'auto'
   this.maxQueueSize = options.maxQueueSize || Infinity;
   this.workerThreadOpts = options.workerThreadOpts || {};
+  this.processOrWorkerOpts = options.processOrWorkerOpts || {}
 
   // configuration
   if (options && 'maxWorkers' in options) {
@@ -369,7 +370,7 @@ Pool.prototype._createWorkerHandler = function () {
     forkOpts: this.forkOpts,
     debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
     workerType: this.workerType,
-    workerThreadOpts: this.workerThreadOpts,
+    processOrWorkerOpts: this.processOrWorkerOpts,
   });
 }
 
