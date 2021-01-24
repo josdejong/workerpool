@@ -29,7 +29,6 @@ function Pool(script, options) {
   this.nodeWorker = options.nodeWorker;
   this.workerType = options.workerType || options.nodeWorker || 'auto'
   this.maxQueueSize = options.maxQueueSize || Infinity;
-  this.workerThreadOpts = options.workerThreadOpts || {};
   this.processOrWorkerOpts = options.processOrWorkerOpts || {}
 
   // configuration
