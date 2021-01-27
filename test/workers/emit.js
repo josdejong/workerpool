@@ -3,7 +3,7 @@ var workerpool = require('../../');
 
 function sendEvent() {
   return new Promise(function (resolve, reject) {
-    workerpool.workerEmit('test-event', {
+    workerpool.workerEmit({
       foo: 'bar'
     });
     resolve('done');
