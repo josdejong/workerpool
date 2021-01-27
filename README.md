@@ -207,7 +207,7 @@ A worker pool contains the following functions:
   - When `method` is a string, a method with this name must exist at the worker and must be registered to make it accessible via the pool. The function will be executed on the worker with given parameters.
   - When `method` is a function, the provided function `fn` will be stringified, send to the worker, and executed there with the provided parameters. The provided function must be static, it must not depend on variables in a surrounding scope.
   - The following options are available:
-    - `on: (payload: any) => void`. An event listener, to handle events sent by the worker for this execution. See [#events] for more details.
+    - `on: (payload: any) => void`. An event listener, to handle events sent by the worker for this execution. See [Events](#events) for more details.
 
 - `Pool.proxy() : Promise.<Object, Error>`<br>
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
