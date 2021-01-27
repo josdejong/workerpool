@@ -982,14 +982,13 @@ describe('Pool', function () {
     var receivedEvent
 
     pool.exec('sendEvent', [], {
-            on: function (eventType, payload) {
-              receivedEvent = [eventType, payload]
+            on: function (payload) {
+              receivedEvent = payload
             }
           })
           .then(function (result) {
             assert.strictEqual(result, 'done');
-            assert.strictEqual(receivedEvent[0], 'test-event');
-            assert.deepStrictEqual(receivedEvent[1], {
+            assert.deepStrictEqual(receivedEvent, {
               foo: 'bar'
             });
 
