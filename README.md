@@ -379,9 +379,9 @@ To receive those events, you can use the `on` option of the pool `exec` method:
 pool.exec('eventExample', [], {
   on: function (payload) {
     if (payload.status === 'in_progress') {
-      console.log('In progress...')
+      console.log('In progress...');
     } else if (payload.status === 'complete') {
-      console.log('Done!')
+      console.log('Done!');
     }
   }
 })
