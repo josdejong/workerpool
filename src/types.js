@@ -11,5 +11,5 @@
 
 /**
  * @typedef {Object} ExecOptions
- * @property {(eventType: string, payload: unknown) => unknown} [on]
+ * @property {(payload: any) => unknown} [on]
  */

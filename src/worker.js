@@ -186,11 +186,11 @@ worker.register = function (methods) {
 
 };
 
-worker.emit = function (eventType, payload) {
+worker.emit = function (payload) {
   if (currentRequestId) {
     worker.send({
       id: currentRequestId,
-      eventType,
+      isEvent: true,
       payload
     });
   }

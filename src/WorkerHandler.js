@@ -224,9 +224,9 @@ function WorkerHandler(script, _options) {
       var id = response.id;
       var task = me.processing[id];
       if (task !== undefined) {
-        if (response.eventType != null) {
+        if (response.isEvent) {
           if (task.options && typeof task.options.on === 'function') {
-            task.options.on(response.eventType, response.payload);
+            task.options.on(response.payload);
           }
         } else {
           // remove the task from the queue
