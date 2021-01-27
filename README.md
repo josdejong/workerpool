@@ -376,7 +376,7 @@ workerpool.worker({
 To receive those events, you can use the `on` option of the pool `exec` method:
 
 ```js
-pool.exec('sendEvent', [], {
+pool.exec('eventExample', [], {
   on: function (payload) {
     if (payload.status === 'in_progress') {
       console.log('In progress...')
