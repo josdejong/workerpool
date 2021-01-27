@@ -343,7 +343,7 @@ workerpool.worker({
 
 ### Events
 
-You can send data back to the pool from workers during the task is being executed using the `workerEmit` function:
+You can send data back from workers to the pool while the task is being executed using the `workerEmit` function:
 
 `workerEmit(payload: any)`
 
