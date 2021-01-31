@@ -265,8 +265,9 @@ function WorkerHandler(script, _options) {
   // send all queued requests to worker
   function dispatchQueuedRequests()
   {
-    me.requestQueue.forEach(me.worker.send.bind(me.worker));
-    me.requestQueue = [];
+    for(const request of me.requestQueue.splice(0)) {
+      me.worker.send(request);
+    }
   }
 
   var worker = this.worker;
