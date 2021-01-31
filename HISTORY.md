@@ -1,6 +1,12 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+## not yet published, version 6.1.0
+
+- Implemented support for sending events from the worker to the main thread,
+  see #51, #227. Thanks @Akryum.
+  
+
 ## 2021-01-16, version 6.0.4
 
 - Make evaluation of offloaded functions a bit more secure by using 
