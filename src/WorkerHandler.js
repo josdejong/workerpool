@@ -224,21 +224,27 @@ function WorkerHandler(script, _options) {
       var id = response.id;
       var task = me.processing[id];
       if (task !== undefined) {
-        // remove the task from the queue
-        delete me.processing[id];
+        if (response.isEvent) {
+          if (task.options && typeof task.options.on === 'function') {
+            task.options.on(response.payload);
+          }
+        } else {
+          // remove the task from the queue
+          delete me.processing[id];
 
-        // test if we need to terminate
-        if (me.terminating === true) {
-          // complete worker termination if all tasks are finished
-          me.terminate();
-        }
+          // test if we need to terminate
+          if (me.terminating === true) {
+            // complete worker termination if all tasks are finished
+            me.terminate();
+          }
 
-        // resolve the task's promise
-        if (response.error) {
-          task.resolver.reject(objectToError(response.error));
-        }
-        else {
-          task.resolver.resolve(response.result);
+          // resolve the task's promise
+          if (response.error) {
+            task.resolver.reject(objectToError(response.error));
+          }
+          else {
+            task.resolver.resolve(response.result);
+          }
         }
       }
     }
@@ -303,9 +309,10 @@ WorkerHandler.prototype.methods = function () {
  * @param {String} method
  * @param {Array} [params]
  * @param {{resolve: Function, reject: Function}} [resolver]
+ * @param {ExecOptions}  [options]
  * @return {Promise.<*, Error>} result
  */
-WorkerHandler.prototype.exec = function(method, params, resolver) {
+WorkerHandler.prototype.exec = function(method, params, resolver, options) {
   if (!resolver) {
     resolver = Promise.defer();
   }
@@ -316,7 +323,8 @@ WorkerHandler.prototype.exec = function(method, params, resolver) {
   // register a new task as being in progress
   this.processing[id] = {
     id: id,
-    resolver: resolver
+    resolver: resolver,
+    options: options
   };
 
   // build a JSON-RPC request
