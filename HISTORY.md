@@ -5,7 +5,8 @@ https://github.com/josdejong/workerpool
 
 - Implemented support for sending events from the worker to the main thread,
   see #51, #227. Thanks @Akryum.
-  
+- Fix an issue in Node.js nightly, see #230. Thanks @aduh95.
+
 
 ## 2021-01-16, version 6.0.4
 
