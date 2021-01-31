@@ -257,7 +257,7 @@ Pool.prototype._getWorker = function() {
 };
 
 /**
- * Remove a worker from the pool. 
+ * Remove a worker from the pool.
  * Attempts to terminate worker if not already terminated, and ensures the minimum
  * pool size is met.
  * @param {WorkerHandler} worker

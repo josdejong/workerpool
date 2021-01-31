@@ -28,6 +28,7 @@ var bannerPlugin = new webpack.BannerPlugin({
 
 var webpackConfig = {
   entry: './src/index.js',
+  target: ['web', 'es5'],
   mode: 'production',
   output: {
     library: 'workerpool',
@@ -40,6 +41,20 @@ var webpackConfig = {
   plugins: [
     bannerPlugin
   ],
+  module: {
+    rules: [
+      {
+        test: /\.m?js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      }
+    ]
+  },
   node: false, // do not include node poly fills for process, __dirname, etc
   optimization: {
     // We no not want to minimize our code.
