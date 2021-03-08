@@ -20,7 +20,6 @@
   "browser": "dist/workerpool.js",
   "files": [
     "dist",
-    "src",
     "HISTORY.md",
     "LICENSE",
     "README.md"
