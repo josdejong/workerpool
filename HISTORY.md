@@ -1,6 +1,12 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+## 2021-03-08, version 6.1.1
+
+- Remove redundant `./src` folder from the published npm package. 
+  Thanks @Nytelife26.
+
+
 ## 2021-01-31, version 6.1.0
 
 - Implemented support for sending events from the worker to the main thread,
