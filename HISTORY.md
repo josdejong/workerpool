@@ -1,9 +1,16 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+
+## 2021-03-09, version 6.1.2
+
+- Fix #253, add `./src` again in the published npm package, reverting the change
+  in `v6.1.1` (see also #243).
+
+
 ## 2021-03-08, version 6.1.1
 
-- Remove redundant `./src` folder from the published npm package. 
+- Remove redundant `./src` folder from the published npm package, see #243. 
   Thanks @Nytelife26.
 
 
