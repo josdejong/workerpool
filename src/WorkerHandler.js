@@ -400,6 +400,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     // all tasks are finished. kill the worker
     var cleanup = function(err) {
       me.terminated = true;
+      me.worker.removeAllListeners('message');
       me.worker = null;
       me.terminating = false;
       if (me.terminationHandler) {
