@@ -469,10 +469,10 @@ describe('WorkerHandler', function () {
     it('worker handler checks if terminated before handling message', function (done) {
       var handler = new WorkerHandler();
       const worker = handler.worker;
-      handler.worker = null;
-      handler.terminated = true;
-      worker.emit('message', 'ready');
-      done();
+      handler.terminate(true, () => {
+        worker.emit('message', 'ready');
+        done();
+      });
     });
   });
 });
