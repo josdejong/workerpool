@@ -216,6 +216,9 @@ function WorkerHandler(script, _options) {
   // queue for requests that are received before the worker is ready
   this.requestQueue = [];
   this.worker.on('message', function (response) {
+    if (me.terminated) {
+      return;
+    }
     if (typeof response === 'string' && response === 'ready') {
       me.worker.ready = true;
       dispatchQueuedRequests();
@@ -400,6 +403,9 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     // all tasks are finished. kill the worker
     var cleanup = function(err) {
       me.terminated = true;
+      if (me.worker != null) {
+        me.worker.removeAllListeners('message');
+      }
       me.worker = null;
       me.terminating = false;
       if (me.terminationHandler) {
