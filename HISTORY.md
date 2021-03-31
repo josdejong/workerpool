@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 6.1.3
+
+- Fix #147: disregard messages from terminated workers. 
+  Thanks @hhprogram and @Madgvox.
+
+
 ## 2021-03-09, version 6.1.2
 
 - Fix #253, add `./src` again in the published npm package, reverting the change
