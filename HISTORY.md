@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 6.1.3
+## 2021-04-01, version 6.1.3
 
 - Fix #147: disregard messages from terminated workers. 
   Thanks @hhprogram and @Madgvox.
