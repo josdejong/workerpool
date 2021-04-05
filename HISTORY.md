@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2021-04-05, version 6.1.4
+
+- Fix terminating a pool throwing an error when used in the browser.
+  Regression introduced in `v6.1.3`.
+
+
 ## 2021-04-01, version 6.1.3
 
 - Fix #147: disregard messages from terminated workers. 

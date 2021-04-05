@@ -359,8 +359,8 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
       return me.terminateAndNotify(true)
         .then(function() {
           throw error;
-        }, function(err) { 
-          throw err; 
+        }, function(err) {
+          throw err;
         });
     } else {
       throw error;
@@ -403,7 +403,8 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     // all tasks are finished. kill the worker
     var cleanup = function(err) {
       me.terminated = true;
-      if (me.worker != null) {
+      if (me.worker != null && me.worker.removeAllListeners) {
+        // removeAllListeners is only available for child_process
         me.worker.removeAllListeners('message');
       }
       me.worker = null;
