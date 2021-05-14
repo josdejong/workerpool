@@ -202,6 +202,11 @@ Pool.prototype._next = function () {
       var me = this;
       var task = this.tasks.shift();
 
+      // assign last task options to worker handler
+      if (!this.minWorkers) {
+        worker.lastTaskOptions = task.options;
+      }
+
       // check if the task is still pending (and not cancelled -> promise rejected)
       if (task.resolver.promise.pending) {
         // send the request to the worker
