@@ -1,6 +1,50 @@
 # workerpool history
 https://github.com/josdejong/workerpool
 
+
+## 2021-04-05, version 6.1.4
+
+- Fix terminating a pool throwing an error when used in the browser.
+  Regression introduced in `v6.1.3`.
+
+
+## 2021-04-01, version 6.1.3
+
+- Fix #147: disregard messages from terminated workers. 
+  Thanks @hhprogram and @Madgvox.
+
+
+## 2021-03-09, version 6.1.2
+
+- Fix #253, add `./src` again in the published npm package, reverting the change
+  in `v6.1.1` (see also #243).
+
+
+## 2021-03-08, version 6.1.1
+
+- Remove redundant `./src` folder from the published npm package, see #243. 
+  Thanks @Nytelife26.
+
+
+## 2021-01-31, version 6.1.0
+
+- Implemented support for sending events from the worker to the main thread,
+  see #51, #227. Thanks @Akryum.
+- Fix an issue in Node.js nightly, see #230. Thanks @aduh95.
+- Fix #232 `workerpool` not working on IE 10.
+
+
+## 2021-01-16, version 6.0.4
+
+- Make evaluation of offloaded functions a bit more secure by using 
+   `new Function` instead of `eval`. Thanks @tjenkinson.
+
+
+## 2020-10-28, version 6.0.3
+
+- Fixes and more robustness in terminating workers. Thanks @boneskull.
+
+
 ## 2020-10-03, version 6.0.2
 
 - Fix #32, #175: the promise returned by `Pool.terminate()` now waits until 

@@ -125,8 +125,6 @@ describe('WorkerHandler', function () {
     var handler = new WorkerHandler();
 
     function asyncAdd(a, b) {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         if (typeof a === 'number' && typeof b === 'number') {
           resolve(a + b);
@@ -463,6 +461,17 @@ describe('WorkerHandler', function () {
             }
           })
         }, 100);
+      });
+    });
+  });
+
+  describe('workerAlreadyTerminated', function () {
+    it('worker handler checks if terminated before handling message', function (done) {
+      var handler = new WorkerHandler();
+      const worker = handler.worker;
+      handler.terminate(true, () => {
+        worker.emit('message', 'ready');
+        done();
       });
     });
   });

@@ -307,8 +307,6 @@ describe('Pool', function () {
     var reachedTheEnd = false;
 
     function delayed() {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           resolve(1);
@@ -355,8 +353,6 @@ describe('Pool', function () {
     var reachedTheEnd = false;
 
     function delayed() {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           resolve(1);
@@ -365,8 +361,6 @@ describe('Pool', function () {
     }
 
     function two() {
-      var Promise = require('../src/Promise');
-
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           resolve(2);
@@ -982,4 +976,29 @@ describe('Pool', function () {
         });
   });
 
+  it('should receive events from worker', function (done) {
+    var pool = new Pool(__dirname + '/workers/emit.js');
+
+    var receivedEvent
+
+    pool.exec('sendEvent', [], {
+            on: function (payload) {
+              receivedEvent = payload
+            }
+          })
+          .then(function (result) {
+            assert.strictEqual(result, 'done');
+            assert.deepStrictEqual(receivedEvent, {
+              foo: 'bar'
+            });
+
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+            done(err);
+          });
+  });
 });
