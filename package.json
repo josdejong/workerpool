@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@babel/core": "7.13.14",
-    "@babel/preset-env": "7.13.12",
+    "@babel/preset-env": "7.14.4",
     "babel-loader": "8.2.2",
     "date-format": "3.0.0",
     "del": "6.0.0",
