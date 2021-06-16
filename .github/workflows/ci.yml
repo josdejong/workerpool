@@ -16,6 +16,12 @@ jobs:
             install-command: npm ci
           - node-version: 10.x
             install-command: npm ci
+          - node-version: 12.x
+            install-command: npm ci
+          - node-version: 14.x
+            install-command: npm ci
+          - node-version: 16.x
+            install-command: npm ci
 
     steps:
       - uses: actions/checkout@v2
