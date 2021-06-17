@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2021-06-17, version 2.3.4
+
+- Backport fix for Node.js 16, see #309. Thanks @mansona.
+
+
 ## 2018-09-12, version 2.3.3
 
 - Fixed space in license field in `package.json`. Thanks @sagotsky.

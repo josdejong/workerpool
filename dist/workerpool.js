@@ -4,8 +4,8 @@
  *
  * Offload tasks to a pool of workers on node.js and in the browser.
  *
- * @version 2.3.3
- * @date    2018-09-12
+ * @version 2.3.4
+ * @date    2021-06-17
  *
  * @license
  * Copyright (C) 2014-2016 Jos de Jong <wjosdejong@gmail.com>
@@ -1018,8 +1018,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // send all queued requests to worker
 	  function dispatchQueuedRequests()
 	  {
-	    me.requestQueue.forEach(me.worker.send.bind(me.worker));
-	    me.requestQueue = [];
+	    var requests = me.requestQueue.splice(0)
+	    for (var i = 0; i < requests.length; i++) {
+	      me.worker.send(requests[i]);
+	    }
 	  }
 
 	  // listen for worker messages error and exit
