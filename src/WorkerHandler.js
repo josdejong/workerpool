@@ -70,7 +70,7 @@ function getDefaultWorker() {
 function setupWorker(script, options) {
   if (options.workerType === 'web') { // browser only
     ensureWebWorker();
-    return setupBrowserWorker(script, Worker);
+    return setupBrowserWorker(script, options, Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
     return setupWorkerThreadWorker(script, WorkerThreads);
@@ -79,7 +79,7 @@ function setupWorker(script, options) {
   } else { // options.workerType === 'auto' or undefined
     if (environment.platform === 'browser') {
       ensureWebWorker();
-      return setupBrowserWorker(script, Worker);
+      return setupBrowserWorker(script, options, Worker);
     }
     else { // environment.platform === 'node'
       var WorkerThreads = tryRequireWorkerThreads();
@@ -92,9 +92,9 @@ function setupWorker(script, options) {
   }
 }
 
-function setupBrowserWorker(script, Worker) {
+function setupBrowserWorker(script, options, Worker) {
   // create the web worker
-  var worker = new Worker(script);
+  var worker = new Worker(script, options);
 
   worker.isBrowserWorker = true;
   // add node.js API to the web worker

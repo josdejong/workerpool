@@ -377,7 +377,7 @@ describe('WorkerHandler', function () {
         postMessage = message;
       };
 
-      var worker = WorkerHandler._setupBrowserWorker(SCRIPT, Worker);
+      var worker = WorkerHandler._setupBrowserWorker(SCRIPT, {}, Worker);
 
       assert.ok(worker instanceof Worker);
       assert.ok(typeof worker.on === 'function');
