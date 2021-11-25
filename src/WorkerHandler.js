@@ -70,7 +70,7 @@ function getDefaultWorker() {
 function setupWorker(script, options) {
   if (options.workerType === 'web') { // browser only
     ensureWebWorker();
-    return setupBrowserWorker(script, options, Worker);
+    return setupBrowserWorker(script, resolveBrowserOptions(options), Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
     return setupWorkerThreadWorker(script, WorkerThreads);
@@ -79,7 +79,7 @@ function setupWorker(script, options) {
   } else { // options.workerType === 'auto' or undefined
     if (environment.platform === 'browser') {
       ensureWebWorker();
-      return setupBrowserWorker(script, options, Worker);
+      return setupBrowserWorker(script, resolveBrowserOptions(options), Worker);
     }
     else { // environment.platform === 'node'
       var WorkerThreads = tryRequireWorkerThreads();
@@ -174,6 +174,21 @@ function resolveForkOptions(opts) {
       .concat(execArgv)
     })
   });
+}
+
+// resolve browser options
+function resolveBrowserOptions(opts) {
+  var browserOpt = {}
+  var workderOptArr = ['type', 'credentials', 'name']
+
+  opts = opts || {};
+  Object.keys(opts).forEach(key => {
+    if(workderOptArr.includes(key)) {
+      browserOpt[key] = opts[key]
+    }
+  })
+
+  return browserOpt
 }
 
 /**
