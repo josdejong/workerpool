@@ -425,12 +425,16 @@ WorkerHandler.prototype.terminate = function (force, callback) {
 
         if (this.worker.isChildProcess) {
           var cleanExitTimeout = setTimeout(function() {
-            me.worker.kill();
+            if (me.worker) {
+              me.worker.kill();
+            }
           }, CHILD_PROCESS_EXIT_TIMEOUT);
 
           this.worker.once('exit', function() {
             clearTimeout(cleanExitTimeout);
-            me.worker.killed = true;
+            if (me.worker) {
+              me.worker.killed = true;
+            }
             cleanup();
           });
 

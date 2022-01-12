@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 6.1.6
+
+- Fix #326: robustness fix when terminating a workerpool.
+
+
 ## 2021-06-17, version 6.1.5
 
 - Fix v6.1.4 not being marked as latest anymore on npm due to bug fix
