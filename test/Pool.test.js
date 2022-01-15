@@ -70,6 +70,61 @@ describe('Pool', function () {
     }
   })
 
+  it('supports forkOpts parameter to pass options to fork', function() {
+    var pool = new Pool({ workerType: 'process', forkOpts: { env: { TEST_ENV: 'env_value'} } });
+    function getEnv() {
+      return process.env.TEST_ENV;
+    }
+
+    return pool.exec(getEnv, [])
+        .then(function (result) {
+          assert.strictEqual(result, 'env_value');
+
+          return pool.terminate();
+        });
+  });
+
+  it('supports worker creation hook to pass dynamic options to fork (for example)', function() {
+    var counter = 0;
+    var terminatedWorkers = [];
+    var pool = new Pool({
+      workerType: 'process',
+      maxWorkers: 4, // make sure we can create enough workers (otherwise we could be limited by the number of CPUs)
+      onCreateWorker: (opts) => {
+        return {...opts, forkOpts: {...opts.forkOpts, env: { TEST_ENV: `env_value${counter++}` }}}
+      },
+      onTerminateWorker: (opts) => {
+        terminatedWorkers.push(opts.forkOpts.env.TEST_ENV);
+      }
+    });
+
+    function getEnv() {
+      return process.env.TEST_ENV;
+    }
+
+    return Promise.all([
+      pool.exec(getEnv, []),
+      pool.exec(getEnv, []),
+      pool.exec(getEnv, [])
+    ]).then(function (result) {
+      assert.strictEqual(result.length, 3, 'The creation hook should be called 3 times');
+      assert(result.includes('env_value0'), 'result should include the value with counter = 0');
+      assert(result.includes('env_value1'), 'result should include the value with counter = 1');
+      assert(result.includes('env_value2'), 'result should include the value with counter = 2');
+      return pool.terminate();
+    }).then(function () {
+      assert.strictEqual(terminatedWorkers.length, 3, 'The termination hook should be called 3 times');
+      assert(terminatedWorkers.includes('env_value0'), 'terminatedWorkers should include the value with counter = 0');
+      assert(terminatedWorkers.includes('env_value1'), 'terminatedWorkers should include the value with counter = 1');
+      assert(terminatedWorkers.includes('env_value2'), 'terminatedWorkers should include the value with counter = 2');
+    }).catch(function (error) {
+      // correctly terminate the pool in case of error to avoid hanging the tests forever
+      return pool.terminate().then(function() {
+        throw error;
+      });
+    });
+  });
+
   it('should offload a function to a worker', function (done) {
     var pool = new Pool({maxWorkers: 10});
 

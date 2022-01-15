@@ -207,6 +207,8 @@ function WorkerHandler(script, _options) {
   this.script = script || getDefaultWorker();
   this.worker = setupWorker(this.script, options);
   this.debugPort = options.debugPort;
+  this.forkOpts = options.forkOpts;
+  this.forkArgs = options.forkArgs;
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
