@@ -2,8 +2,9 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 6.1.6
+## 2022-01-15, version 6.2.0
 
+- Implement callbacks `onCreateWorker` and `onTerminateWorker`. Thanks @forty.
 - Fix #326: robustness fix when terminating a workerpool.
 
 
