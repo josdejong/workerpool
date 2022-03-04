@@ -59,6 +59,21 @@ describe('Pool', function () {
       });
     });
 
+    it('supports require', function() {
+      const expectedCpus = require('os').cpus().length
+      const pool = createPool({ maxWorkers: expectedCpus });
+
+      function myFn() {
+        return require('os').cpus()
+      }
+      return pool.exec(myFn)
+        .then(function (cpus) {
+          assert.strictEqual(cpus.length, expectedCpus);
+
+          return pool.terminate();
+        });
+    })
+
     if (WorkerThreads) {
       it('supports thread', function() {
         var pool = createPool({ workerType: 'thread' });
