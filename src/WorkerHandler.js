@@ -443,7 +443,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
           if (this.worker.ready) {
             this.worker.send(TERMINATE_METHOD_ID);
           } else {
-            this.worker.requestQueue.push(TERMINATE_METHOD_ID)
+            this.requestQueue.push(TERMINATE_METHOD_ID)
           }
         } else {
           // worker_thread
