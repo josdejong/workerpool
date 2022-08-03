@@ -27,7 +27,11 @@ function Pool(script, options) {
   this.forkOpts = Object.freeze(options.forkOpts || {});
   this.debugPortStart = (options.debugPortStart || 43210);
   this.nodeWorker = options.nodeWorker;
-  this.workerType = options.workerType || options.nodeWorker || 'auto'
+  this.workerOpts = {
+    stdout: options.stdout,
+    stderr: options.stderr,
+  };
+  this.workerType = options.workerType || options.nodeWorker || 'auto';
   this.maxQueueSize = options.maxQueueSize || Infinity;
 
   this.onCreateWorker = options.onCreateWorker || (() => null);
@@ -394,6 +398,7 @@ Pool.prototype._createWorkerHandler = function () {
     forkArgs: overridenParams.forkArgs || this.forkArgs,
     forkOpts: overridenParams.forkOpts || this.forkOpts,
     debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
+    workerOpts: this.workerOpts,
     workerType: this.workerType
   });
 }

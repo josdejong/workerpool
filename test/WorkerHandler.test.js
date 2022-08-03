@@ -399,6 +399,7 @@ describe('WorkerHandler', function () {
   describe('setupWorkerThreadWorker', function() {
     it('works', function() {
       var SCRIPT = 'the script';
+      const OPTIONS = {};
       var postMessage;
       var addEventListener;
       var terminate = 0;
@@ -421,7 +422,7 @@ describe('WorkerHandler', function () {
         terminate++;
       }
 
-      var worker = WorkerHandler._setupWorkerThreadWorker(SCRIPT, { Worker: Worker });
+      var worker = WorkerHandler._setupWorkerThreadWorker(SCRIPT, OPTIONS, { Worker: Worker });
 
       assert.ok(worker instanceof Worker);
 
