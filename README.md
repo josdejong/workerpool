@@ -195,7 +195,7 @@ The following options are available:
   - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown. Only available in a node.js environment.
 - `forkArgs: String[]`. For `process` worker type. An array passed as `args` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `forkOpts: Object`. For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options). See nodejs documentation for available options.
-- `workerThreadOpts: Object`. For `worker` worker type. An object passed to [worker_threads](https://nodejs.org/api/worker_threads.html#worker-threads). See nodejs documentation for available options.
+- `workerThreadOpts: Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options). See nodejs documentation for available options.
 - `onCreateWorker: Function`. A callback that is called whenever a worker is being created. It can be used to allocate resources for each worker for example. The callback is passed as argument an object with the following properties:
   - `forkArgs: String[]`: the `forkArgs` option of this pool
   - `forkOpts: Object`: the `forkOpts` option of this pool
