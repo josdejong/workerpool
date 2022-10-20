@@ -73,7 +73,7 @@ function setupWorker(script, options) {
     return setupBrowserWorker(script, Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
-    return setupWorkerThreadWorker(script, WorkerThreads);
+    return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
   } else if (options.workerType === 'process' || !options.workerType) { // node.js only
     return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
   } else { // options.workerType === 'auto' or undefined
@@ -109,10 +109,11 @@ function setupBrowserWorker(script, Worker) {
   return worker;
 }
 
-function setupWorkerThreadWorker(script, WorkerThreads) {
+function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
   var worker = new WorkerThreads.Worker(script, {
     stdout: false, // automatically pipe worker.STDOUT to process.STDOUT
-    stderr: false  // automatically pipe worker.STDERR to process.STDERR
+    stderr: false,  // automatically pipe worker.STDERR to process.STDERR
+    ...workerThreadOptions
   });
   worker.isWorkerThread = true;
   // make the worker mimic a child_process
@@ -209,6 +210,7 @@ function WorkerHandler(script, _options) {
   this.debugPort = options.debugPort;
   this.forkOpts = options.forkOpts;
   this.forkArgs = options.forkArgs;
+  this.workerThreadOpts = options.workerThreadOpts
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
