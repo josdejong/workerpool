@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2022-10-24, version 6.3.0
+
+- Implement option `workerThreadOpts` to pass options to a worker of type 
+  `thread`, a `worker_thread` (#357, fixes #356). Thanks @galElmalah.
+
 ## 2022-04-11, version 6.2.1
 
 - Fix #343: `.terminate()` sometimes throwing an exception.

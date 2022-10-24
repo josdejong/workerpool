@@ -465,7 +465,7 @@ To see the coverage results, open the generated report in your browser:
 
 - Describe changes in HISTORY.md
 - Update version in package.json, run `npm install` to update it in `package-lock.json` too.
-- Push to github
+- Push to Github
 - Deploy to npm via `npm publish`
 - Add a git tag with the version number like:
   ```
