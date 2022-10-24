@@ -1,11 +1,8 @@
 # workerpool
 
-
-
 **workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** basically implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern). There is a pool of workers to execute tasks. New tasks are put in a queue. A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
 **workerpool** runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
-
 
 ## Features
 
@@ -18,7 +15,6 @@
 - Handles crashed workers
 - Small: 5 kB minified and gzipped
 
-
 ## Why
 
 JavaScript is based upon a single event loop which handles one event at a time. Jeremy Epstein [explains this clearly](http://greenash.net.au/thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/):
@@ -30,15 +26,13 @@ JavaScript is based upon a single event loop which handles one event at a time. 
 This means that CPU heavy tasks will block other tasks from being executed. In case of a browser environment, the browser will not react to user events like a mouse click while executing a CPU intensive task (the browser "hangs"). In case of a node.js server, the server will not respond to any new request while executing a single, heavy request.
 
 For front-end processes, this is not a desired situation.
-Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated *workers*. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](https://nodejs.org/api/child_process.html) and [worker_threads](https://nodejs.org/api/worker_threads.html) are available. An application should be split in separate, decoupled parts, which can run independent of each other in a parallelized way. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
-
+Therefore, CPU intensive tasks should be offloaded from the main event loop onto dedicated _workers_. In a browser environment, [Web Workers](http://www.html5rocks.com/en/tutorials/workers/basics/) can be used. In node.js, [child processes](https://nodejs.org/api/child_process.html) and [worker_threads](https://nodejs.org/api/worker_threads.html) are available. An application should be split in separate, decoupled parts, which can run independent of each other in a parallelized way. Effectively, this results in an architecture which achieves concurrency by means of isolated processes and message passing.
 
 ## Install
 
 Install via npm:
 
     npm install workerpool
-
 
 ## Load
 
@@ -60,7 +54,6 @@ To load workerpool in a web worker in the browser:
 importScripts('workerpool.js');
 ```
 
-
 ## Use
 
 ### Offload functions dynamically
@@ -68,6 +61,7 @@ importScripts('workerpool.js');
 In the following example there is a function `add`, which is offloaded dynamically to a worker to be executed for a given set of arguments.
 
 **myApp.js**
+
 ```js
 const workerpool = require('workerpool');
 const pool = workerpool.pool();
@@ -76,26 +70,27 @@ function add(a, b) {
   return a + b;
 }
 
-pool.exec(add, [3, 4])
-    .then(function (result) {
-      console.log('result', result); // outputs 7
-    })
-    .catch(function (err) {
-      console.error(err);
-    })
-    .then(function () {
-      pool.terminate(); // terminate all workers when done
-    });
+pool
+  .exec(add, [3, 4])
+  .then(function (result) {
+    console.log('result', result); // outputs 7
+  })
+  .catch(function (err) {
+    console.error(err);
+  })
+  .then(function () {
+    pool.terminate(); // terminate all workers when done
+  });
 ```
 
 Note that both function and arguments must be static and stringifiable, as they need to be sent to the worker in a serialized form. In case of large functions or function arguments, the overhead of sending the data to the worker can be significant.
-
 
 ### Dedicated workers
 
 A dedicated worker can be created in a separate script, and then used via a worker pool.
 
 **myWorker.js**
+
 ```js
 const workerpool = require('workerpool');
 
@@ -107,13 +102,14 @@ function fibonacci(n) {
 
 // create a worker and register public functions
 workerpool.worker({
-  fibonacci: fibonacci
+  fibonacci: fibonacci,
 });
 ```
 
 This worker can be used by a worker pool:
 
 **myApp.js**
+
 ```js
 const workerpool = require('workerpool');
 
@@ -121,39 +117,41 @@ const workerpool = require('workerpool');
 const pool = workerpool.pool(__dirname + '/myWorker.js');
 
 // run registered functions on the worker via exec
-pool.exec('fibonacci', [10])
-    .then(function (result) {
-      console.log('Result: ' + result); // outputs 55
-    })
-    .catch(function (err) {
-      console.error(err);
-    })
-    .then(function () {
-      pool.terminate(); // terminate all workers when done
-    });
+pool
+  .exec('fibonacci', [10])
+  .then(function (result) {
+    console.log('Result: ' + result); // outputs 55
+  })
+  .catch(function (err) {
+    console.error(err);
+  })
+  .then(function () {
+    pool.terminate(); // terminate all workers when done
+  });
 
 // or run registered functions on the worker via a proxy:
-pool.proxy()
-    .then(function (worker) {
-      return worker.fibonacci(10);
-    })
-    .then(function (result) {
-      console.log('Result: ' + result); // outputs 55
-    })
-    .catch(function (err) {
-      console.error(err);
-    })
-    .then(function () {
-      pool.terminate(); // terminate all workers when done
-    });
+pool
+  .proxy()
+  .then(function (worker) {
+    return worker.fibonacci(10);
+  })
+  .then(function (result) {
+    console.log('Result: ' + result); // outputs 55
+  })
+  .catch(function (err) {
+    console.error(err);
+  })
+  .then(function () {
+    pool.terminate(); // terminate all workers when done
+  });
 ```
 
 Worker can also initialize asynchronously:
 
 **myAsyncWorker.js**
-```js
-define(['workerpool/dist/workerpool'], function(workerpool) {
 
+```js
+define(['workerpool/dist/workerpool'], function (workerpool) {
   // a deliberately inefficient implementation of the fibonacci sequence
   function fibonacci(n) {
     if (n < 2) return n;
@@ -162,9 +160,8 @@ define(['workerpool/dist/workerpool'], function(workerpool) {
 
   // create a worker and register public functions
   workerpool.worker({
-    fibonacci: fibonacci
+    fibonacci: fibonacci,
   });
-
 });
 ```
 
@@ -173,7 +170,6 @@ define(['workerpool/dist/workerpool'], function(workerpool) {
 Examples are available in the examples directory:
 
 [https://github.com/josdejong/workerpool/tree/master/examples](https://github.com/josdejong/workerpool/tree/master/examples)
-
 
 ## API
 
@@ -199,12 +195,13 @@ The following options are available:
   - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown. Only available in a node.js environment.
 - `forkArgs: String[]`. For `process` worker type. An array passed as `args` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `forkOpts: Object`. For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options). See nodejs documentation for available options.
+- `workerThreadOpts: Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options). See nodejs documentation for available options.
 - `onCreateWorker: Function`. A callback that is called whenever a worker is being created. It can be used to allocate resources for each worker for example. The callback is passed as argument an object with the following properties:
   - `forkArgs: String[]`: the `forkArgs` option of this pool
   - `forkOpts: Object`: the `forkOpts` option of this pool
   - `script: string`: the `script` option of this pool
-  Optionally, this callback can return an object containing one or more of the above properties. The provided properties will be used to override the Pool properties for the worker being created. 
-- `onTerminateWorker: Function`. A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated. 
+    Optionally, this callback can return an object containing one or more of the above properties. The provided properties will be used to override the Pool properties for the worker being created.
+- `onTerminateWorker: Function`. A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated.
 
 > Important note on `'workerType'`: when sending and receiving primitive data types (plain JSON) from and to a worker, the different worker types (`'web'`, `'process'`, `'thread'`) can be used interchangeably. However, when using more advanced data types like buffers, the API and returned results can vary. In these cases, it is best not to use the `'auto'` setting but have a fixed `'workerType'` and good unit testing in place.
 
@@ -212,6 +209,7 @@ A worker pool contains the following functions:
 
 - `Pool.exec(method: Function | string, params: Array | null [, options: Object]) : Promise.<*, Error>`<br>
   Execute a function on a worker with given arguments.
+
   - When `method` is a string, a method with this name must exist at the worker and must be registered to make it accessible via the pool. The function will be executed on the worker with given parameters.
   - When `method` is a function, the provided function `fn` will be stringified, send to the worker, and executed there with the provided parameters. The provided function must be static, it must not depend on variables in a surrounding scope.
   - The following options are available:
@@ -221,19 +219,19 @@ A worker pool contains the following functions:
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
 
 - `Pool.stats() : Object`<br>
-   Retrieve statistics on workers, and active and pending tasks.
+  Retrieve statistics on workers, and active and pending tasks.
 
-   Returns an object containing the following properties:
+  Returns an object containing the following properties:
 
-   ```
-   {
-     totalWorkers: 0,
-     busyWorkers: 0,
-     idleWorkers: 0,
-     pendingTasks: 0,
-     activeTasks: 0
-   }
-   ```
+  ```
+  {
+    totalWorkers: 0,
+    busyWorkers: 0,
+    idleWorkers: 0,
+    pendingTasks: 0,
+    activeTasks: 0
+  }
+  ```
 
 - `Pool.terminate([force: boolean [, timeout: number]])`
 
@@ -265,42 +263,44 @@ function add(a, b) {
 const pool1 = workerpool.pool();
 
 // offload a function to a worker
-pool1.exec(add, [2, 4])
-    .then(function (result) {
-      console.log(result); // will output 6
-    })
-    .catch(function (err) {
-      console.error(err);
-    });
+pool1
+  .exec(add, [2, 4])
+  .then(function (result) {
+    console.log(result); // will output 6
+  })
+  .catch(function (err) {
+    console.error(err);
+  });
 
 // create a dedicated worker
 const pool2 = workerpool.pool(__dirname + '/myWorker.js');
 
 // supposed myWorker.js contains a function 'fibonacci'
-pool2.exec('fibonacci', [10])
-    .then(function (result) {
-      console.log(result); // will output 55
-    })
-    .catch(function (err) {
-      console.error(err);
-    });
+pool2
+  .exec('fibonacci', [10])
+  .then(function (result) {
+    console.log(result); // will output 55
+  })
+  .catch(function (err) {
+    console.error(err);
+  });
 
 // create a proxy to myWorker.js
-pool2.proxy()
-    .then(function (myWorker) {
-      return myWorker.fibonacci(10)
-    })
-    .then(function (result) {
-      console.log(result); // will output 55
-    })
-    .catch(function (err) {
-      console.error(err);
-    });
+pool2
+  .proxy()
+  .then(function (myWorker) {
+    return myWorker.fibonacci(10);
+  })
+  .then(function (result) {
+    console.log(result); // will output 55
+  })
+  .catch(function (err) {
+    console.error(err);
+  });
 
 // create a pool with a specified maximum number of workers
-const pool3 = workerpool.pool({maxWorkers: 7});
+const pool3 = workerpool.pool({ maxWorkers: 7 });
 ```
-
 
 ### worker
 
@@ -327,7 +327,7 @@ function multiply(a, b) {
 // create a worker and register functions
 workerpool.worker({
   add: add,
-  multiply: multiply
+  multiply: multiply,
 });
 ```
 
@@ -339,13 +339,13 @@ const workerpool = require('workerpool');
 
 function timeout(delay) {
   return new Promise(function (resolve, reject) {
-    setTimeout(resolve, delay)
+    setTimeout(resolve, delay);
   });
 }
 
 // create a worker and register functions
 workerpool.worker({
-  timeout: timeout
+  timeout: timeout,
 });
 ```
 
@@ -365,19 +365,19 @@ const workerpool = require('workerpool');
 
 function eventExample(delay) {
   workerpool.workerEmit({
-    status: 'in_progress'
+    status: 'in_progress',
   });
 
   workerpool.workerEmit({
-    status: 'complete'
+    status: 'complete',
   });
-  
+
   return true;
 }
 
 // create a worker and register functions
 workerpool.worker({
-  eventExample: eventExample
+  eventExample: eventExample,
 });
 ```
 
@@ -391,18 +391,17 @@ pool.exec('eventExample', [], {
     } else if (payload.status === 'complete') {
       console.log('Done!');
     }
-  }
-})
+  },
+});
 ```
 
 ### Utilities
 
 Following properties are available for convenience:
 
-- **platform**: The Javascript platform. Either *node* or *browser*
+- **platform**: The Javascript platform. Either _node_ or _browser_
 - **isMainThread**: Whether the code is running in main thread or not (Workers)
 - **cpus**: The number of CPUs/cores available
-
 
 ## Roadmap
 
@@ -412,7 +411,6 @@ Following properties are available for convenience:
   fallback to processing tasks in the main application.
 - Implement session support: be able to handle a series of related tasks by a
   single worker, which can keep a state for the session.
-
 
 ## Related libraries
 
@@ -426,7 +424,6 @@ Following properties are available for convenience:
 - https://github.com/godaddy/node-cluster-service
 - https://github.com/ramesaliyev/EasyWebWorker
 - https://github.com/rvagg/node-worker-farm
-
 
 ## Build
 
@@ -446,7 +443,6 @@ Then, the project can be build by executing the build script via npm:
 This will build the library workerpool.js and workerpool.min.js from the source
 files and put them in the folder dist.
 
-
 ## Test
 
 To execute tests for the library, install the project dependencies once:
@@ -465,7 +461,6 @@ To see the coverage results, open the generated report in your browser:
 
     ./coverage/lcov-report/index.html
 
-
 ## Publish
 
 - Describe changes in HISTORY.md
@@ -478,7 +473,6 @@ To see the coverage results, open the generated report in your browser:
   git push --tags
   ```
 
-
 ## License
 
 Copyright (C) 2014-2022 Jos de Jong <wjosdejong@gmail.com>
@@ -487,7 +481,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,

@@ -74,6 +74,15 @@ describe('Pool', function () {
           return pool.terminate();
         });
       });
+
+      it('supports passing options to threads', function() {
+        const maxYoungGenerationSizeMb = 200
+        var pool = createPool({ minWorkers:1, workerType: 'thread', workerThreadOpts: { resourceLimits: { maxYoungGenerationSizeMb } } });
+        var worker = pool.workers[0].worker;
+
+        assert.strictEqual(worker.isWorkerThread, true);
+        assert.strictEqual(worker.resourceLimits.maxYoungGenerationSizeMb, maxYoungGenerationSizeMb);
+      });
     } else {
       it('errors when not supporting worker thread', function() {
         assert.throws(function() {
