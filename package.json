@@ -34,9 +34,9 @@
     "prepublishOnly": "npm run test"
   },
   "devDependencies": {
-    "@babel/core": "7.19.6",
-    "@babel/preset-env": "7.19.4",
-    "babel-loader": "8.2.5",
+    "@babel/core": "7.20.2",
+    "@babel/preset-env": "7.20.2",
+    "babel-loader": "9.1.0",
     "date-format": "4.0.14",
     "del": "6.1.1",
     "fancy-log": "2.0.0",
@@ -44,7 +44,7 @@
     "gulp": "4.0.2",
     "handlebars": "4.7.7",
     "istanbul": "0.4.5",
-    "mocha": "9.2.2",
+    "mocha": "10.1.0",
     "uglify-js": "3.17.4",
     "webpack": "5.74.0"
   },
