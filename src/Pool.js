@@ -25,7 +25,7 @@ function Pool(script, options) {
 
   this.forkArgs = Object.freeze(options.forkArgs || []);
   this.forkOpts = Object.freeze(options.forkOpts || {});
-  this.workerThreadOpts = Object.freeze(options.workerThreadOpts || {}) 
+  this.workerThreadOpts = Object.freeze(options.workerThreadOpts || {})
   this.debugPortStart = (options.debugPortStart || 43210);
   this.nodeWorker = options.nodeWorker;
   this.workerType = options.workerType || options.nodeWorker || 'auto'
@@ -326,6 +326,7 @@ Pool.prototype.terminate = function (force, timeout) {
   this.tasks.length = 0;
 
   var f = function (worker) {
+    DEBUG_PORT_ALLOCATOR.releasePort(worker.debugPort);
     this._removeWorkerFromList(worker);
   };
   var removeWorker = f.bind(this);

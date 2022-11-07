@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2022-11-07, version 6.3.1
+
+- Fix #318: debug ports not being released when terminating a pool.
+
+
 ## 2022-10-24, version 6.3.0
 
 - Implement option `workerThreadOpts` to pass options to a worker of type 
