@@ -1,13 +1,13 @@
 {
   "scripts": {
     "build-embedded-worker": "node createEmbeddedWorker.js",
-    "build-app": "npx webpack app.js -o dist/app.bundle.js --mode=production",
+    "build-app": "webpack ./app.js -o ./dist --mode=production",
     "build": "npm run build-embedded-worker && npm run build-app"
   },
   "dependencies": {},
   "devDependencies": {
     "btoa": "1.2.1",
-    "webpack": "4.43.0",
-    "webpack-cli": "3.3.12"
+    "webpack": "5.75.0",
+    "webpack-cli": "5.0.1"
   }
 }
