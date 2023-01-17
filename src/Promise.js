@@ -22,6 +22,9 @@ function Promise(handler, parent) {
   var _onSuccess = [];
   var _onFail = [];
 
+  // empty worker
+  this.worker = null;
+
   // status
   this.resolved = false;
   this.rejected = false;
@@ -140,6 +143,22 @@ function Promise(handler, parent) {
 
     return me;
   };
+
+/**
+   * Calls a defined worker method with optional parameters
+   * @param {string} methodName Name of the method to be called as defined in the workerpool.worker() function
+   * @param {Array} [methodParameters] Array with optional parameters
+   */
+this.emit = function (methodName, methodParameters) {
+  if (this.worker?.worker && methodName) {
+    const payload = {
+      eventName: methodName,
+      eventParams: methodParameters,
+    };
+    this.worker.worker.postMessage(payload);
+  }
+  return this;
+};
 
   // attach handler passing the resolve and reject functions
   handler(function (result) {

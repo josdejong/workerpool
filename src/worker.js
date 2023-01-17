@@ -120,7 +120,7 @@ worker.on('message', function (request) {
 
     if (method) {
       currentRequestId = request.id;
-      
+
       // execute the function
       var result = method.apply(method, request.params);
 
@@ -196,7 +196,21 @@ worker.emit = function (payload) {
   }
 };
 
+worker.onEvents = function(events) {
+  for (const eventKey of Object.keys(events)) {
+    worker.on('message', function({eventName, eventParams}) {
+      if (eventName === eventKey) {
+        if (eventParams && !Array.isArray(eventParams)) {
+          eventParams = [eventParams];
+        }
+        events[eventKey].apply(worker, eventParams);
+      }
+    });
+  }
+}
+
 if (typeof exports !== 'undefined') {
   exports.add = worker.register;
   exports.emit = worker.emit;
+  exports.addOnEvents = worker.onEvents;
 }
