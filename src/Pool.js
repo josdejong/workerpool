@@ -204,6 +204,9 @@ Pool.prototype._next = function () {
       // get the first task from the queue
       var me = this;
       var task = this.tasks.shift();
+      
+      // assign worker to promise so it can be referred to by the handler
+      task.resolver.promise.worker = worker;
 
       // check if the task is still pending (and not cancelled -> promise rejected)
       if (task.resolver.promise.pending) {

@@ -16,9 +16,10 @@ exports.pool = function pool(script, options) {
  * Create a worker and optionally register a set of methods to the worker.
  * @param {Object} [methods]
  */
-exports.worker = function worker(methods) {
+exports.worker = function worker(methods, events) {
   var worker = require('./worker');
   worker.add(methods);
+  if (events) worker.addOnEvents(events);
 };
 
 /**
