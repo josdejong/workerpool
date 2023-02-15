@@ -695,17 +695,20 @@ describe('Pool', function () {
     });
 
     it('should increase maxWorkers to match minWorkers', function () {
-      var pool = createPool({minWorkers: 16});
-
+      var cpus = require('os').cpus();
+      var count = cpus.length + 2;
+      var tasksCount = cpus.length * 2;
+      var pool = createPool({minWorkers: count});
+      
       var tasks = []
-      for(var i=0;i<20;i++) {
+      for(var i=0;i<tasksCount;i++) {
         tasks.push(pool.exec(add, [i, i*2]));
       }
 
-      assert.strictEqual(pool.minWorkers, 16);
-      assert.strictEqual(pool.maxWorkers, 16);
-      assert.strictEqual(pool.workers.length, 16);
-      assert.strictEqual(pool.tasks.length, 4);
+      assert.strictEqual(pool.minWorkers, count);
+      assert.strictEqual(pool.maxWorkers, count);
+      assert.strictEqual(pool.workers.length, count);
+      assert.strictEqual(pool.tasks.length, tasksCount - count);
 
       return Promise.all(tasks).then(function () {
         return pool.terminate();
@@ -1056,6 +1059,29 @@ describe('Pool', function () {
             assert.deepStrictEqual(receivedEvent, {
               foo: 'bar'
             });
+
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+            done(err);
+          });
+  });
+
+  it('should support transferable objects', function (done) {
+    var pool = createPool(__dirname + '/workers/transfer.js');
+
+    var size = 8;
+    var uInt8Array = new Uint8Array(size).map((_v, i) => i);
+    pool.exec('transfer', [uInt8Array], {
+            transferList: [uInt8Array.buffer]
+          })
+          .then(function (result) {
+            assert.strictEqual(result, size);
+            // transfered objects should be empty buffer
+            assert.strictEqual(uInt8Array.byteLength, 0);
 
             pool.terminate();
             done();
