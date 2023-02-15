@@ -1070,7 +1070,7 @@ describe('Pool', function () {
           });
   });
 
-  it('should support sending transferrable object to worker', function (done) {
+  it('should support sending transferable object to worker', function (done) {
     var pool = createPool(__dirname + '/workers/transfer-to.js');
 
     var size = 8;
@@ -1093,7 +1093,7 @@ describe('Pool', function () {
           });
   });
 
-  it('should support sending transferrable object from worker', function (done) {
+  it('should support sending transferable object from worker', function (done) {
     var pool = createPool(__dirname + '/workers/transfer-from.js');
 
     var size = 8;
