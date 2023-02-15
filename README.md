@@ -14,7 +14,7 @@
 - Set a timeout on tasks
 - Handles crashed workers
 - Small: 5 kB minified and gzipped
-- Supports transferable objects
+- Supports transferable objects (only for web workers and worker_threads)
 
 ## Why
 
