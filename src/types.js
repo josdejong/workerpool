@@ -13,5 +13,5 @@
 /**
  * @typedef {Object} ExecOptions
  * @property {(payload: any) => unknown} [on]
- * @property {Object[]} [transferList]
+ * @property {Object[]} [transfer]
  */

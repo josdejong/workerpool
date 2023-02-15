@@ -1070,19 +1070,37 @@ describe('Pool', function () {
           });
   });
 
-  it('should support transferable objects', function (done) {
-    var pool = createPool(__dirname + '/workers/transfer.js');
+  it('should support sending transferrable object to worker', function (done) {
+    var pool = createPool(__dirname + '/workers/transfer-to.js');
 
     var size = 8;
     var uInt8Array = new Uint8Array(size).map((_v, i) => i);
     pool.exec('transfer', [uInt8Array], {
-            transferList: [uInt8Array.buffer]
+            transfer: [uInt8Array.buffer]
           })
           .then(function (result) {
             assert.strictEqual(result, size);
-            // transfered objects should be empty buffer
+            // original buffer should be transferred thus empty
             assert.strictEqual(uInt8Array.byteLength, 0);
 
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+            done(err);
+          });
+  });
+
+  it('should support sending transferrable object from worker', function (done) {
+    var pool = createPool(__dirname + '/workers/transfer-from.js');
+
+    var size = 8;
+    pool.exec('transfer', [size])
+          .then(function (result) {
+            assert.strictEqual(result.byteLength, size);
+            
             pool.terminate();
             done();
           })

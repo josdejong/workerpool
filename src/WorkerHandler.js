@@ -103,8 +103,8 @@ function setupBrowserWorker(script, Worker) {
       callback(message.data);
     });
   };
-  worker.send = function (message, transferList) {
-    this.postMessage(message, transferList);
+  worker.send = function (message, transfer) {
+    this.postMessage(message, transfer);
   };
   return worker;
 }
@@ -116,8 +116,8 @@ function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
     ...workerThreadOptions
   });
   worker.isWorkerThread = true;
-  worker.send = function(message, transferList) {
-    this.postMessage(message, transferList);
+  worker.send = function(message, transfer) {
+    this.postMessage(message, transfer);
   };
 
   worker.kill = function() {
@@ -140,7 +140,7 @@ function setupProcessWorker(script, options, child_process) {
     options.forkOpts
   );
 
-  // ignore transferList, it is not supported by child_process.fork
+  // ignore transfer argument since it is not supported by process
   var send = worker.send;
   worker.send = function (message) {
     return send.call(worker, message);
@@ -278,7 +278,7 @@ function WorkerHandler(script, _options) {
   function dispatchQueuedRequests()
   {
     for(const request of me.requestQueue.splice(0)) {
-      me.worker.send(request.message, request.transferList);
+      me.worker.send(request.message, request.transfer);
     }
   }
 
@@ -347,14 +347,14 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
       method: method,
       params: params
     },
-    transferList: options && options.transferList
+    transfer: options && options.transfer
   };
 
   if (this.terminated) {
     resolver.reject(new Error('Worker is terminated'));
   } else if (this.worker.ready) {
     // send the request to the worker
-    this.worker.send(request.message, request.transferList);
+    this.worker.send(request.message, request.transfer);
   } else {
     this.requestQueue.push(request);
   }
