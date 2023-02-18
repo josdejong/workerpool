@@ -282,6 +282,7 @@ Pool.prototype._removeWorker = function(worker) {
       me.onTerminateWorker({
         forkArgs: worker.forkArgs,
         forkOpts: worker.forkOpts,
+        workerThreadOpts: worker.workerThreadOpts,
         script: worker.script
       });
       if (err) {
@@ -340,6 +341,7 @@ Pool.prototype.terminate = function (force, timeout) {
         me.onTerminateWorker({
           forkArgs: worker.forkArgs,
           forkOpts: worker.forkOpts,
+          workerThreadOpts: worker.workerThreadOpts,
           script: worker.script
         });
       });
