@@ -193,6 +193,7 @@ The following options are available:
   - In case of `'web'`, a Web Worker will be used. Only available in a browser environment.
   - In case of `'process'`, `child_process` will be used. Only available in a node.js environment.
   - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown. Only available in a node.js environment.
+- `workerTerminationTimeout: number`. The timeout in milliseconds to wait for a worker to cleanup it's resources on termination before stopping it forcefully. Default value is `1000`.
 - `forkArgs: String[]`. For `process` worker type. An array passed as `args` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `forkOpts: Object`. For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options). See nodejs documentation for available options.
 - `workerThreadOpts: Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options). See nodejs documentation for available options.
@@ -306,9 +307,14 @@ const pool3 = workerpool.pool({ maxWorkers: 7 });
 
 A worker is constructed as:
 
-`workerpool.worker([methods: Object.<String, Function>])`
+`workerpool.worker([methods: Object.<String, Function>] [, options: Object])`
 
 Argument `methods` is optional can can be an object with functions available in the worker. Registered functions will be available via the worker pool.
+
+The following options are available:
+
+- `onTerminate: ([code: number]) => Promise.<void> | void`. A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The difference with pool's `onTerminateWorker` is that this callback runs in the worker context, while `onTerminateWorker` is executed on the main thread.
+
 
 Example usage:
 

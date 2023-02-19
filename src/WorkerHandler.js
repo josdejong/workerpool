@@ -10,12 +10,6 @@ var requireFoolWebpack = require('./requireFoolWebpack');
  */
 var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 
-/**
- * If sending `TERMINATE_METHOD_ID` does not cause the child process to exit in this many milliseconds,
- * force-kill the child process.
- */
-var CHILD_PROCESS_EXIT_TIMEOUT = 1000;
-
 function ensureWorkerThreads() {
   var WorkerThreads = tryRequireWorkerThreads()
   if (!WorkerThreads) {
@@ -211,6 +205,7 @@ function WorkerHandler(script, _options) {
   this.forkOpts = options.forkOpts;
   this.forkArgs = options.forkArgs;
   this.workerThreadOpts = options.workerThreadOpts
+  this.workerTerminationTimeout = options.workerTerminationTimeout;
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
@@ -300,6 +295,7 @@ function WorkerHandler(script, _options) {
 
   this.terminating = false;
   this.terminated = false;
+  this.cleaning = false;
   this.terminationHandler = null;
   this.lastId = 0;
 }
@@ -373,11 +369,11 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
 };
 
 /**
- * Test whether the worker is working or not
+ * Test whether the worker is processing any tasks or cleaning up before termination.
  * @return {boolean} Returns true if the worker is busy
  */
 WorkerHandler.prototype.busy = function () {
-  return Object.keys(this.processing).length > 0;
+  return this.cleaning || Object.keys(this.processing).length > 0;
 };
 
 /**
@@ -407,6 +403,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     // all tasks are finished. kill the worker
     var cleanup = function(err) {
       me.terminated = true;
+      me.cleaning = false;
       if (me.worker != null && me.worker.removeAllListeners) {
         // removeAllListeners is only available for child_process
         me.worker.removeAllListeners('message');
@@ -427,32 +424,30 @@ WorkerHandler.prototype.terminate = function (force, callback) {
           return;
         }
 
-        if (this.worker.isChildProcess) {
-          var cleanExitTimeout = setTimeout(function() {
-            if (me.worker) {
-              me.worker.kill();
-            }
-          }, CHILD_PROCESS_EXIT_TIMEOUT);
-
-          this.worker.once('exit', function() {
-            clearTimeout(cleanExitTimeout);
-            if (me.worker) {
-              me.worker.killed = true;
-            }
-            cleanup();
-          });
-
-          if (this.worker.ready) {
-            this.worker.send(TERMINATE_METHOD_ID);
-          } else {
-            this.requestQueue.push(TERMINATE_METHOD_ID)
+        // child process and worker threads
+        var cleanExitTimeout = setTimeout(function() {
+          if (me.worker) {
+            me.worker.kill();
           }
-        } else {
-          // worker_thread
-          this.worker.kill();
-          this.worker.killed = true;
+        }, this.workerTerminationTimeout);
+
+        this.worker.once('exit', function() {
+          clearTimeout(cleanExitTimeout);
+          if (me.worker) {
+            me.worker.killed = true;
+          }
           cleanup();
+        });
+
+        if (this.worker.ready) {
+          this.worker.send(TERMINATE_METHOD_ID);
+        } else {
+          this.requestQueue.push(TERMINATE_METHOD_ID);
         }
+        
+        // mark that the worker is cleaning up resources
+        // to prevent new tasks from being executed
+        this.cleaning = true;
         return;
       }
       else if (typeof this.worker.terminate === 'function') {

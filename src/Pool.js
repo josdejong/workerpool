@@ -30,6 +30,7 @@ function Pool(script, options) {
   this.nodeWorker = options.nodeWorker;
   this.workerType = options.workerType || options.nodeWorker || 'auto'
   this.maxQueueSize = options.maxQueueSize || Infinity;
+  this.workerTerminationTimeout = options.workerTerminationTimeout || 1000;
 
   this.onCreateWorker = options.onCreateWorker || (() => null);
   this.onTerminateWorker = options.onTerminateWorker || (() => null);
@@ -398,7 +399,8 @@ Pool.prototype._createWorkerHandler = function () {
     forkOpts: overridenParams.forkOpts || this.forkOpts,
     workerThreadOpts: overridenParams.workerThreadOpts || this.workerThreadOpts,
     debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
-    workerType: this.workerType
+    workerType: this.workerType,
+    workerTerminationTimeout: this.workerTerminationTimeout,
   });
 }
 

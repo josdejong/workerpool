@@ -4,6 +4,7 @@
  * @property {number} [maxWorkers]
  * @property {number} [maxQueueSize]
  * @property {'auto' | 'web' | 'process' | 'thread'} [workerType]
+ * @property {number} [workerTerminationTimeout]
  * @property {*} [forkArgs]
  * @property {*} [forkOpts]
  * @property {Function} [onCreateWorker]
@@ -13,4 +14,9 @@
 /**
  * @typedef {Object} ExecOptions
  * @property {(payload: any) => unknown} [on]
+ */
+
+/**
+ * @typedef {Object} WorkerRegisterOptions
+ * @property {(code: number | undefined) => Promise | void} [onTerminate]
  */
