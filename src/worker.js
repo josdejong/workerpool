@@ -2,6 +2,7 @@
  * worker must be started as a child process or a web worker.
  * It listens for RPC messages from the parent process.
  */
+var Transfer = require('./transfer');
 
 // source of inspiration: https://github.com/sindresorhus/require-fool-webpack
 var requireFoolWebpack = eval(
@@ -57,7 +58,10 @@ else if (typeof process !== 'undefined') {
     worker.exit = process.exit.bind(process);
   } else {
     worker.on = process.on.bind(process);
-    worker.send = process.send.bind(process);
+    // ignore transfer argument since it is not supported by process
+    worker.send = function (message) {
+      process.send(message);
+    };
     // register disconnect handler only for subprocess worker to exit when parent is killed unexpectedly
     worker.on('disconnect', function () {
       process.exit(1);
@@ -156,11 +160,19 @@ worker.on('message', function (request) {
         // promise returned, resolve this and then return
         result
             .then(function (result) {
-              worker.send({
-                id: request.id,
-                result: result,
-                error: null
-              });
+              if (result instanceof Transfer) {
+                worker.send({
+                  id: request.id,
+                  result: result.message,
+                  error: null
+                }, result.transfer);
+              } else {
+                worker.send({
+                  id: request.id,
+                  result: result,
+                  error: null
+                });
+              }
               currentRequestId = null;
             })
             .catch(function (err) {
@@ -174,11 +186,19 @@ worker.on('message', function (request) {
       }
       else {
         // immediate result
-        worker.send({
-          id: request.id,
-          result: result,
-          error: null
-        });
+        if (result instanceof Transfer) {
+          worker.send({
+            id: request.id,
+            result: result.message,
+            error: null
+          }, result.transfer);
+        } else {
+          worker.send({
+            id: request.id,
+            result: result,
+            error: null
+          });
+        }
 
         currentRequestId = null;
       }
@@ -220,6 +240,15 @@ worker.register = function (methods, options) {
 
 worker.emit = function (payload) {
   if (currentRequestId) {
+    if (payload instanceof Transfer) {
+      worker.send({
+        id: currentRequestId,
+        isEvent: true,
+        payload: payload.message
+      }, payload.transfer);
+      return;
+    }
+
     worker.send({
       id: currentRequestId,
       isEvent: true,

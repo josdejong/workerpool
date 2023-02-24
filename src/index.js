@@ -37,6 +37,12 @@ exports.workerEmit = function workerEmit(payload) {
  */
 exports.Promise = require('./Promise');
 
+/**
+ * Create a transfer object.
+ * @type {Transfer} transfer
+ */
+exports.Transfer = require('./transfer');
+
 exports.platform = environment.platform;
 exports.isMainThread = environment.isMainThread;
 exports.cpus = environment.cpus;

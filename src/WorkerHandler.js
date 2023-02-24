@@ -97,8 +97,8 @@ function setupBrowserWorker(script, Worker) {
       callback(message.data);
     });
   };
-  worker.send = function (message) {
-    this.postMessage(message);
+  worker.send = function (message, transfer) {
+    this.postMessage(message, transfer);
   };
   return worker;
 }
@@ -110,9 +110,8 @@ function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
     ...workerThreadOptions
   });
   worker.isWorkerThread = true;
-  // make the worker mimic a child_process
-  worker.send = function(message) {
-    this.postMessage(message);
+  worker.send = function(message, transfer) {
+    this.postMessage(message, transfer);
   };
 
   worker.kill = function() {
@@ -134,6 +133,12 @@ function setupProcessWorker(script, options, child_process) {
     options.forkArgs,
     options.forkOpts
   );
+
+  // ignore transfer argument since it is not supported by process
+  var send = worker.send;
+  worker.send = function (message) {
+    return send.call(worker, message);
+  };
 
   worker.isChildProcess = true;
   return worker;
@@ -268,7 +273,7 @@ function WorkerHandler(script, _options) {
   function dispatchQueuedRequests()
   {
     for(const request of me.requestQueue.splice(0)) {
-      me.worker.send(request);
+      me.worker.send(request.message, request.transfer);
     }
   }
 
@@ -333,16 +338,19 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
 
   // build a JSON-RPC request
   var request = {
-    id: id,
-    method: method,
-    params: params
+    message: {
+      id: id,
+      method: method,
+      params: params
+    },
+    transfer: options && options.transfer
   };
 
   if (this.terminated) {
     resolver.reject(new Error('Worker is terminated'));
   } else if (this.worker.ready) {
     // send the request to the worker
-    this.worker.send(request);
+    this.worker.send(request.message, request.transfer);
   } else {
     this.requestQueue.push(request);
   }

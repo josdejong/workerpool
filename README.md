@@ -14,6 +14,7 @@
 - Set a timeout on tasks
 - Handles crashed workers
 - Small: 5 kB minified and gzipped
+- Supports transferable objects (only for web workers and worker_threads)
 
 ## Why
 
@@ -215,6 +216,7 @@ A worker pool contains the following functions:
   - When `method` is a function, the provided function `fn` will be stringified, send to the worker, and executed there with the provided parameters. The provided function must be static, it must not depend on variables in a surrounding scope.
   - The following options are available:
     - `on: (payload: any) => void`. An event listener, to handle events sent by the worker for this execution. See [Events](#events) for more details.
+    - `transfer: Object[]`. A list of transferable objects to send to the worker. Not supported by `process` worker type. See [example](./examples/transferableObjects.js) for usage.
 
 - `Pool.proxy() : Promise.<Object, Error>`<br>
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
@@ -286,6 +288,18 @@ pool2
     console.error(err);
   });
 
+// send a transferable object to the worker
+// supposed myWorker.js contains a function 'sum'
+const toTransfer = new Uint8Array(2).map((_v, i) => i)
+pool2
+  .exec('sum', [toTransfer], { transfer: [toTransfer.buffer] })
+  .then(function (result) {
+    console.log(result); // will output 3
+  })
+  .catch(function (err) {
+    console.error(err);
+  });
+
 // create a proxy to myWorker.js
 pool2
   .proxy()
@@ -352,6 +366,23 @@ function timeout(delay) {
 // create a worker and register functions
 workerpool.worker({
   timeout: timeout,
+});
+```
+
+Transferable objects can be sent back to the pool using `Transfer` helper class:
+
+```js
+// file myWorker.js
+const workerpool = require('workerpool');
+
+function array(size) {
+  var array = new Uint8Array(size).map((_v, i) => i);
+  return new workerpool.Transfer(array, [array.buffer]);
+}
+
+// create a worker and register functions
+workerpool.worker({
+  array: array,
 });
 ```
 

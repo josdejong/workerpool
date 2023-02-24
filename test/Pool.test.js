@@ -142,6 +142,42 @@ describe('Pool', function () {
     });
   });
 
+  it('supports worker creation hook to pass dynamic options to threads (for example)', function() {
+    var counter = 0;
+    var terminatedWorkers = [];
+    var pool = createPool({
+      workerType: 'thread',
+      maxWorkers: 4, // make sure we can create enough workers (otherwise we could be limited by the number of CPUs)
+      onCreateWorker: (opts) => {
+        return {...opts, workerThreadOpts: {...opts.workerThreadOpts, env: { TEST_ENV: `env_value${counter++}` }}}
+      },
+      onTerminateWorker: (opts) => {
+        terminatedWorkers.push(opts.workerThreadOpts.env.TEST_ENV);
+      }
+    });
+
+    function getEnv() {
+      return process.env.TEST_ENV;
+    }
+
+    return Promise.all([
+      pool.exec(getEnv, []),
+      pool.exec(getEnv, []),
+      pool.exec(getEnv, [])
+    ]).then(function (result) {
+      assert.strictEqual(result.length, 3, 'The creation hook should be called 3 times');
+      assert(result.includes('env_value0'), 'result should include the value with counter = 0');
+      assert(result.includes('env_value1'), 'result should include the value with counter = 1');
+      assert(result.includes('env_value2'), 'result should include the value with counter = 2');
+      return pool.terminate();
+    }).then(function () {
+      assert.strictEqual(terminatedWorkers.length, 3, 'The termination hook should be called 3 times');
+      assert(terminatedWorkers.includes('env_value0'), 'terminatedWorkers should include the value with counter = 0');
+      assert(terminatedWorkers.includes('env_value1'), 'terminatedWorkers should include the value with counter = 1');
+      assert(terminatedWorkers.includes('env_value2'), 'terminatedWorkers should include the value with counter = 2');
+    });
+  });
+
   it('should offload a function to a worker', function (done) {
     var pool = createPool({maxWorkers: 10});
 
@@ -695,17 +731,20 @@ describe('Pool', function () {
     });
 
     it('should increase maxWorkers to match minWorkers', function () {
-      var pool = createPool({minWorkers: 16});
-
+      var cpus = require('os').cpus();
+      var count = cpus.length + 2;
+      var tasksCount = cpus.length * 2;
+      var pool = createPool({minWorkers: count});
+      
       var tasks = []
-      for(var i=0;i<20;i++) {
+      for(var i=0;i<tasksCount;i++) {
         tasks.push(pool.exec(add, [i, i*2]));
       }
 
-      assert.strictEqual(pool.minWorkers, 16);
-      assert.strictEqual(pool.maxWorkers, 16);
-      assert.strictEqual(pool.workers.length, 16);
-      assert.strictEqual(pool.tasks.length, 4);
+      assert.strictEqual(pool.minWorkers, count);
+      assert.strictEqual(pool.maxWorkers, count);
+      assert.strictEqual(pool.workers.length, count);
+      assert.strictEqual(pool.tasks.length, tasksCount - count);
 
       return Promise.all(tasks).then(function () {
         return pool.terminate();
@@ -1057,6 +1096,47 @@ describe('Pool', function () {
               foo: 'bar'
             });
 
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+            done(err);
+          });
+  });
+
+  it('should support sending transferable object to worker', function (done) {
+    var pool = createPool(__dirname + '/workers/transfer-to.js');
+
+    var size = 8;
+    var uInt8Array = new Uint8Array(size).map((_v, i) => i);
+    pool.exec('transfer', [uInt8Array], {
+            transfer: [uInt8Array.buffer]
+          })
+          .then(function (result) {
+            assert.strictEqual(result, size);
+            // original buffer should be transferred thus empty
+            assert.strictEqual(uInt8Array.byteLength, 0);
+
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert('Should not throw an error');
+            done(err);
+          });
+  });
+
+  it('should support sending transferable object from worker', function (done) {
+    var pool = createPool(__dirname + '/workers/transfer-from.js');
+
+    var size = 8;
+    pool.exec('transfer', [size])
+          .then(function (result) {
+            assert.strictEqual(result.byteLength, size);
+            
             pool.terminate();
             done();
           })
