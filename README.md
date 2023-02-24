@@ -13,7 +13,7 @@
 - Cancel running tasks
 - Set a timeout on tasks
 - Handles crashed workers
-- Small: 5 kB minified and gzipped
+- Small: 7 kB minified and gzipped
 - Supports transferable objects (only for web workers and worker_threads)
 
 ## Why
@@ -506,7 +506,7 @@ To see the coverage results, open the generated report in your browser:
 
 ## License
 
-Copyright (C) 2014-2022 Jos de Jong <wjosdejong@gmail.com>
+Copyright (C) 2014-2023 Jos de Jong <wjosdejong@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

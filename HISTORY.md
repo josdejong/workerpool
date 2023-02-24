@@ -2,6 +2,17 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-02-24, version 6.4.0
+
+- Support transferable objects (#3, #374). Thanks @Michsior14.
+- Implement a new callback `onTerminate` at the worker side, which can be used
+  to clean up resources, and an option `workerTerminateTimeout` which forcefully 
+  terminates a worker if it doesn't finish in time (#353, #377). 
+  Thanks @Michsior14.
+- Pass `workerThreadOpts` to the `onTerminateWorker` callback (#376). 
+  Thanks @Michsior14.
+
+
 ## 2022-11-07, version 6.3.1
 
 - Fix #318: debug ports not being released when terminating a pool.

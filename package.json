@@ -1,7 +1,7 @@
 {
   "name": "workerpool",
   "license": "Apache-2.0",
-  "version": "6.3.1",
+  "version": "6.4.0",
   "description": "Offload tasks to a pool of workers on node.js and in the browser",
   "homepage": "https://github.com/josdejong/workerpool",
   "author": "Jos de Jong <wjosdejong@gmail.com> (https://github.com/josdejong)",
@@ -28,13 +28,13 @@
   "scripts": {
     "build": "gulp",
     "watch": "gulp watch",
-    "test": "npm run build && mocha test --timeout 2000",
-    "test:debug": "npm run build && mocha debug test --timeout 10000",
+    "test": "npm run build && mocha test",
+    "test:debug": "npm run build && mocha debug test",
     "coverage": "npm run build && istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\"",
     "prepublishOnly": "npm run test"
   },
   "devDependencies": {
-    "@babel/core": "7.20.12",
+    "@babel/core": "7.21.0",
     "@babel/preset-env": "7.20.2",
     "babel-loader": "9.1.2",
     "date-format": "4.0.14",
