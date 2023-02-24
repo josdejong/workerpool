@@ -19,7 +19,7 @@ workerpool.worker(
     // This function is called when the worker is terminated.
     // It can be used to clean up any open connections or resources.
     // May return a promise, in such case make sure that pool's option
-    // `workerTerminationTimeout` is set to a value larger than the time it takes to clean up.
+    // `workerTerminateTimeout` is set to a value larger than the time it takes to clean up.
     onTerminate: function (code) {
       return new Promise(function (resolve, reject) {
         setTimeout(function () {

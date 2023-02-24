@@ -4,7 +4,7 @@
  * @property {number} [maxWorkers]
  * @property {number} [maxQueueSize]
  * @property {'auto' | 'web' | 'process' | 'thread'} [workerType]
- * @property {number} [workerTerminationTimeout]
+ * @property {number} [workerTerminateTimeout]
  * @property {*} [forkArgs]
  * @property {*} [forkOpts]
  * @property {Function} [onCreateWorker]

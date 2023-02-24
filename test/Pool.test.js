@@ -12,8 +12,8 @@ describe('Pool', function () {
   // Creating pool with this function ensures that the pool is terminated
   // at the end of the test, which avoid hanging the test suite if terminate()
   // hadn't been called for some reasons
-  function createPool(poolParameters) {
-    var pool = new Pool(poolParameters);
+  function createPool(script, options) {
+    var pool = new Pool(script, options);
 
     after(() => {
       return pool.terminate();
@@ -1145,5 +1145,69 @@ describe('Pool', function () {
             assert('Should not throw an error');
             done(err);
           });
+  });
+
+  it('should call worker termination handler (worker_thread)', function () {
+    var pool = createPool(__dirname + '/workers/cleanup.js', {
+      type: 'thread',
+    });
+
+    var handlerCalled = false;
+    var channel = new MessageChannel();
+    channel.port1.onmessage = function (event) {
+      assert.strictEqual(event.data, 0);
+      handlerCalled = true;
+    };
+
+    pool.exec('asyncAdd', [1, 2, channel.port2], {
+      transfer: [channel.port2],
+    });
+
+    return pool.terminate().then(function () {
+      assert(handlerCalled);
+    });
+  });
+
+  it('should call worker termination async handler (worker_thread)', function () {
+    var pool = createPool(__dirname + '/workers/cleanup-async.js', {
+      type: 'thread',
+    });
+
+    var handlerCalled = false;
+    var channel = new MessageChannel();
+    channel.port1.onmessage = function (event) {
+      assert.strictEqual(event.data, 0);
+      handlerCalled = true;
+    };
+
+    pool.exec('asyncAdd', [1, 2, channel.port2], {
+      transfer: [channel.port2],
+    });
+
+    return pool.terminate().then(function () {
+      assert(handlerCalled);
+    });
+  });
+
+  it('should not call worker termination async handler after timeout (worker_thread)', function () {
+    var pool = createPool(__dirname + '/workers/cleanup-async.js', {
+      type: 'thread',
+      workerTerminateTimeout: 1,
+    });
+
+    var handlerCalled = false;
+    var channel = new MessageChannel();
+    channel.port1.onmessage = function (event) {
+      assert.strictEqual(event.data, 0);
+      handlerCalled = true;
+    };
+
+    pool.exec('asyncAdd', [1, 2, channel.port2], {
+      transfer: [channel.port2],
+    });
+
+    return pool.terminate().then(function () {
+      assert(handlerCalled === false);
+    });
   });
 });

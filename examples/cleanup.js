@@ -27,19 +27,12 @@ const main = async () => {
   // because the process exits before they are even scheduled
   const tasks = [
     task(),
-    timeout(1000).then(() => task()),
-    timeout(1050).then(() => task()),
+    timeout(50).then(() => task()),
+    timeout(100).then(() => task()),
   ];
 
-  // Simulate SIGINT signal
-  timeout(500)
-    .then(() => pool.terminate())
-    .then(() => {
-      console.log("pool terminated");
-      process.exit(0);
-    });
-
-  await Promise.all(tasks);
+  // Will print `Inside worker cleanup finished (code = 0)` three times
+  await Promise.all(tasks).then(() => pool.terminate());
 };
 
 main();

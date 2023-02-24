@@ -210,7 +210,7 @@ function WorkerHandler(script, _options) {
   this.forkOpts = options.forkOpts;
   this.forkArgs = options.forkArgs;
   this.workerThreadOpts = options.workerThreadOpts
-  this.workerTerminationTimeout = options.workerTerminationTimeout;
+  this.workerTerminateTimeout = options.workerTerminateTimeout;
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
@@ -437,7 +437,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
           if (me.worker) {
             me.worker.kill();
           }
-        }, this.workerTerminationTimeout);
+        }, this.workerTerminateTimeout);
 
         this.worker.once('exit', function() {
           clearTimeout(cleanExitTimeout);
