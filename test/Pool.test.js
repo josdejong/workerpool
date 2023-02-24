@@ -1148,9 +1148,7 @@ describe('Pool', function () {
   });
 
   it('should call worker termination handler (worker_thread)', function () {
-    var pool = createPool(__dirname + '/workers/cleanup.js', {
-      type: 'thread',
-    });
+    var pool = createPool(__dirname + '/workers/cleanup.js');
 
     var handlerCalled = false;
     var channel = new MessageChannel();
@@ -1169,9 +1167,7 @@ describe('Pool', function () {
   });
 
   it('should call worker termination async handler (worker_thread)', function () {
-    var pool = createPool(__dirname + '/workers/cleanup-async.js', {
-      type: 'thread',
-    });
+    var pool = createPool(__dirname + '/workers/cleanup-async.js');
 
     var handlerCalled = false;
     var channel = new MessageChannel();
@@ -1189,9 +1185,8 @@ describe('Pool', function () {
     });
   });
 
-  it('should not call worker termination async handler after timeout (worker_thread)', function () {
+  it('should not call worker termination async handler after timeout', function () {
     var pool = createPool(__dirname + '/workers/cleanup-async.js', {
-      type: 'thread',
       workerTerminateTimeout: 1,
     });
 
