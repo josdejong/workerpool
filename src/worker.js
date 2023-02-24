@@ -55,6 +55,7 @@ else if (typeof process !== 'undefined') {
     var parentPort  = WorkerThreads.parentPort;
     worker.send = parentPort.postMessage.bind(parentPort);
     worker.on = parentPort.on.bind(parentPort);
+    worker.exit = process.exit.bind(process);
   } else {
     worker.on = process.on.bind(process);
     // ignore transfer argument since it is not supported by process
@@ -113,11 +114,38 @@ worker.methods.methods = function methods() {
   return Object.keys(worker.methods);
 };
 
+/**
+ * Custom handler for when the worker is terminated.
+ */
+worker.terminationHandler = undefined;
+
+/**
+ * Cleanup and exit the worker.
+ * @param {Number} code 
+ * @returns 
+ */
+worker.cleanupAndExit = function(code) {
+  var _exit = function() {
+    worker.exit(code);
+  }
+
+  if(!worker.terminationHandler) {
+    return _exit();
+  }
+
+  var result = worker.terminationHandler(code);
+  if (isPromise(result)) {
+    result.then(_exit, _exit);
+  } else {
+    _exit();
+  }
+}
+
 var currentRequestId = null;
 
 worker.on('message', function (request) {
   if (request === TERMINATE_METHOD_ID) {
-    return worker.exit(0);
+    return worker.cleanupAndExit(0);
   }
   try {
     var method = worker.methods[request.method];
@@ -190,9 +218,10 @@ worker.on('message', function (request) {
 
 /**
  * Register methods to the worker
- * @param {Object} methods
+ * @param {Object} [methods]
+ * @param {WorkerRegisterOptions} [options]
  */
-worker.register = function (methods) {
+worker.register = function (methods, options) {
 
   if (methods) {
     for (var name in methods) {
@@ -202,8 +231,11 @@ worker.register = function (methods) {
     }
   }
 
-  worker.send('ready');
+  if (options) {
+    worker.terminationHandler = options.onTerminate;
+  }
 
+  worker.send('ready');
 };
 
 worker.emit = function (payload) {
