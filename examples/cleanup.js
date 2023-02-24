@@ -23,8 +23,6 @@ const main = async () => {
         console.error(err);
       });
 
-  // Only first task is executed, the rest won't run
-  // because the process exits before they are even scheduled
   const tasks = [
     task(),
     timeout(50).then(() => task()),
