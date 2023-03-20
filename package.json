@@ -30,7 +30,7 @@
     "watch": "gulp watch",
     "test": "npm run build && mocha test",
     "test:debug": "npm run build && mocha debug test",
-    "coverage": "npm run build && c8 mocha && c8 report --reporter=html; echo \"\nCoverage report is available at ./coverage/index.html\"",
+    "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo \"\nCoverage report is available at ./coverage/index.html\"",
     "prepublishOnly": "npm run test"
   },
   "devDependencies": {
@@ -47,5 +47,8 @@
     "mocha": "10.2.0",
     "uglify-js": "3.17.4",
     "webpack": "5.76.0"
+  },
+  "dependencies": {
+    "commit": "^0.0.4"
   }
 }
