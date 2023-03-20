@@ -47,8 +47,5 @@
     "mocha": "10.2.0",
     "uglify-js": "3.17.4",
     "webpack": "5.76.0"
-  },
-  "dependencies": {
-    "commit": "^0.0.4"
   }
 }
