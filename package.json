@@ -30,23 +30,22 @@
     "watch": "gulp watch",
     "test": "npm run build && mocha test",
     "test:debug": "npm run build && mocha debug test",
-    "coverage": "npm run build && istanbul cover _mocha -- test; echo \"\nCoverage report is available at ./coverage/lcov-report/index.html\"",
+    "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo \"\nCoverage report is available at ./coverage/index.html\"",
     "prepublishOnly": "npm run test"
   },
   "devDependencies": {
     "@babel/core": "7.21.0",
     "@babel/preset-env": "7.20.2",
     "babel-loader": "9.1.2",
+    "c8": "^7.13.0",
     "date-format": "4.0.14",
     "del": "6.1.1",
     "fancy-log": "2.0.0",
     "find-process": "1.4.7",
     "gulp": "4.0.2",
     "handlebars": "4.7.7",
-    "istanbul": "0.4.5",
     "mocha": "10.2.0",
     "uglify-js": "3.17.4",
     "webpack": "5.76.0"
-  },
-  "dependencies": {}
+  }
 }

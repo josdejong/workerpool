@@ -496,7 +496,7 @@ To test code coverage of the tests:
 
 To see the coverage results, open the generated report in your browser:
 
-    ./coverage/lcov-report/index.html
+    ./coverage/index.html
 
 ## Publish
 
