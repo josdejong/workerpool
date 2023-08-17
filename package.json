@@ -34,18 +34,18 @@
     "prepublishOnly": "npm run test"
   },
   "devDependencies": {
-    "@babel/core": "7.21.0",
-    "@babel/preset-env": "7.20.2",
-    "babel-loader": "9.1.2",
-    "c8": "7.13.0",
+    "@babel/core": "7.22.10",
+    "@babel/preset-env": "7.22.10",
+    "babel-loader": "9.1.3",
+    "c8": "8.0.1",
     "date-format": "4.0.14",
     "del": "6.1.1",
     "fancy-log": "2.0.0",
     "find-process": "1.4.7",
     "gulp": "4.0.2",
-    "handlebars": "4.7.7",
+    "handlebars": "4.7.8",
     "mocha": "10.2.0",
     "uglify-js": "3.17.4",
-    "webpack": "5.76.0"
+    "webpack": "5.88.2"
   }
 }

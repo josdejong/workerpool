@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-08-17, version 6.4.1
+
+- Fix: worker termination before it's ready (#394, #387). Thanks @Michsior14.
+
+
 ## 2023-02-24, version 6.4.0
 
 - Support transferable objects (#3, #374). Thanks @Michsior14.
