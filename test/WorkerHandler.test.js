@@ -121,6 +121,16 @@ describe('WorkerHandler', function () {
     assert.strictEqual(handler.terminated, true);
   });
 
+  it('should terminate before the worker is ready', function (done) {
+    var handler = new WorkerHandler(__dirname + '/workers/async.js', { workerType: 'process' });
+    handler.terminate(true);
+    assert.strictEqual(handler.requestQueue[0].message, '__workerpool-terminate__');
+    setTimeout(function () {
+      assert.strictEqual(handler.terminated, true);
+      done();
+    }, 100);
+  });
+
   it('handle a promise based result', function (done) {
     var handler = new WorkerHandler();
 
