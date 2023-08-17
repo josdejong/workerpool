@@ -487,7 +487,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
 WorkerHandler.prototype.terminateAndNotify = function (force, timeout) {
   var resolver = Promise.defer();
   if (timeout) {
-    resolver.promise.timeout = timeout;
+    resolver.promise.timeout(timeout);
   }
   this.terminate(force, function(err, worker) {
     if (err) {
