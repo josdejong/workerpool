@@ -450,7 +450,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
         if (this.worker.ready) {
           this.worker.send(TERMINATE_METHOD_ID);
         } else {
-          this.requestQueue.push(TERMINATE_METHOD_ID);
+          this.requestQueue.push({ message: TERMINATE_METHOD_ID });
         }
         
         // mark that the worker is cleaning up resources
