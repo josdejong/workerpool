@@ -372,11 +372,13 @@ describe('WorkerHandler', function () {
   describe('setupBrowserWorker', function() {
     it('correctly sets up the browser worker', function() {
       var SCRIPT = 'the script';
+      var OPTIONS = { type: 'classic', credentials: 'omit', name: 'testWorker' }; // default WorkerOption values for type and credentials, custom name
       var postMessage;
       var addEventListener;
 
-      function Worker(script) {
+      function Worker(script, options) {
         assert.strictEqual(script, SCRIPT);
+        assert.strictEqual(options, OPTIONS);
       }
 
       Worker.prototype.addEventListener = function(eventName, callback) {
@@ -387,7 +389,7 @@ describe('WorkerHandler', function () {
         postMessage = message;
       };
 
-      var worker = WorkerHandler._setupBrowserWorker(SCRIPT, Worker);
+      var worker = WorkerHandler._setupBrowserWorker(SCRIPT, OPTIONS, Worker);
 
       assert.ok(worker instanceof Worker);
       assert.ok(typeof worker.on === 'function');

@@ -25,6 +25,7 @@ function Pool(script, options) {
 
   this.forkArgs = Object.freeze(options.forkArgs || []);
   this.forkOpts = Object.freeze(options.forkOpts || {});
+  this.workerOpts = Object.freeze(options.workerOpts || {});
   this.workerThreadOpts = Object.freeze(options.workerThreadOpts || {})
   this.debugPortStart = (options.debugPortStart || 43210);
   this.nodeWorker = options.nodeWorker;
@@ -389,17 +390,19 @@ Pool.prototype._ensureMinWorkers = function() {
  * @private
  */
 Pool.prototype._createWorkerHandler = function () {
-  const overridenParams = this.onCreateWorker({
+  const overriddenParams = this.onCreateWorker({
     forkArgs: this.forkArgs,
     forkOpts: this.forkOpts,
+    workerOpts: this.workerOpts,
     workerThreadOpts: this.workerThreadOpts,
     script: this.script
   }) || {};
 
-  return new WorkerHandler(overridenParams.script || this.script, {
-    forkArgs: overridenParams.forkArgs || this.forkArgs,
-    forkOpts: overridenParams.forkOpts || this.forkOpts,
-    workerThreadOpts: overridenParams.workerThreadOpts || this.workerThreadOpts,
+  return new WorkerHandler(overriddenParams.script || this.script, {
+    forkArgs: overriddenParams.forkArgs || this.forkArgs,
+    forkOpts: overriddenParams.forkOpts || this.forkOpts,
+    workerOpts: overriddenParams.workerOpts || this.workerOpts,
+    workerThreadOpts: overriddenParams.workerThreadOpts || this.workerThreadOpts,
     debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
     workerType: this.workerType,
     workerTerminateTimeout: this.workerTerminateTimeout,

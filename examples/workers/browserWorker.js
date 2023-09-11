@@ -9,7 +9,12 @@ function fibonacci(n) {
   return fibonacci(n - 2) + fibonacci(n - 1);
 }
 
+function getName() {
+  return self.name || 'DefaultNameWorker';
+}
+
 // create a worker and register public functions
 workerpool.worker({
-  fibonacci: fibonacci
+  fibonacci: fibonacci,
+  getName: getName
 });
