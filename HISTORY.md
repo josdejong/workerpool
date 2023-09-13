@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-09-13, version 6.5.0
+
+- Implement support for passing options to web workers constructors (#400, 
+  #322). Thanks @DonatJR.
+
+
 ## 2023-08-21, version 6.4.2
 
 - Fix: a bug in the timeout of termination (#395, #387). Thanks @Michsior14.
