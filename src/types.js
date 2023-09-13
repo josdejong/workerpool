@@ -1,4 +1,11 @@
 /**
+ * @typedef {Object} WorkerOptions
+ * @property {'classic' | 'module'} [type]
+ * @property {'omit' | 'same-origin' | 'include'} [credentials]
+ * @property {string} [name]
+ */
+
+/**
  * @typedef {Object} WorkerPoolOptions
  * @property {number | 'max'} [minWorkers]
  * @property {number} [maxWorkers]
@@ -7,6 +14,7 @@
  * @property {number} [workerTerminateTimeout]
  * @property {*} [forkArgs]
  * @property {*} [forkOpts]
+ * @property {WorkerOptions} [workerOpts]
  * @property {Function} [onCreateWorker]
  * @property {Function} [onTerminateWorker]
  */

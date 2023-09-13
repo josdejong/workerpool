@@ -64,7 +64,7 @@ function getDefaultWorker() {
 function setupWorker(script, options) {
   if (options.workerType === 'web') { // browser only
     ensureWebWorker();
-    return setupBrowserWorker(script, Worker);
+    return setupBrowserWorker(script, options.workerOpts, Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
     return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
@@ -73,7 +73,7 @@ function setupWorker(script, options) {
   } else { // options.workerType === 'auto' or undefined
     if (environment.platform === 'browser') {
       ensureWebWorker();
-      return setupBrowserWorker(script, Worker);
+      return setupBrowserWorker(script, options.workerOpts, Worker);
     }
     else { // environment.platform === 'node'
       var WorkerThreads = tryRequireWorkerThreads();
@@ -86,9 +86,9 @@ function setupWorker(script, options) {
   }
 }
 
-function setupBrowserWorker(script, Worker) {
+function setupBrowserWorker(script, workerOpts, Worker) {
   // create the web worker
-  var worker = new Worker(script);
+  var worker = new Worker(script, workerOpts);
 
   worker.isBrowserWorker = true;
   // add node.js API to the web worker
@@ -209,6 +209,7 @@ function WorkerHandler(script, _options) {
   this.debugPort = options.debugPort;
   this.forkOpts = options.forkOpts;
   this.forkArgs = options.forkArgs;
+  this.workerOpts = options.workerOpts;
   this.workerThreadOpts = options.workerThreadOpts
   this.workerTerminateTimeout = options.workerTerminateTimeout;
 
