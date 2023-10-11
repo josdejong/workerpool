@@ -78,7 +78,7 @@ function setupWorker(script, options) {
     else { // environment.platform === 'node'
       var WorkerThreads = tryRequireWorkerThreads();
       if (WorkerThreads) {
-        return setupWorkerThreadWorker(script, WorkerThreads);
+        return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
       } else {
         return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
       }
@@ -453,7 +453,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
         } else {
           this.requestQueue.push({ message: TERMINATE_METHOD_ID });
         }
-        
+
         // mark that the worker is cleaning up resources
         // to prevent new tasks from being executed
         this.cleaning = true;

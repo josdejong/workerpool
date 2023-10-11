@@ -83,6 +83,15 @@ describe('Pool', function () {
         assert.strictEqual(worker.isWorkerThread, true);
         assert.strictEqual(worker.resourceLimits.maxYoungGenerationSizeMb, maxYoungGenerationSizeMb);
       });
+
+      it('supports passing options to threads via mode auto', function() {
+        const maxYoungGenerationSizeMb = 200
+        var pool = createPool({ minWorkers:1, workerType: 'auto', workerThreadOpts: { resourceLimits: { maxYoungGenerationSizeMb } } });
+        var worker = pool.workers[0].worker;
+
+        assert.strictEqual(worker.isWorkerThread, true);
+        assert.strictEqual(worker.resourceLimits.maxYoungGenerationSizeMb, maxYoungGenerationSizeMb);
+      });
     } else {
       it('errors when not supporting worker thread', function() {
         assert.throws(function() {
@@ -735,7 +744,7 @@ describe('Pool', function () {
       var count = cpus.length + 2;
       var tasksCount = cpus.length * 2;
       var pool = createPool({minWorkers: count});
-      
+
       var tasks = []
       for(var i=0;i<tasksCount;i++) {
         tasks.push(pool.exec(add, [i, i*2]));
@@ -812,7 +821,7 @@ describe('Pool', function () {
             // this will throw if the process with pid `workerPid` does not exist
             process.kill(workerPid, 0);
           });
-        
+
           done();
         })
         .catch(done);
@@ -1136,7 +1145,7 @@ describe('Pool', function () {
     pool.exec('transfer', [size])
           .then(function (result) {
             assert.strictEqual(result.byteLength, size);
-            
+
             pool.terminate();
             done();
           })
