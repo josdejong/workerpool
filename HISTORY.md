@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-10-11, version 6.5.1
+
+- Fix: `workerThreadOpts` not working when `workerType: auto`, see #357.
+
+
 ## 2023-09-13, version 6.5.0
 
 - Implement support for passing options to web workers constructors (#400, 
