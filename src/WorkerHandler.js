@@ -2,7 +2,6 @@
 
 var Promise = require('./Promise');
 var environment = require('./environment');
-var requireFoolWebpack = require('./requireFoolWebpack');
 
 /**
  * Special message sent by parent which causes a child process worker to terminate itself.
@@ -29,7 +28,7 @@ function ensureWebWorker() {
 
 function tryRequireWorkerThreads() {
   try {
-    return requireFoolWebpack('worker_threads');
+    return require('worker_threads');
   } catch(error) {
     if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
       // no worker_threads available (old version of node.js)
@@ -69,7 +68,7 @@ function setupWorker(script, options) {
     WorkerThreads = ensureWorkerThreads();
     return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
   } else if (options.workerType === 'process' || !options.workerType) { // node.js only
-    return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
+    return setupProcessWorker(script, resolveForkOptions(options), require('child_process'));
   } else { // options.workerType === 'auto' or undefined
     if (environment.platform === 'browser') {
       ensureWebWorker();
@@ -80,7 +79,7 @@ function setupWorker(script, options) {
       if (WorkerThreads) {
         return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
       } else {
-        return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
+        return setupProcessWorker(script, resolveForkOptions(options), require('child_process'));
       }
     }
   }
