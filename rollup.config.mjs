@@ -13,7 +13,6 @@ function createBanner() {
         .replace('@@date', today)
         .replace('@@version', version);
 }
-// 防止打包时删除 ts 的类型注解
 fse.emptyDirSync("./dist/");
 fse.copyFileSync('./src/header.js', './dist/workerpool.min.js.LICENSE.txt')
 const commonPlugin = [
