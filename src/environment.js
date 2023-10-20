@@ -16,7 +16,7 @@ module.exports.platform = typeof process !== 'undefined' && isNode(process)
 
 // determines whether the code is running in main thread or not
 // note that in node.js we have to check both worker_thread and child_process
-var worker_threads = require('worker_threads');
+var worker_threads = module.exports.platform === 'node' && require('worker_threads');
 module.exports.isMainThread = module.exports.platform === 'node'
   ? ((!worker_threads || worker_threads.isMainThread) && !process.connected)
   : typeof Window !== 'undefined';
