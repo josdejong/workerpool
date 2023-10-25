@@ -2,9 +2,23 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-11-25, version 8.0.0
+
+BREAKING CHANGE: the library now throws an Error when passing unknown or 
+inherited properties for `workerOpts`, `workerThreadOpts` and `forkOpts`.
+
+- Fix: throw an error in case of unknown properties or inherited properties
+  in `workerOpts`, `workerThreadOpts` and `forkOpts` to protect against 
+  security issues related to prototype pollution 
+  (see ea5368c5e53d97120b952ffad151a318c1ff073c).
+- Fix: #56 document the return type of all functions.
+- Docs: added a full usage example with Vite and Webpack5 (#408), 
+  thanks @KonghaYao.
+
+
 ## 2023-11-25, version 7.0.0
 
-WARNING: The setup to bundle `workerpool` has been replaced. This should 
+BREAKING CHANGE: The setup to bundle `workerpool` has been replaced. This should 
 be a drop-in replacement, but it may have impact depending on your setup.
 
 - Switched build setup from Webpack to Rollup, see #403. Thanks @KonghaYao.
@@ -125,8 +139,8 @@ be a drop-in replacement, but it may have impact depending on your setup.
 
 ## 2020-05-13, version 6.0.0
 
-WARNING: the library entry points are changed and new source maps are added. 
-This may have impact on your project depending on your setup.
+BREAKING CHANGE: the library entry points are changed and new source maps are
+added. This may have impact on your project depending on your setup.
 
 - Created separate library entry points in package.json for node.js and browser.
   Thanks @boneskull.
