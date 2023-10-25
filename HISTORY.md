@@ -2,6 +2,14 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-11-25, version 7.0.0
+
+WARNING: The setup to bundle `workerpool` has been replaced. This should 
+be a drop-in replacement, but it may have impact depending on your setup.
+
+- Switched build setup from Webpack to Rollup, see #403. Thanks @KonghaYao.
+
+
 ## 2023-10-11, version 6.5.1
 
 - Fix: `workerThreadOpts` not working when `workerType: auto`, see #357.
