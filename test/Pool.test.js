@@ -1214,4 +1214,60 @@ describe('Pool', function () {
       assert(handlerCalled === false);
     });
   });
+
+  describe('validate', () => {
+    it('should not allow unknown properties in forkOpts', function() {
+      var pool = createPool({
+        workerType: 'process',
+        forkOpts: { foo: 42 }
+      });
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "forkOpts" contains an unknown option "foo"/);
+    });
+
+    it('should not allow inherited properties in forkOpts', function() {
+      var pool = createPool({
+        workerType: 'process'
+      });
+
+      // prototype pollution
+      Object.prototype.env = { NODE_OPTIONS: '--inspect-brk=0.0.0.0:1337' };
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "forkOpts" contains an inherited option "env"/);
+
+      delete Object.prototype.env;
+      after(() => { delete Object.prototype.env });
+    });
+
+    it('should not allow unknown properties in workerThreadOpts', function() {
+      var pool = createPool({
+        workerType: 'thread',
+        workerThreadOpts: { foo: 42 }
+      });
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "workerThreadOpts" contains an unknown option "foo"/);
+    });
+
+    it('should not allow inherited properties in workerThreadOpts', function() {
+      var pool = createPool({
+        workerType: 'thread'
+      });
+
+      // prototype pollution
+      Object.prototype.env = { NODE_OPTIONS: '--inspect-brk=0.0.0.0:1337' };
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "workerThreadOpts" contains an inherited option "env"/);
+
+      delete Object.prototype.env;
+      after(() => { delete Object.prototype.env });
+    });
+  });
 });

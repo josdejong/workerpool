@@ -2,6 +2,7 @@
 
 var Promise = require('./Promise');
 var environment = require('./environment');
+const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} = require("./validateOptions");
 
 /**
  * Special message sent by parent which causes a child process worker to terminate itself.
@@ -86,6 +87,9 @@ function setupWorker(script, options) {
 }
 
 function setupBrowserWorker(script, workerOpts, Worker) {
+  // validate the options right before creating the worker (not when creating the pool)
+  validateOptions(workerOpts, workerOptsNames, 'workerOpts')
+
   // create the web worker
   var worker = new Worker(script, workerOpts);
 
@@ -103,6 +107,9 @@ function setupBrowserWorker(script, workerOpts, Worker) {
 }
 
 function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
+  // validate the options right before creating the worker thread (not when creating the pool)
+  validateOptions(workerThreadOptions, workerThreadOptsNames, 'workerThreadOpts')
+
   var worker = new WorkerThreads.Worker(script, {
     stdout: false, // automatically pipe worker.STDOUT to process.STDOUT
     stderr: false,  // automatically pipe worker.STDERR to process.STDERR
@@ -126,6 +133,9 @@ function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
 }
 
 function setupProcessWorker(script, options, child_process) {
+  // validate the options right before creating the child process (not when creating the pool)
+  validateOptions(options.forkOpts, forkOptsNames, 'forkOpts')
+
   // no WorkerThreads, fallback to sub-process based workers
   var worker = child_process.fork(
     script,
