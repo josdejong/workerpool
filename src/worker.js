@@ -4,13 +4,6 @@
  */
 var Transfer = require('./transfer');
 
-// source of inspiration: https://github.com/sindresorhus/require-fool-webpack
-var requireFoolWebpack = eval(
-    'typeof require !== \'undefined\'' +
-    ' ? require' +
-    ' : function (module) { throw new Error(\'Module " + module + " not found.\') }'
-);
-
 /**
  * Special message sent by parent which causes the worker to terminate itself.
  * Not a "message object"; this string is the entire message.
@@ -40,7 +33,7 @@ else if (typeof process !== 'undefined') {
 
   var WorkerThreads;
   try {
-    WorkerThreads = requireFoolWebpack('worker_threads');
+    WorkerThreads = require('worker_threads');
   } catch(error) {
     if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
       // no worker_threads, fallback to sub-process based workers
