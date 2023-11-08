@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## 2023-11-25, version 8.0.0
+## 2023-10-25, version 8.0.0
 
 BREAKING CHANGE: the library now throws an Error when passing unknown or 
 inherited properties for `workerOpts`, `workerThreadOpts` and `forkOpts`.
@@ -16,7 +16,7 @@ inherited properties for `workerOpts`, `workerThreadOpts` and `forkOpts`.
   thanks @KonghaYao.
 
 
-## 2023-11-25, version 7.0.0
+## 2023-10-25, version 7.0.0
 
 BREAKING CHANGE: The setup to bundle `workerpool` has been replaced. This should 
 be a drop-in replacement, but it may have impact depending on your setup.
