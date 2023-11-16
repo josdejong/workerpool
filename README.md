@@ -325,7 +325,7 @@ A worker is constructed as:
 
 `workerpool.worker([methods: Object<String, Function>] [, options: Object]) : void`
 
-Argument `methods` is optional can can be an object with functions available in the worker. Registered functions will be available via the worker pool.
+Argument `methods` is optional and can be an object with functions available in the worker. Registered functions will be available via the worker pool.
 
 The following options are available:
 
