@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/workerpool": "^6.4.5",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5",
+    "vite": "^4.5.1",
     "vite-plugin-solid": "^2.7.0"
   }
 }
