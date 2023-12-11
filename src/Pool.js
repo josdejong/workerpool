@@ -4,7 +4,8 @@ var environment = require('./environment');
 var DebugPortAllocator = require('./debug-port-allocator');
 var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
 /**
- * A pool to manage workers
+ * A pool to manage workers, which can be created using the function workerpool.pool.
+ *
  * @param {String} [script]   Optional worker script
  * @param {import('./types.js').WorkerPoolOptions} [options]  See docs
  * @constructor
