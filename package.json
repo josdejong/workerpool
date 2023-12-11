@@ -18,6 +18,7 @@
   ],
   "main": "src/index.js",
   "browser": "dist/workerpool.js",
+  "types": "types/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -31,9 +32,11 @@
     "test": "npm run build && mocha test",
     "test:debug": "npm run build && mocha debug test",
     "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo Coverage report is available at ./coverage/index.html",
-    "prepublishOnly": "npm run test"
+    "prepublishOnly": "npm run test",
+    "types": "tsc -p ."
   },
   "devDependencies": {
+    "@types/node": "20.10.4",
     "@babel/core": "7.23.5",
     "@babel/preset-env": "7.23.5",
     "@rollup/plugin-babel": "6.0.4",
@@ -46,6 +49,7 @@
     "fs-extra": "11.2.0",
     "find-process": "1.4.7",
     "mocha": "10.2.0",
-    "rollup": "4.6.1"
+    "rollup": "4.6.1",
+    "typescript": "5.3.3"
   }
 }

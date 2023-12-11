@@ -6,11 +6,12 @@ var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
 /**
  * A pool to manage workers
  * @param {String} [script]   Optional worker script
- * @param {WorkerPoolOptions} [options]  See docs
+ * @param {import('./types.js').WorkerPoolOptions} [options]  See docs
  * @constructor
  */
 function Pool(script, options) {
   if (typeof script === 'string') {
+    /** @readonly */
     this.script = script || null;
   }
   else {
@@ -18,27 +19,43 @@ function Pool(script, options) {
     options = script;
   }
 
+  /** @private */
   this.workers = [];  // queue with all workers
+  /** @private */
   this.tasks = [];    // queue with tasks awaiting execution
 
   options = options || {};
 
+  /** @readonly */
   this.forkArgs = Object.freeze(options.forkArgs || []);
+  /** @readonly */
   this.forkOpts = Object.freeze(options.forkOpts || {});
+  /** @readonly */
   this.workerOpts = Object.freeze(options.workerOpts || {});
+  /** @readonly */
   this.workerThreadOpts = Object.freeze(options.workerThreadOpts || {})
+  /** @private */
   this.debugPortStart = (options.debugPortStart || 43210);
+  /** @readonly @deprecated */
   this.nodeWorker = options.nodeWorker;
+  /** @readonly
+   * @type {'auto' | 'web' | 'process' | 'thread'}
+   */
   this.workerType = options.workerType || options.nodeWorker || 'auto'
+  /** @readonly */
   this.maxQueueSize = options.maxQueueSize || Infinity;
+  /** @readonly */
   this.workerTerminateTimeout = options.workerTerminateTimeout || 1000;
 
+  /** @readonly */
   this.onCreateWorker = options.onCreateWorker || (() => null);
+  /** @readonly */
   this.onTerminateWorker = options.onTerminateWorker || (() => null);
 
   // configuration
   if (options && 'maxWorkers' in options) {
     validateMaxWorkers(options.maxWorkers);
+    /** @readonly */
     this.maxWorkers = options.maxWorkers;
   }
   else {
@@ -47,6 +64,7 @@ function Pool(script, options) {
 
   if (options && 'minWorkers' in options) {
     if(options.minWorkers === 'max') {
+      /** @readonly */
       this.minWorkers = this.maxWorkers;
     } else {
       validateMinWorkers(options.minWorkers);
@@ -56,6 +74,7 @@ function Pool(script, options) {
     this._ensureMinWorkers();
   }
 
+  /** @private */
   this._boundNext = this._next.bind(this);
 
 
@@ -86,16 +105,16 @@ function Pool(script, options) {
  *       .catch(function(error) {
  *         console.log(error);
  *       });
- *
- * @param {String | Function} method  Function name or function.
+ * @template { (...args: any[]) => any } T
+ * @param {String | T} method  Function name or function.
  *                                    If `method` is a string, the corresponding
  *                                    method on the worker will be executed
  *                                    If `method` is a Function, the function
  *                                    will be stringified and executed via the
  *                                    workers built-in function `run(fn, args)`.
- * @param {Array} [params]  Function arguments applied when calling the function
- * @param {ExecOptions} [options]  Options object
- * @return {Promise.<*, Error>} result
+ * @param {Parameters<T>} [params]  Function arguments applied when calling the function
+ * @param {import('./types.js').ExecOptions} [options]  Options
+ * @return {Promise<ReturnType<T>>}
  */
 Pool.prototype.exec = function (method, params, options) {
   // validate type of arguments
@@ -152,9 +171,9 @@ Pool.prototype.exec = function (method, params, options) {
 
 /**
  * Create a proxy for current worker. Returns an object containing all
- * methods available on the worker. The methods always return a promise.
- *
- * @return {Promise.<Object, Error>} proxy
+ * methods available on the worker. All methods return promises resolving the methods result.
+ * @template { { [k: string]: (...args: any[]) => any } } T
+ * @return {Promise<import('./types.js').Proxy<T>, Error>} Returns a promise which resolves with a proxy object
  */
 Pool.prototype.proxy = function () {
   if (arguments.length > 0) {

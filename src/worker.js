@@ -212,7 +212,7 @@ worker.on('message', function (request) {
 /**
  * Register methods to the worker
  * @param {Object} [methods]
- * @param {WorkerRegisterOptions} [options]
+ * @param {import('./types.js').WorkerRegisterOptions} [options]
  */
 worker.register = function (methods, options) {
 
