@@ -1,16 +1,9 @@
 /**
- * @typedef {Object} WorkerOptions
- * @property {'classic' | 'module'} [type]
- * @property {'omit' | 'same-origin' | 'include'} [credentials]
- * @property {string} [name]
- */
-
-/**
  * @typedef {Object} WorkerArg
  * @property {string[]} [forkArgs] The `forkArgs` option of this pool
- * @property {Object} [forkOpts] The `forkOpts` option of this pool
+ * @property {import('child_process').ForkOptions} [forkOpts] The `forkOpts` option of this pool
  * @property {WorkerOptions} [workerOpts] The `workerOpts` option of this pool
- * @property {Object} [workerThreadOpts] The `workerThreadOpts` option of this pool
+ * @property {import('worker_threads').WorkerOptions} [workerThreadOpts] The `workerThreadOpts` option of this pool
  * @property {string} [script] The `script` option of this pool
  */
 
@@ -26,9 +19,9 @@
  *   - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown. Only available in a node.js environment.
  * @property {number} [workerTerminateTimeout] The timeout in milliseconds to wait for a worker to cleanup it's resources on termination before stopping it forcefully. Default value is `1000`.
  * @property {string[]} [forkArgs] For `process` worker type. An array passed as `args` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
- * @property {Object} [forkOpts] For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options).
+ * @property {import('child_process').ForkOptions} [forkOpts] For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options).
  * @property {WorkerOptions} [workerOpts] For `web` worker type. An object passed to the [constructor of the web worker](https://html.spec.whatwg.org/multipage/workers.html#dom-worker). See [WorkerOptions specification](https://html.spec.whatwg.org/multipage/workers.html#workeroptions) for available options. 
- * @property {Object} [workerThreadOpts] Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options).
+ * @property {import('worker_threads').WorkerOptions} [workerThreadOpts] Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options).
  * @property { (arg: WorkerArg) => WorkerArg | undefined } [onCreateWorker] A callback that is called whenever a worker is being created. It can be used to allocate resources for each worker for example. Optionally, this callback can return an object containing one or more of the `WorkerArg` properties. The provided properties will be used to override the Pool properties for the worker being created.
  * @property { (arg: WorkerArg) => void } [onTerminateWorker] A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated.
  */
