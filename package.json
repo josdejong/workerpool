@@ -27,13 +27,14 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rollup -c rollup.config.mjs",
+    "build": "rollup -c rollup.config.mjs && npm run build:types",
+    "build:types": "tsc -p .",
     "watch": "rollup -c rollup.config.mjs -w",
-    "test": "npm run build && mocha test",
+    "test": "npm run build && mocha test && npm run test:types",
+    "test:types": "tsc -p test/types",
     "test:debug": "npm run build && mocha debug test",
     "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo Coverage report is available at ./coverage/index.html",
-    "prepublishOnly": "npm run test",
-    "types": "tsc -p ."
+    "prepublishOnly": "npm run test"
   },
   "devDependencies": {
     "@types/node": "20.10.4",
