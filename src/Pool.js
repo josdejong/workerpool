@@ -113,7 +113,7 @@ function Pool(script, options) {
  *                                    If `method` is a Function, the function
  *                                    will be stringified and executed via the
  *                                    workers built-in function `run(fn, args)`.
- * @param {Parameters<T>} [params]  Function arguments applied when calling the function
+ * @param {Parameters<T> | null} [params]  Function arguments applied when calling the function
  * @param {import('./types.js').ExecOptions} [options]  Options
  * @return {Promise<ReturnType<T>>}
  */

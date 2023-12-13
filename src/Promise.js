@@ -214,7 +214,7 @@ Promise.prototype.always = function (fn) {
  * Create a promise which resolves when all provided promises are resolved,
  * and fails when any of the promises resolves.
  * @param {Promise[]} promises
- * @returns {Promise} promise
+ * @returns {Promise<any[], any>} promise
  */
 Promise.all = function (promises){
   return new Promise(function (resolve, reject) {

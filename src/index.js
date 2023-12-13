@@ -1,6 +1,13 @@
 const {platform, isMainThread, cpus} = require('./environment');
 
 /**
+ * @overload
+ * Create a new worker pool
+ * @param {import("./types.js").WorkerPoolOptions} [script]
+ * @returns {Pool} pool
+ */
+/**
+ * @overload
  * Create a new worker pool
  * @param {string} [script]
  * @param {import("./types.js").WorkerPoolOptions} [options]
