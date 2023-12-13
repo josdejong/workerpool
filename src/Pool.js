@@ -214,7 +214,7 @@ Pool.prototype.map = function (array, callback) {
 /**
  * Grab the first task from the queue, find a free worker, and assign the
  * worker to the task.
- * @protected
+ * @private
  */
 Pool.prototype._next = function () {
   if (this.tasks.length > 0) {
@@ -288,7 +288,7 @@ Pool.prototype._getWorker = function() {
  * pool size is met.
  * @param {WorkerHandler} worker
  * @return {Promise<WorkerHandler>}
- * @protected
+ * @private
  */
 Pool.prototype._removeWorker = function(worker) {
   var me = this;
@@ -319,7 +319,7 @@ Pool.prototype._removeWorker = function(worker) {
 /**
  * Remove a worker from the pool list.
  * @param {WorkerHandler} worker
- * @protected
+ * @private
  */
 Pool.prototype._removeWorkerFromList = function(worker) {
   // remove from the list with workers
@@ -394,7 +394,7 @@ Pool.prototype.stats = function () {
 
 /**
  * Ensures that a minimum of minWorkers is up and running
- * @protected
+ * @private
  */
 Pool.prototype._ensureMinWorkers = function() {
   if (this.minWorkers) {
