@@ -1,5 +1,5 @@
 var assert = require('assert');
-var Promise = require('../src/Promise');
+var {Promise} = require('../src/Promise');
 var Pool = require('../src/Pool');
 var tryRequire = require('./utils').tryRequire
 

@@ -41,7 +41,8 @@ function workerEmit(payload) {
 };
 exports.workerEmit = workerEmit;
 
-exports.Promise = require('./Promise');
+const {Promise} = require('./Promise');
+exports.Promise = Promise;
 
 exports.Transfer = require('./transfer');
 

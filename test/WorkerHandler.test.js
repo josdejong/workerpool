@@ -1,10 +1,10 @@
 var assert = require('assert');
-var Promise = require('../src/Promise');
+var {Promise} = require('../src/Promise');
 var WorkerHandler = require('../src/WorkerHandler');
 var path = require('path');
 var childProcess = require('child_process');
 var findProcess = require('find-process');
-const { CancellationError } = require('../src/Promise');
+const { CancellationError } = Promise;
 
 function add(a, b) {
   return a + b;

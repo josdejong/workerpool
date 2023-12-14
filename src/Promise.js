@@ -5,7 +5,7 @@
  *
  * Inspired by https://gist.github.com/RubaXa/8501359 from RubaXa <trash@rubaxa.org>
  * @template T
- * @template E
+ * @template [E=Error]
  * @param {Function} handler   Called as handler(resolve: Function, reject: Function)
  * @param {Promise} [parent]   Parent promise for propagation of cancel and timeout
  */
@@ -290,4 +290,4 @@ TimeoutError.prototype.name = 'TimeoutError';
 Promise.TimeoutError = TimeoutError;
 
 
-module.exports = Promise;
+exports.Promise = Promise;

@@ -1,4 +1,4 @@
-var Promise = require('./Promise');
+var {Promise} = require('./Promise');
 var WorkerHandler = require('./WorkerHandler');
 var environment = require('./environment');
 var DebugPortAllocator = require('./debug-port-allocator');

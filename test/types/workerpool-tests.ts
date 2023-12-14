@@ -96,8 +96,6 @@ pool.proxy().then(proxy => {
 new wp.Promise.CancellationError();
 new wp.Promise.TimeoutError();
 
-// We can remove the following line when migrating to ESM.
-// @ts-expect-error
 let promises: wp.Promise<any[]> = wp.Promise.all([
     pool.exec("foo", null),
     pool.exec("foo", null),

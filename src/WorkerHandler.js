@@ -1,6 +1,6 @@
 'use strict';
 
-var Promise = require('./Promise');
+var {Promise} = require('./Promise');
 var environment = require('./environment');
 const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} = require("./validateOptions");
 
