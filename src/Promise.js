@@ -52,7 +52,7 @@ function Promise(handler, parent) {
   /**
    * Add an onSuccess callback and optionally an onFail callback to the Promise
    * @template TT
-   * @template TE
+   * @template [TE=never]
    * @param {(r: T) => TT} onSuccess
    * @param {(r: E) => TE} [onFail]
    * @returns {Promise<TT | TE, any>} promise
