@@ -4,7 +4,8 @@
  * Promise
  *
  * Inspired by https://gist.github.com/RubaXa/8501359 from RubaXa <trash@rubaxa.org>
- *
+ * @template T
+ * @template [E=Error]
  * @param {Function} handler   Called as handler(resolve: Function, reject: Function)
  * @param {Promise} [parent]   Parent promise for propagation of cancel and timeout
  */
@@ -23,8 +24,17 @@ function Promise(handler, parent) {
   var _onFail = [];
 
   // status
+  /**
+   * @readonly
+   */
   this.resolved = false;
+  /**
+   * @readonly
+   */
   this.rejected = false;
+  /**
+   * @readonly
+   */
   this.pending = true;
 
   /**
@@ -41,9 +51,11 @@ function Promise(handler, parent) {
 
   /**
    * Add an onSuccess callback and optionally an onFail callback to the Promise
-   * @param {Function} onSuccess
-   * @param {Function} [onFail]
-   * @returns {Promise} promise
+   * @template TT
+   * @template [TE=never]
+   * @param {(r: T) => TT} onSuccess
+   * @param {(r: E) => TE} [onFail]
+   * @returns {Promise<TT | TE, any>} promise
    */
   this.then = function (onSuccess, onFail) {
     return new Promise(function (resolve, reject) {
@@ -104,7 +116,7 @@ function Promise(handler, parent) {
 
   /**
    * Cancel te promise. This will reject the promise with a CancellationError
-   * @returns {Promise} self
+   * @returns {this} self
    */
   this.cancel = function () {
     if (parent) {
@@ -122,7 +134,7 @@ function Promise(handler, parent) {
    * the time, the promise will be cancelled and a TimeoutError is thrown.
    * If the promise is resolved in time, the timeout is removed.
    * @param {number} delay     Delay in milliseconds
-   * @returns {Promise} self
+   * @returns {this} self
    */
   this.timeout = function (delay) {
     if (parent) {
@@ -177,8 +189,9 @@ function _then(callback, resolve, reject) {
 
 /**
  * Add an onFail callback to the Promise
- * @param {Function} onFail
- * @returns {Promise} promise
+ * @template TT
+ * @param {(error: E) => TT} onFail
+ * @returns {Promise<T | TT>} promise
  */
 Promise.prototype['catch'] = function (onFail) {
   return this.then(null, onFail);
@@ -189,8 +202,9 @@ Promise.prototype['catch'] = function (onFail) {
 
 /**
  * Execute given callback when the promise either resolves or rejects.
- * @param {Function} fn
- * @returns {Promise} promise
+ * @template TT
+ * @param {() => Promise<TT>} fn
+ * @returns {Promise<TT>} promise
  */
 Promise.prototype.always = function (fn) {
   return this.then(fn, fn);
@@ -200,7 +214,7 @@ Promise.prototype.always = function (fn) {
  * Create a promise which resolves when all provided promises are resolved,
  * and fails when any of the promises resolves.
  * @param {Promise[]} promises
- * @returns {Promise} promise
+ * @returns {Promise<any[], any>} promise
  */
 Promise.all = function (promises){
   return new Promise(function (resolve, reject) {
@@ -276,4 +290,4 @@ TimeoutError.prototype.name = 'TimeoutError';
 Promise.TimeoutError = TimeoutError;
 
 
-module.exports = Promise;
+exports.Promise = Promise;

@@ -1,6 +1,6 @@
 'use strict';
 
-var Promise = require('./Promise');
+var {Promise} = require('./Promise');
 var environment = require('./environment');
 const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} = require("./validateOptions");
 
@@ -206,7 +206,7 @@ function objectToError (obj) {
  * on node.js or a WebWorker in a browser environment.
  * @param {String} [script] If no script is provided, a default worker with a
  *                          function run will be created.
- * @param {WorkerPoolOptions} _options See docs
+ * @param {import('./types.js').WorkerPoolOptions} [_options] See docs
  * @constructor
  */
 function WorkerHandler(script, _options) {
@@ -328,7 +328,7 @@ WorkerHandler.prototype.methods = function () {
  * @param {String} method
  * @param {Array} [params]
  * @param {{resolve: Function, reject: Function}} [resolver]
- * @param {ExecOptions}  [options]
+ * @param {import('./types.js').ExecOptions}  [options]
  * @return {Promise.<*, Error>} result
  */
 WorkerHandler.prototype.exec = function(method, params, resolver, options) {
