@@ -2,12 +2,18 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-12-18, version 9.0.1
+
+- Export the types `Pool`, `WorkerPoolOptions`, and `WorkerRegisterOptions`,
+  see #416. Thanks @joshkel.
+
+
 ## 2023-12-18, version 9.0.0
 
 BREAKING CHANGE: the library now comes with TypeScript type definitions
 included. There may be minor differences between the new, embedded type 
 definitions and the implementation from `@types/workerpool` that was needed 
-before.
+before. For example, `type WorkerPool` is called `type Pool` now.
 
 - Generate TypeScript types from JSDoc comments. Thanks @tamuratak.
 
