@@ -1,16 +1,20 @@
 const {platform, isMainThread, cpus} = require('./environment');
 
+/** @typedef {import("./Pool")} Pool */
+/** @typedef {import("./types.js").WorkerPoolOptions} WorkerPoolOptions */
+/** @typedef {import("./types.js").WorkerRegisterOptions} WorkerRegisterOptions */
+
 /**
  * @overload
  * Create a new worker pool
- * @param {import("./types.js").WorkerPoolOptions} [script]
+ * @param {WorkerPoolOptions} [script]
  * @returns {Pool} pool
  */
 /**
  * @overload
  * Create a new worker pool
  * @param {string} [script]
- * @param {import("./types.js").WorkerPoolOptions} [options]
+ * @param {WorkerPoolOptions} [options]
  * @returns {Pool} pool
  */
 function pool(script, options) {
@@ -23,7 +27,7 @@ exports.pool = pool;
 /**
  * Create a worker and optionally register a set of methods to the worker.
  * @param {{ [k: string]: (...args: any[]) => any }} [methods]
- * @param {import("./types.js").WorkerRegisterOptions} [options]
+ * @param {WorkerRegisterOptions} [options]
  */
 function worker(methods, options) {
   var worker = require('./worker');
