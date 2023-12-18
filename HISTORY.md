@@ -2,6 +2,16 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-12-18, version 9.0.0
+
+BREAKING CHANGE: the library now comes with TypeScript type definitions
+included. There may be minor differences between the new, embedded type 
+definitions and the implementation from `@types/workerpool` that was needed 
+before.
+
+- Generate TypeScript types from JSDoc comments. Thanks @tamuratak.
+
+
 ## 2023-10-25, version 8.0.0
 
 BREAKING CHANGE: the library now throws an Error when passing unknown or 
