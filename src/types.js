@@ -39,7 +39,7 @@
 
 /**
  * @template { { [k: string]: (...args: any[]) => any } } T
- * @typedef {{ [M in keyof T]: (...args: Parameters<T[M]>) => Promise<ReturnType<T[M]>>; }} Proxy<T>
+ * @typedef {{ [M in keyof T]: (...args: Parameters<T[M]>) => import('./Promise.js').Promise<ReturnType<T[M]>>; }} Proxy<T>
  */
 
 module.exports = {}

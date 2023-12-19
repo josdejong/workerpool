@@ -5,6 +5,11 @@ const {platform, isMainThread, cpus} = require('./environment');
 /** @typedef {import("./types.js").WorkerRegisterOptions} WorkerRegisterOptions */
 
 /**
+ * @template { { [k: string]: (...args: any[]) => any } } T
+ * @typedef {import('./types.js').Proxy<T>} Proxy<T>
+ */
+
+/**
  * @overload
  * Create a new worker pool
  * @param {WorkerPoolOptions} [script]
