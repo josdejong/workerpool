@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-12-19, version 9.0.2
+
+- Export the `Proxy` type (see #417). Thanks @tamuratak.
+- Use workerpool's `Promise` type definition (see #417). Thanks @tamuratak.
+
+
 ## 2023-12-18, version 9.0.1
 
 - Export the types `Pool`, `WorkerPoolOptions`, and `WorkerRegisterOptions`,
