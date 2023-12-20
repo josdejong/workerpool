@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-12-20, version 9.0.3
+
+- Improve types: unwrap Promise types (#419). Thanks @joshkel.
+
+
 ## 2023-12-19, version 9.0.2
 
 - Export the `Proxy` type (see #417). Thanks @tamuratak.
