@@ -88,6 +88,11 @@ pool.proxy<IWorkers>().then(proxy => {
     proxy.hello();
 });
 
+function sayHello(message: string) {
+    console.log(message);
+}
+pool.proxy<IWorkers>().then(proxy => proxy.hello()).then(sayHello);
+
 pool.proxy().then(proxy => {
     proxy.add(1, 2);
     proxy.hello();

@@ -39,7 +39,7 @@ function Promise(handler, parent) {
 
   /**
    * Process onSuccess and onFail callbacks: add them to the queue.
-   * Once the promise is resolve, the function _promise is replace.
+   * Once the promise is resolved, the function _promise is replace.
    * @param {Function} onSuccess
    * @param {Function} onFail
    * @private
@@ -53,8 +53,8 @@ function Promise(handler, parent) {
    * Add an onSuccess callback and optionally an onFail callback to the Promise
    * @template TT
    * @template [TE=never]
-   * @param {(r: T) => TT} onSuccess
-   * @param {(r: E) => TE} [onFail]
+   * @param {(r: T) => TT | PromiseLike<TT>} onSuccess
+   * @param {(r: E) => TE | PromiseLike<TE>} [onFail]
    * @returns {Promise<TT | TE, any>} promise
    */
   this.then = function (onSuccess, onFail) {
@@ -115,7 +115,7 @@ function Promise(handler, parent) {
   };
 
   /**
-   * Cancel te promise. This will reject the promise with a CancellationError
+   * Cancel the promise. This will reject the promise with a CancellationError
    * @returns {this} self
    */
   this.cancel = function () {
@@ -190,7 +190,7 @@ function _then(callback, resolve, reject) {
 /**
  * Add an onFail callback to the Promise
  * @template TT
- * @param {(error: E) => TT} onFail
+ * @param {(error: E) => TT | PromiseLike<TT>} onFail
  * @returns {Promise<T | TT>} promise
  */
 Promise.prototype['catch'] = function (onFail) {
