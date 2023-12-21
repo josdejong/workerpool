@@ -46,7 +46,7 @@ wp.pool({
         workerThreadOpts,
     }),
 });
-const pool = wp.pool();
+const pool: wp.Pool = wp.pool();
 pool.terminate()
     .then(() => pool.terminate())
     .then(() => pool.terminate())
@@ -83,7 +83,7 @@ pool.exec(hello, []).then((s: string) => s);
 
 const workers = { add, hello };
 type IWorkers = typeof workers;
-pool.proxy<IWorkers>().then(proxy => {
+pool.proxy<IWorkers>().then((proxy: wp.Proxy<IWorkers>) => {
     proxy.add(1, 2);
     proxy.hello();
 });
