@@ -1,10 +1,12 @@
 
 // source: https://github.com/flexdinesh/browser-or-node
+// source: https://github.com/mozilla/pdf.js/blob/7ea0e40e588864cd938d1836ec61f1928d3877d3/src/shared/util.js#L24
 var isNode = function (nodeProcess) {
   return (
     typeof nodeProcess !== 'undefined' &&
     nodeProcess.versions != null &&
-    nodeProcess.versions.node != null
+    nodeProcess.versions.node != null &&
+    nodeProcess + '' === '[object process]'
   );
 }
 module.exports.isNode = isNode
