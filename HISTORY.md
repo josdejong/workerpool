@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2023-12-22, version 9.0.4
+
+- Improve the logic to detect the Node.js platform (#421). Thanks @tamuratak.
+
+
 ## 2023-12-20, version 9.0.3
 
 - Improve types: unwrap Promise types (#419). Thanks @joshkel.
