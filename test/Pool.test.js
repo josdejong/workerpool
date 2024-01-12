@@ -187,6 +187,154 @@ describe('Pool', function () {
     });
   });
 
+  it('supports stdout capture via fork', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStdout: true});
+
+    var receivedEvent
+    pool.exec("stdout", [], {
+      on: function (payload) {
+        receivedEvent = payload
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvent, {
+        stdout: 'stdout message\n'
+      });
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('supports stderr capture via fork', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStderr: true});
+
+    var receivedEvent
+    pool.exec("stderr", [], {
+      on: function (payload) {
+        receivedEvent = payload
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvent, {
+        stderr: 'stderr message\n'
+      });
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  
+  it('supports partial capture via fork', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStderr: true});
+
+    var receivedEvent = null
+    pool.exec("stdout", [], {
+      on: function (payload) {
+        receivedEvent = payload
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.strictEqual(receivedEvent, null);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('supports stdout capture via threads', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStdout: true});
+
+    var receivedEvent
+    pool.exec("stdout", [], {
+      on: function (payload) {
+        receivedEvent = payload
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvent, {
+        stdout: 'stdout message\n'
+      });
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('supports stderr capture via threads', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStderr: true});
+
+    var receivedEvent
+    pool.exec("stderr", [], {
+      on: function (payload) {
+        receivedEvent = payload
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvent, {
+        stderr: 'stderr message\n'
+      });
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('supports partial capture via threads', function(done) {
+    // workerThreadOpts only used to hide console.error's from polluting test runner output
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStdout: true, workerThreadOpts: { stderr: true }});
+
+    var receivedEvent = null
+    pool.exec("stderr", [], {
+      on: function (payload) {
+        receivedEvent = payload
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.strictEqual(receivedEvent, null);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
   it('should offload a function to a worker', function (done) {
     var pool = createPool({maxWorkers: 10});
 
