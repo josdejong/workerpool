@@ -11,7 +11,7 @@ pool.exec('stdStreams', [], {
         console.log(`captured stdout: ${payload.stdout.trim()}`) // outputs 'captured stdout: stdout message'
       }
       if (payload.stderr) {
-        console.log(`captured stderr: ${payload.stderr.trim()}`) // output 'captured stderr: stderr message'
+        console.log(`captured stderr: ${payload.stderr.trim()}`) // outputs 'captured stderr: stderr message'
       }
     }})
     .then(function () {
