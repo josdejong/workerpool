@@ -54,9 +54,7 @@ function Pool(script, options) {
   this.onTerminateWorker = options.onTerminateWorker || (() => null);
 
   /** @readonly */
-  this.emitStderr = options.emitStderr || false
-  /** @readonly */
-  this.emitStdout = options.emitStdout || false
+  this.emitStdStreams = options.emitStdStreams || false
 
   // configuration
   if (options && 'maxWorkers' in options) {
@@ -431,8 +429,7 @@ Pool.prototype._createWorkerHandler = function () {
     debugPort: DEBUG_PORT_ALLOCATOR.nextAvailableStartingAt(this.debugPortStart),
     workerType: this.workerType,
     workerTerminateTimeout: this.workerTerminateTimeout,
-    emitStderr: this.emitStderr,
-    emitStdout: this.emitStdout
+    emitStdStreams: this.emitStdStreams,
   });
 }
 

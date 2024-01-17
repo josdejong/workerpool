@@ -186,120 +186,23 @@ describe('Pool', function () {
       assert(terminatedWorkers.includes('env_value2'), 'terminatedWorkers should include the value with counter = 2');
     });
   });
-
-  it('supports stdout capture via fork', function(done) {
-    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStdout: true});
-
-    var receivedEvent
-    pool.exec("stdout", [], {
-      on: function (payload) {
-        receivedEvent = payload
-      }
-    })
-    .then(function (result) {
-      assert.strictEqual(result, 'done');
-      assert.deepStrictEqual(receivedEvent, {
-        stdout: 'stdout message\n'
-      });
-
-      pool.terminate();
-      done();
-    })
-    .catch(function (err) {
-      console.log(err);
-      assert('Should not throw an error');
-      done(err);
-    });
-  })
-
-  it('supports stderr capture via fork', function(done) {
-    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStderr: true});
-
-    var receivedEvent
-    pool.exec("stderr", [], {
-      on: function (payload) {
-        receivedEvent = payload
-      }
-    })
-    .then(function (result) {
-      assert.strictEqual(result, 'done');
-      assert.deepStrictEqual(receivedEvent, {
-        stderr: 'stderr message\n'
-      });
-
-      pool.terminate();
-      done();
-    })
-    .catch(function (err) {
-      console.log(err);
-      assert('Should not throw an error');
-      done(err);
-    });
-  })
-
   
-  it('supports partial capture via fork', function(done) {
-    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStderr: true});
+  it('supports stdout/stderr capture via fork', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStdStreams: true});
 
-    var receivedEvent = null
-    pool.exec("stdout", [], {
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
       on: function (payload) {
-        receivedEvent = payload
+        receivedEvents.push(payload)
       }
     })
     .then(function (result) {
       assert.strictEqual(result, 'done');
-      assert.strictEqual(receivedEvent, null);
-
-      pool.terminate();
-      done();
-    })
-    .catch(function (err) {
-      console.log(err);
-      assert('Should not throw an error');
-      done(err);
-    });
-  })
-
-  it('supports stdout capture via threads', function(done) {
-    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStdout: true});
-
-    var receivedEvent
-    pool.exec("stdout", [], {
-      on: function (payload) {
-        receivedEvent = payload
-      }
-    })
-    .then(function (result) {
-      assert.strictEqual(result, 'done');
-      assert.deepStrictEqual(receivedEvent, {
+      assert.deepStrictEqual(receivedEvents, [{
         stdout: 'stdout message\n'
-      });
-
-      pool.terminate();
-      done();
-    })
-    .catch(function (err) {
-      console.log(err);
-      assert('Should not throw an error');
-      done(err);
-    });
-  })
-
-  it('supports stderr capture via threads', function(done) {
-    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStderr: true});
-
-    var receivedEvent
-    pool.exec("stderr", [], {
-      on: function (payload) {
-        receivedEvent = payload
-      }
-    })
-    .then(function (result) {
-      assert.strictEqual(result, 'done');
-      assert.deepStrictEqual(receivedEvent, {
+      }, {
         stderr: 'stderr message\n'
-      });
+      }]);
 
       pool.terminate();
       done();
@@ -311,19 +214,68 @@ describe('Pool', function () {
     });
   })
 
-  it('supports partial capture via threads', function(done) {
-    // workerThreadOpts only used to hide console.error's from polluting test runner output
-    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStdout: true, workerThreadOpts: { stderr: true }});
+  it('excludes stdout/stderr capture via fork', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process'});
 
-    var receivedEvent = null
-    pool.exec("stderr", [], {
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
       on: function (payload) {
-        receivedEvent = payload
+        receivedEvents.push(payload)
       }
     })
     .then(function (result) {
       assert.strictEqual(result, 'done');
-      assert.strictEqual(receivedEvent, null);
+      assert.deepStrictEqual(receivedEvents, []);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('supports stdout/stderr capture via threads', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStdStreams: true});
+
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
+      on: function (payload) {
+        receivedEvents.push(payload)
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvents, [{
+        stdout: 'stdout message\n'
+      }, {
+        stderr: 'stderr message\n'
+      }]);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('excludes stdout/stderr capture via threads', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads'});
+
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
+      on: function (payload) {
+        receivedEvents.push(payload)
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvents, []);
 
       pool.terminate();
       done();

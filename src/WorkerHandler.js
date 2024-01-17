@@ -111,8 +111,8 @@ function setupWorkerThreadWorker(script, WorkerThreads, options) {
   validateOptions(options?.workerThreadOpts, workerThreadOptsNames, 'workerThreadOpts')
 
   var worker = new WorkerThreads.Worker(script, {
-    stdout: options?.emitStdout ?? false, // pipe worker.STDOUT to process.STDOUT if not requested
-    stderr: options?.emitStderr ?? false,  // pipe worker.STDERR to process.STDERR if not requested
+    stdout: options?.emitStdStreams ?? false, // pipe worker.STDOUT to process.STDOUT if not requested
+    stderr: options?.emitStdStreams ?? false,  // pipe worker.STDERR to process.STDERR if not requested
     ...options?.workerThreadOpts
   });
   worker.isWorkerThread = true;
@@ -129,10 +129,8 @@ function setupWorkerThreadWorker(script, WorkerThreads, options) {
     this.terminate();
   };
 
-  if (options?.emitStdout) {
+  if (options?.emitStdStreams) {
     worker.stdout.on('data', (data) => worker.emit("stdout", data))
-  }
-  if (options?.emitStderr) {
     worker.stderr.on('data', (data) => worker.emit("stderr", data))
   }
 
@@ -156,10 +154,8 @@ function setupProcessWorker(script, options, child_process) {
     return send.call(worker, message);
   };
 
-  if (options.emitStdout) {
+  if (options.emitStdStreams) {
     worker.stdout.on('data', (data) => worker.emit("stdout", data))
-  }
-  if (options.emitStderr) {
     worker.stderr.on('data', (data) => worker.emit("stderr", data))
   }
 
@@ -195,7 +191,7 @@ function resolveForkOptions(opts) {
     forkOpts: Object.assign({}, opts.forkOpts, {
       execArgv: (opts.forkOpts && opts.forkOpts.execArgv || [])
       .concat(execArgv),
-      stdio: opts.emitStdout || opts.emitStderr ? "pipe": undefined
+      stdio: opts.emitStdStreams ? "pipe": undefined
     })
   });
 }
