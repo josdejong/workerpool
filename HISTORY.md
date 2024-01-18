@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2024-01-18, version 9.1.0
+
+- Support capturing the stdout/stderr streams from the workers (#425, #423).
+  Thanks @cpendery.
+
+
 ## 2023-12-22, version 9.0.4
 
 - Improve the logic to detect the Node.js platform (#421). Thanks @tamuratak.
