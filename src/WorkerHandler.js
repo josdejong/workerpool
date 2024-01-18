@@ -67,7 +67,7 @@ function setupWorker(script, options) {
     return setupBrowserWorker(script, options.workerOpts, Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
-    return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
+    return setupWorkerThreadWorker(script, WorkerThreads, options);
   } else if (options.workerType === 'process' || !options.workerType) { // node.js only
     return setupProcessWorker(script, resolveForkOptions(options), require('child_process'));
   } else { // options.workerType === 'auto' or undefined
@@ -78,7 +78,7 @@ function setupWorker(script, options) {
     else { // environment.platform === 'node'
       var WorkerThreads = tryRequireWorkerThreads();
       if (WorkerThreads) {
-        return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
+        return setupWorkerThreadWorker(script, WorkerThreads, options);
       } else {
         return setupProcessWorker(script, resolveForkOptions(options), require('child_process'));
       }
@@ -106,14 +106,14 @@ function setupBrowserWorker(script, workerOpts, Worker) {
   return worker;
 }
 
-function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
+function setupWorkerThreadWorker(script, WorkerThreads, options) {
   // validate the options right before creating the worker thread (not when creating the pool)
-  validateOptions(workerThreadOptions, workerThreadOptsNames, 'workerThreadOpts')
+  validateOptions(options?.workerThreadOpts, workerThreadOptsNames, 'workerThreadOpts')
 
   var worker = new WorkerThreads.Worker(script, {
-    stdout: false, // automatically pipe worker.STDOUT to process.STDOUT
-    stderr: false,  // automatically pipe worker.STDERR to process.STDERR
-    ...workerThreadOptions
+    stdout: options?.emitStdStreams ?? false, // pipe worker.STDOUT to process.STDOUT if not requested
+    stderr: options?.emitStdStreams ?? false,  // pipe worker.STDERR to process.STDERR if not requested
+    ...options?.workerThreadOpts
   });
   worker.isWorkerThread = true;
   worker.send = function(message, transfer) {
@@ -128,6 +128,11 @@ function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
   worker.disconnect = function() {
     this.terminate();
   };
+
+  if (options?.emitStdStreams) {
+    worker.stdout.on('data', (data) => worker.emit("stdout", data))
+    worker.stderr.on('data', (data) => worker.emit("stderr", data))
+  }
 
   return worker;
 }
@@ -148,6 +153,11 @@ function setupProcessWorker(script, options, child_process) {
   worker.send = function (message) {
     return send.call(worker, message);
   };
+
+  if (options.emitStdStreams) {
+    worker.stdout.on('data', (data) => worker.emit("stdout", data))
+    worker.stderr.on('data', (data) => worker.emit("stderr", data))
+  }
 
   worker.isChildProcess = true;
   return worker;
@@ -180,7 +190,8 @@ function resolveForkOptions(opts) {
     forkArgs: opts.forkArgs,
     forkOpts: Object.assign({}, opts.forkOpts, {
       execArgv: (opts.forkOpts && opts.forkOpts.execArgv || [])
-      .concat(execArgv)
+      .concat(execArgv),
+      stdio: opts.emitStdStreams ? "pipe": undefined
     })
   });
 }
@@ -199,6 +210,17 @@ function objectToError (obj) {
   }
 
   return temp
+}
+
+function handleEmittedStdPayload(handler, payload) {
+  // TODO: refactor if parallel task execution gets added
+  if (Object.keys(handler.processing).length !== 1) {
+    return;
+  }
+  var task = Object.values(handler.processing)[0]
+  if (task.options && typeof task.options.on === 'function') {
+    task.options.on(payload);
+  }
 }
 
 /**
@@ -229,6 +251,14 @@ function WorkerHandler(script, _options) {
 
   // queue for requests that are received before the worker is ready
   this.requestQueue = [];
+
+  this.worker.on("stdout", function (data) {
+    handleEmittedStdPayload(me, {"stdout": data.toString()})
+  })
+  this.worker.on("stderr", function (data) {
+    handleEmittedStdPayload(me, {"stderr": data.toString()})
+  })
+
   this.worker.on('message', function (response) {
     if (me.terminated) {
       return;
