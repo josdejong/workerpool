@@ -34,6 +34,8 @@ function Pool(script, options) {
   /** @readonly */
   this.workerOpts = Object.freeze(options.workerOpts || {});
   /** @readonly */
+  this.webWorker = options.webWorker || null;
+  /** @readonly */
   this.workerThreadOpts = Object.freeze(options.workerThreadOpts || {})
   /** @private */
   this.debugPortStart = (options.debugPortStart || 43210);
@@ -430,6 +432,7 @@ Pool.prototype._createWorkerHandler = function () {
     workerType: this.workerType,
     workerTerminateTimeout: this.workerTerminateTimeout,
     emitStdStreams: this.emitStdStreams,
+    webWorker: this.webWorker
   });
 }
 
