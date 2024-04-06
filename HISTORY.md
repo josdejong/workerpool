@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2024-04-06, version 9.1.1
+
+- Fix: events not emitted when using (#439). Thanks @t0oF-azpn.
+
+
 ## 2024-01-18, version 9.1.0
 
 - Support capturing the stdout/stderr streams from the workers (#425, #423).
