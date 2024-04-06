@@ -64,7 +64,7 @@ function getDefaultWorker() {
 function setupWorker(script, options) {
   if (options.workerType === 'web') { // browser only
     ensureWebWorker();
-    return setupBrowserWorker(script, options.workerOpts, Worker);
+    return setupBrowserWorker(script, options.workerOpts, Worker, options.webWorker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
     return setupWorkerThreadWorker(script, WorkerThreads, options);
@@ -73,7 +73,7 @@ function setupWorker(script, options) {
   } else { // options.workerType === 'auto' or undefined
     if (environment.platform === 'browser') {
       ensureWebWorker();
-      return setupBrowserWorker(script, options.workerOpts, Worker);
+      return setupBrowserWorker(script, options.workerOpts, Worker, options.webWorker);
     }
     else { // environment.platform === 'node'
       var WorkerThreads = tryRequireWorkerThreads();
@@ -86,12 +86,11 @@ function setupWorker(script, options) {
   }
 }
 
-function setupBrowserWorker(script, workerOpts, Worker) {
+function setupBrowserWorker(script, workerOpts, Worker, existingWorker) {
   // validate the options right before creating the worker (not when creating the pool)
   validateOptions(workerOpts, workerOptsNames, 'workerOpts')
-
   // create the web worker
-  var worker = new Worker(script, workerOpts);
+  var worker = existingWorker || new Worker(script, workerOpts);
 
   worker.isBrowserWorker = true;
   // add node.js API to the web worker
