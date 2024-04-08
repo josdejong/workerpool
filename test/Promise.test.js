@@ -183,6 +183,30 @@ describe ('Promise', function () {
 
   });
 
+  describe('finally', function () {
+    it('should call finally when resolved', function(done) {
+      new Promise(function(resolve, reject) {
+        setImmediate(resolve, 0);
+      }).then(() => {
+        assert.ok(true, "should call then on resolve");
+      }).finally(() => {
+        assert.ok(true, "should call finally after resolve");
+        done();
+      });
+    });
+
+    it('should call finally when rejected', function(done) {
+      new Promise(function(resolve, reject) {
+        setImmediate(() => {reject(new Error("My Error"))}, 0);
+      }).catch((err) => {
+        assert.strictEqual(err.toString(), "My Error");
+      }).finally(() => {
+        assert.ok(true, "should call finally after resolve");
+        done();
+      });
+    });
+  });
+
   describe('always', function () {
     it('should call always when resolved', function (done) {
       var promise = new Promise(function (resolve, reject) {
