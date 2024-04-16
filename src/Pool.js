@@ -1,7 +1,7 @@
-var {Promise} = require('./Promise');
 var WorkerHandler = require('./WorkerHandler');
 var environment = require('./environment');
 var DebugPortAllocator = require('./debug-port-allocator');
+var EventEmitter = require('events');
 var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
 /**
  * A pool to manage workers, which can be created using the function workerpool.pool.
@@ -19,14 +19,14 @@ function Pool(script, options) {
     this.script = null;
     options = script;
   }
-
+  
   /** @private */
   this.workers = [];  // queue with all workers
   /** @private */
-  this.tasks = [];    // queue with tasks awaiting execution
+
 
   options = options || {};
-
+  this.event  = new EventEmitter()
   /** @readonly */
   this.forkArgs = Object.freeze(options.forkArgs || []);
   /** @readonly */
@@ -78,10 +78,6 @@ function Pool(script, options) {
     this._ensureMinWorkers();
   }
 
-  /** @private */
-  this._boundNext = this._next.bind(this);
-
-
   if (this.workerType === 'thread') {
     WorkerHandler.ensureWorkerThreads();
   }
@@ -125,44 +121,15 @@ Pool.prototype.exec = function (method, params, options) {
   if (params && !Array.isArray(params)) {
     throw new TypeError('Array expected as argument "params"');
   }
-
   if (typeof method === 'string') {
-    var resolver = Promise.defer();
-
-    if (this.tasks.length >= this.maxQueueSize) {
-      throw new Error('Max queue size of ' + this.maxQueueSize + ' reached');
-    }
-
-    // add a new task to the queue
-    var tasks = this.tasks;
-    var task = {
-      method:  method,
-      params:  params,
-      resolver: resolver,
-      timeout: null,
-      options: options
-    };
-    tasks.push(task);
-
-    // replace the timeout method of the Promise with our own,
-    // which starts the timer as soon as the task is actually started
-    var originalTimeout = resolver.promise.timeout;
-    resolver.promise.timeout = function timeout (delay) {
-      if (tasks.indexOf(task) !== -1) {
-        // task is still queued -> start the timer later on
-        task.timeout = delay;
-        return resolver.promise;
+    return new Promise((resolve, reject)=>{
+      var worker = this._getWorker();
+      if(worker){
+        worker.exec(method, params, {resolve,reject}, options)
+      }else{
+        reject(new Error('No worker available'))
       }
-      else {
-        // task is already being executed -> start timer immediately
-        return originalTimeout.call(resolver.promise, delay);
-      }
-    };
-
-    // trigger task execution
-    this._next();
-
-    return resolver.promise;
+    })
   }
   else if (typeof method === 'function') {
     // send stringified function and function arguments to worker
@@ -183,7 +150,6 @@ Pool.prototype.proxy = function () {
   if (arguments.length > 0) {
     throw new Error('No arguments expected');
   }
-
   var pool = this;
   return this.exec('methods')
       .then(function (methods) {
@@ -199,62 +165,6 @@ Pool.prototype.proxy = function () {
       });
 };
 
-/**
- * Creates new array with the results of calling a provided callback function
- * on every element in this array.
- * @param {Array} array
- * @param {function} callback  Function taking two arguments:
- *                             `callback(currentValue, index)`
- * @return {Promise.<Array>} Returns a promise which resolves  with an Array
- *                           containing the results of the callback function
- *                           executed for each of the array elements.
- */
-/* TODO: implement map
-Pool.prototype.map = function (array, callback) {
-};
-*/
-
-/**
- * Grab the first task from the queue, find a free worker, and assign the
- * worker to the task.
- * @private
- */
-Pool.prototype._next = function () {
-  if (this.tasks.length > 0) {
-    // there are tasks in the queue
-
-    // find an available worker
-    var worker = this._getWorker();
-    if (worker) {
-      // get the first task from the queue
-      var me = this;
-      var task = this.tasks.shift();
-
-      // check if the task is still pending (and not cancelled -> promise rejected)
-      if (task.resolver.promise.pending) {
-        // send the request to the worker
-        var promise = worker.exec(task.method, task.params, task.resolver, task.options)
-          .then(me._boundNext)
-          .catch(function () {
-            // if the worker crashed and terminated, remove it from the pool
-            if (worker.terminated) {
-              return me._removeWorker(worker);
-            }
-          }).then(function() {
-            me._next(); // trigger next task in the queue
-          });
-
-        // start queued timer now
-        if (typeof task.timeout === 'number') {
-          promise.timeout(task.timeout);
-        }
-      } else {
-        // The task taken was already complete (either rejected or resolved), so just trigger next task in the queue
-        me._next();
-      }
-    }
-  }
-};
 
 /**
  * Get an available worker. If no worker is available and the maximum number
@@ -270,9 +180,7 @@ Pool.prototype._getWorker = function() {
   var workers = this.workers;
   for (var i = 0; i < workers.length; i++) {
     var worker = workers[i];
-    if (worker.busy() === false) {
-      return worker;
-    }
+    return worker;
   }
 
   if (workers.length < this.maxWorkers) {
@@ -345,11 +253,7 @@ Pool.prototype._removeWorkerFromList = function(worker) {
 Pool.prototype.terminate = function (force, timeout) {
   var me = this;
 
-  // cancel any pending tasks
-  this.tasks.forEach(function (task) {
-    task.resolver.reject(new Error('Pool terminated'));
-  });
-  this.tasks.length = 0;
+
 
   var f = function (worker) {
     DEBUG_PORT_ALLOCATOR.releasePort(worker.debugPort);
@@ -362,7 +266,7 @@ Pool.prototype.terminate = function (force, timeout) {
   workers.forEach(function (worker) {
     var termPromise = worker.terminateAndNotify(force, timeout)
       .then(removeWorker)
-      .always(function() {
+      .finally(function() {
         me.onTerminateWorker({
           forkArgs: worker.forkArgs,
           forkOpts: worker.forkOpts,
@@ -389,9 +293,6 @@ Pool.prototype.stats = function () {
     totalWorkers:  totalWorkers,
     busyWorkers:   busyWorkers,
     idleWorkers:   totalWorkers - busyWorkers,
-
-    pendingTasks:  this.tasks.length,
-    activeTasks:   busyWorkers
   };
 };
 
@@ -430,9 +331,13 @@ Pool.prototype._createWorkerHandler = function () {
     workerType: this.workerType,
     workerTerminateTimeout: this.workerTerminateTimeout,
     emitStdStreams: this.emitStdStreams,
+    event: this.event
   });
 }
 
+Pool.prototype.on = function (event, callback) {
+  this.event.on(event, callback);
+}
 /**
  * Ensure that the maxWorkers option is an integer >= 1
  * @param {*} maxWorkers

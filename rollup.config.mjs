@@ -4,6 +4,7 @@ import babel from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
 import format from 'date-format'
 import terser from '@rollup/plugin-terser';
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 import { defineConfig } from 'rollup'
 const packages = fse.readJSONSync("./package.json");
 function createBanner() {
@@ -26,6 +27,7 @@ const commonPlugin = [
     commonjs({
         ignore: ['os', 'worker_threads', 'child_process']
     }),
+    nodePolyfills(),
     babel({
         extensions: [".js", ".ts"],
         babelHelpers: "bundled",

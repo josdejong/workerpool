@@ -1,6 +1,5 @@
 'use strict';
 
-var {Promise} = require('./Promise');
 var environment = require('./environment');
 const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} = require("./validateOptions");
 
@@ -243,6 +242,7 @@ function WorkerHandler(script, _options) {
   this.workerOpts = options.workerOpts;
   this.workerThreadOpts = options.workerThreadOpts
   this.workerTerminateTimeout = options.workerTerminateTimeout;
+  this.event = options.event;
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
@@ -272,9 +272,7 @@ function WorkerHandler(script, _options) {
       var task = me.processing[id];
       if (task !== undefined) {
         if (response.isEvent) {
-          if (task.options && typeof task.options.on === 'function') {
-            task.options.on(response.payload);
-          }
+          this.event?.emit(response.payload.event,response.payload.data)
         } else {
           // remove the task from the queue
           delete me.processing[id];
@@ -292,6 +290,10 @@ function WorkerHandler(script, _options) {
           else {
             task.resolver.resolve(response.result);
           }
+        }
+      } else {
+        if(response.isEvent){
+          this.event?.emit(response.payload.event,response.payload.data)
         }
       }
     }
@@ -349,8 +351,8 @@ function WorkerHandler(script, _options) {
  * Get a list with methods available on the worker.
  * @return {Promise.<String[], Error>} methods
  */
-WorkerHandler.prototype.methods = function () {
-  return this.exec('methods');
+WorkerHandler.prototype.methods = function (resolver) {
+  return this.exec('methods',[],resolver);
 };
 
 /**
@@ -362,10 +364,7 @@ WorkerHandler.prototype.methods = function () {
  * @return {Promise.<*, Error>} result
  */
 WorkerHandler.prototype.exec = function(method, params, resolver, options) {
-  if (!resolver) {
-    resolver = Promise.defer();
-  }
-
+ 
   // generate a unique id for the task
   var id = ++this.lastId;
 
@@ -395,25 +394,6 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
     this.requestQueue.push(request);
   }
 
-  // on cancellation, force the worker to terminate
-  var me = this;
-  return resolver.promise.catch(function (error) {
-    if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
-      // remove this task from the queue. It is already rejected (hence this
-      // catch event), and else it will be rejected again when terminating
-      delete me.processing[id];
-
-      // terminate worker
-      return me.terminateAndNotify(true)
-        .then(function() {
-          throw error;
-        }, function(err) {
-          throw err;
-        });
-    } else {
-      throw error;
-    }
-  })
 };
 
 /**
@@ -525,18 +505,15 @@ WorkerHandler.prototype.terminate = function (force, callback) {
  * @return {Promise.<WorkerHandler, Error>}
  */
 WorkerHandler.prototype.terminateAndNotify = function (force, timeout) {
-  var resolver = Promise.defer();
-  if (timeout) {
-    resolver.promise.timeout(timeout);
-  }
-  this.terminate(force, function(err, worker) {
-    if (err) {
-      resolver.reject(err);
-    } else {
-      resolver.resolve(worker);
-    }
+  return new Promise((resolve, reject) => {
+    this.terminate(force, function(err, worker) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(worker);
+      }
+    });
   });
-  return resolver.promise;
 };
 
 module.exports = WorkerHandler;

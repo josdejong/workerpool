@@ -232,22 +232,22 @@ worker.register = function (methods, options) {
 };
 
 worker.emit = function (payload) {
-  if (currentRequestId) {
-    if (payload instanceof Transfer) {
-      worker.send({
-        id: currentRequestId,
-        isEvent: true,
-        payload: payload.message
-      }, payload.transfer);
-      return;
-    }
-
+  
+  if (payload instanceof Transfer) {
     worker.send({
       id: currentRequestId,
       isEvent: true,
-      payload
-    });
+      payload: payload.message
+    }, payload.transfer);
+    return;
   }
+
+  worker.send({
+    id: currentRequestId,
+    isEvent: true,
+    payload
+  });
+  
 };
 
 if (typeof exports !== 'undefined') {

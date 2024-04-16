@@ -50,9 +50,6 @@ function workerEmit(payload) {
 };
 exports.workerEmit = workerEmit;
 
-const {Promise} = require('./Promise');
-exports.Promise = Promise;
-
 exports.Transfer = require('./transfer');
 
 exports.platform = platform;
