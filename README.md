@@ -2,7 +2,7 @@
 
 **workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** basically implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern). There is a pool of workers to execute tasks. New tasks are put in a queue. A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
-**workerpool** runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
+**workerpool** runs on Node.js and in the browser.
 
 ## Features
 
