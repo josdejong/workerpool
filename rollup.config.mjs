@@ -29,6 +29,7 @@ const commonPlugin = [
     babel({
         extensions: [".js", ".ts"],
         babelHelpers: "bundled",
+        presets: ['@babel/env']
     }),
 ];
 const commonOutput = {
