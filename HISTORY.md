@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2024-06-04, version 9.1.2
+
+- Fix: #446 ensure the library can be used with older browsers.
+
+
 ## 2024-04-06, version 9.1.1
 
 - Fix: events not emitted when using (#439). Thanks @t0oF-azpn.
