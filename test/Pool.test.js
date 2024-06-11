@@ -1315,6 +1315,18 @@ describe('Pool', function () {
     });
   });
 
+  it('should not terminate worker if abort listener is defined',async function () {
+    var pool = createPool(__dirname + '/workers/cleanup-abort.js');
+    
+    const handler = await pool.exec('asyncTimeout');
+
+    await handler.timeout(200);
+    
+    console.log(pool.stats);
+    pool.terminate();
+    done();
+  });
+
   describe('validate', () => {
     it('should not allow unknown properties in forkOpts', function() {
       var pool = createPool({
