@@ -55,6 +55,11 @@ exports.Promise = Promise;
 
 exports.Transfer = require('./transfer');
 
+exports.addAbortListener = function (listener) {
+  var worker = require('./worker');
+  worker.addAbortListener(listener);
+}
+
 exports.platform = platform;
 exports.isMainThread = isMainThread;
 exports.cpus = cpus;

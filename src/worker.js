@@ -112,6 +112,8 @@ worker.methods.methods = function methods() {
  */
 worker.terminationHandler = undefined;
 
+worker.onAbort = undefined;
+
 /**
  * Cleanup and exit the worker.
  * @param {Number} code 
@@ -121,16 +123,28 @@ worker.cleanupAndExit = function(code) {
   var _exit = function() {
     worker.exit(code);
   }
-
-  if(!worker.terminationHandler) {
-    return _exit();
+  var _abort = function() {
+    worker.onAbort = undefined;
   }
 
-  var result = worker.terminationHandler(code);
-  if (isPromise(result)) {
-    result.then(_exit, _exit);
+  if (worker.onAbort) {
+    let handler = worker.onAbort();
+    if(isPromise(handler)) {
+      handler.then(_abort);
+    } else {
+      _abort();
+    }
   } else {
-    _exit();
+    if(!worker.terminationHandler) {
+      return _exit();
+    }
+    
+    var result = worker.terminationHandler(code);
+    if (isPromise(result)) {
+      result.then(_exit, _exit);
+    } else {
+      _exit();
+    }
   }
 }
 
@@ -253,4 +267,7 @@ worker.emit = function (payload) {
 if (typeof exports !== 'undefined') {
   exports.add = worker.register;
   exports.emit = worker.emit;
+  exports.addAbortListener = function(listener) {
+    worker.onAbort = listener;
+  };
 }
