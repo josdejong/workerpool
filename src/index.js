@@ -55,6 +55,12 @@ exports.Promise = Promise;
 
 exports.Transfer = require('./transfer');
 
+/**
+ * Registers a handler for worker timeout / cancelation
+ * which will be run to cleanup a given worker.
+ * Allowing cleanup to resolve with out worker termination
+ * @param {() => Promise<void>} listener 
+ */
 exports.addAbortListener = function (listener) {
   var worker = require('./worker');
   worker.addAbortListener(listener);

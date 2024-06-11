@@ -112,6 +112,9 @@ worker.methods.methods = function methods() {
  */
 worker.terminationHandler = undefined;
 
+/**
+ * abort listener for handling worker timeout / canceling
+ */
 worker.onAbort = undefined;
 
 /**
