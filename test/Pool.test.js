@@ -1315,16 +1315,20 @@ describe('Pool', function () {
     });
   });
 
-  it('should not terminate worker if abort listener is defined',async function () {
+  it('should not terminate worker if abort listener is defined', function () {
     var pool = createPool(__dirname + '/workers/cleanup-abort.js');
     
-    const handler = await pool.exec('asyncTimeout');
-
-    await handler.timeout(200);
-    
-    console.log(pool.stats);
-    pool.terminate();
-    done();
+    pool.exec('asyncTimeout', [])
+    .timeout(200)
+    .catch((err) => {
+      assert(err instanceof Promise.TimeoutError);
+      // We should still have a busy worker since the worker should still be
+      // active and the promise chain for the timeout has yet to resolve
+      // which keeps the task active.
+      assert(pool.stats().busyWorkers === 1);
+      pool.terminate();
+      done();
+    });
   });
 
   describe('validate', () => {

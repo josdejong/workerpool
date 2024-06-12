@@ -16,6 +16,6 @@ function asyncTimeout() {
 // create a worker and register public functions
 workerpool.worker(
   {
-    asyncAdd: asyncAdd,
+    asyncTimeout: asyncTimeout,
   }
 );
