@@ -95,7 +95,8 @@ worker.methods = {};
  * @returns {*}
  */
 worker.methods.run = function run(fn, args) {
-  var f = new Function('return (' + fn + ').apply(null, arguments);');
+  var f = new Function('return (' + fn + ').apply(this, arguments);');
+  f.worker = _buildMethodWorkerApi();
   return f.apply(f, args);
 };
 
@@ -112,10 +113,13 @@ worker.methods.methods = function methods() {
  */
 worker.terminationHandler = undefined;
 
+worker.abortListenerTimeout = 1000;
+
 /**
- * abort listener for handling worker timeout / canceling
+ * Abort handlers for resolving errors which may cause a timeout or cancellation
+ * to occur from a worker context
  */
-worker.onAbort = undefined;
+worker.abortListeners = [];
 
 /**
  * Cleanup and exit the worker.
@@ -127,16 +131,19 @@ worker.cleanupAndExit = function(code) {
     worker.exit(code);
   }
   var _abort = function() {
-    worker.onAbort = undefined;
+    worker.abortListeners = [];
   }
 
-  if (worker.onAbort) {
-    let handler = worker.onAbort();
-    if(isPromise(handler)) {
-      handler.then(_abort);
-    } else {
-      _abort();
-    }
+  if (worker.abortListeners.length) {
+    const promises = worker.abortListeners.map((listener) => listener());
+    const settlePromise = Promise.allSettled(promises).then(_abort);
+    const timeoutPromise = new Promise((resolve) => {
+      setTimeout(resolve, this.abortListenerTimeout);
+    }).then(_exit);
+    Promise.race([
+          settlePromise,
+          timeoutPromise
+    ]).catch(_exit);
   } else {
     if(!worker.terminationHandler) {
       return _exit();
@@ -237,12 +244,15 @@ worker.register = function (methods, options) {
     for (var name in methods) {
       if (methods.hasOwnProperty(name)) {
         worker.methods[name] = methods[name];
+        worker.methods[name].worker = _buildMethodWorkerApi();
       }
     }
   }
 
   if (options) {
     worker.terminationHandler = options.onTerminate;
+    // register listener timeout or default to 1 second
+    worker.abortListenerTimeout = options.abortListenerTimeout || 1000;
   }
 
   worker.send('ready');
@@ -267,10 +277,22 @@ worker.emit = function (payload) {
   }
 };
 
+/**
+ * Builds an api for attaching to a method for
+ * worker functionality availble from within a task context
+ * @returns {Object}
+ */
+function _buildMethodWorkerApi() {
+  var binding = {};
+  binding.addAbortListener = function(listener) {
+    worker.abortListeners.push(listener);
+  };
+  binding.emit = worker.emit;
+
+  return binding;
+}
+
 if (typeof exports !== 'undefined') {
   exports.add = worker.register;
   exports.emit = worker.emit;
-  exports.addAbortListener = function(listener) {
-    worker.onAbort = listener;
-  };
 }
