@@ -1315,10 +1315,83 @@ describe('Pool', function () {
     });
   });
 
-  it('should not terminate worker if abort listener is defined', function () {
-    var pool = createPool(__dirname + '/workers/cleanup-abort.js');
+  it('should not terminate worker if abort listener is defined dedicated worker', function () {
+    var workerCount = 0;
+    var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
+      maxWorkers: 1,
+      onCreateWorker: (opts) => {
+        workerCount += 1;
+      }
+    });
     
-    pool.exec('asyncTimeout', [])
+    pool.exec('asyncTimeout', [],  {
+    })
+    .timeout(200)
+    .catch((err) => {
+      assert(err instanceof Promise.TimeoutError);
+      // We should still have a busy worker since the worker should still be
+      // active and the promise chain for the timeout has yet to resolve
+      // which keeps the task active.
+      let stats = pool.stats();
+      assert(pool.stats().busyWorkers === 1);
+    }).then(() => { 
+      return pool.exec(add, [1, 2]) 
+    }).then((res) => {
+      assert.strictEqual(workerCount, 2);
+      pool.terminate();
+    });
+  });
+
+  it('should not terminate worker if abort listener is defined inline worker', function () {
+    var workerCount = 0;
+    var pool = createPool({
+      onCreateWorker: (opts) => {
+        workerCount += 1;
+      },
+      maxWorkers: 1,
+    });
+    function asyncTimeout() {
+      var me = this;
+      return new Promise((resolve) => {
+        let timeout = setTimeout(() => {
+            resolve();
+        }, 5000); 
+        me.worker.addAbortListener(async function () {
+            clearTimeout(timeout);
+            resolve();
+            return Promise.resolve();
+        });
+      });
+    }
+
+    pool.exec(asyncTimeout, [],  {
+    })
+    .timeout(200)
+    .catch((err) => {
+      assert(err instanceof Promise.TimeoutError);
+      // We should still have a busy worker since the worker should still be
+      // active and the promise chain for the timeout has yet to resolve
+      // which keeps the task active.
+      let stats = pool.stats();
+      assert(pool.stats().busyWorkers === 1);
+    }).then(() => { 
+      return pool.exec(add, [1, 2]) 
+    }).then((res) => {
+      assert.strictEqual(workerCount, 2);
+      pool.terminate();
+    });
+  });
+
+  it('should invoke timeout for abort handler if timeout period is reached', function () {
+    var workerCount = 0;
+    var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
+      maxWorkers: 1,
+      onCreateWorker: (opts) => {
+        workerCount += 1;
+      }
+    });
+  
+    pool.exec('asyncAbortHandlerNeverResolves', [])
     .timeout(200)
     .catch((err) => {
       assert(err instanceof Promise.TimeoutError);
@@ -1326,10 +1399,16 @@ describe('Pool', function () {
       // active and the promise chain for the timeout has yet to resolve
       // which keeps the task active.
       assert(pool.stats().busyWorkers === 1);
+    }).then(() => {
+      return pool.exec(add, [1, 1]);
+    }).then((res) => {
+      assert.strictEqual(workerCount, 2);
       pool.terminate();
-      done();
     });
   });
+
+
+
 
   describe('validate', () => {
     it('should not allow unknown properties in forkOpts', function() {

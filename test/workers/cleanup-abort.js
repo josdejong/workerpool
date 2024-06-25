@@ -1,21 +1,44 @@
 var workerpool = require("../..");
 
 function asyncTimeout() {
-    return new Promise(function (resolve) {
+  var me = this;
+  return new Promise((resolve) => {
+    let timeout = setTimeout(() => {
+        resolve();
+    }, 5000); 
 
-        let timeout = setTimeout(function () {
-            resolve();
-        }, 5000);
-        workerpool.addAbortListener(function () {
-            clearTimeout(timeout);
-            resolve();
-        });
+    me.worker.addAbortListener(async function () {
+
+        clearTimeout(timeout);
+        resolve();
+        await Promise.resolve();
     });
+  });
+}
+
+function asyncAbortHandlerNeverResolves() {
+  var me = this;
+  return new Promise((resolve) => {
+    let timeout = setTimeout(() => {
+        resolve();
+    }, 5000); 
+    me.worker.addAbortListener(function () {
+      return new Promise( function(res) {
+        clearTimeout(timeout);
+        setTimeout(res, 1000000000);
+      });
+
+    });
+  });
 }
 
 // create a worker and register public functions
 workerpool.worker(
   {
     asyncTimeout: asyncTimeout,
+    asyncAbortHandlerNeverResolves: asyncAbortHandlerNeverResolves,
+  },
+  {
+    abortListenerTimeout: 1000
   }
 );
