@@ -135,15 +135,18 @@ worker.cleanupAndExit = function(code) {
   }
 
   if (worker.abortListeners.length) {
-    const promises = worker.abortListeners.map((listener) => listener());
+    const promises = worker.abortListeners.filter((listener) => listener());
+
     const settlePromise = Promise.allSettled(promises).then(_abort);
     const timeoutPromise = new Promise((resolve) => {
-      setTimeout(resolve, this.abortListenerTimeout);
+      setTimeout(resolve, worker.abortListenerTimeout);
     }).then(_exit);
     Promise.race([
           settlePromise,
           timeoutPromise
-    ]).catch(_exit);
+    ]).catch((err) => {
+      _exit()
+    });
   } else {
     if(!worker.terminationHandler) {
       return _exit();
