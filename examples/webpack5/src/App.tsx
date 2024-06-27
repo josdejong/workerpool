@@ -40,15 +40,15 @@ function App() {
     const p = document.createElement('p')!;
     const promise = pool.exec('createArray', [size], { on: function (array) {
       const p = document.createElement('p');
-      p.innerHTML = `Array of size ${array.buffer.byteLength} bytes is created.`;
+      p.innerHTML = `Array of size ${array.buffer.byteLength} bytes is created in the worker.`;
       result.appendChild(p);
     }}).then(function (f) {
       const p = document.createElement('p');
       if (f) {
-        p.innerHTML = `${f} Ok. Array has been transferred.`;
+        p.innerHTML = 'Ok. Array has been transferred.';
       }
       else {
-        p.innerHTML = `${f}<b>Warning. Array has been cloned.<b>`;
+        p.innerHTML = '<b>Warning. Array has been cloned.<b>';
       }
       result.appendChild(p);
     }).catch(function (error) { 
@@ -62,7 +62,7 @@ function App() {
 
   return <div>
     <section>
-      Calculate fibonacci:
+      <h4>Calculate fibonacci:</h4>
       <input type="text" id="input" value={inputValue()} oninput={(e) => setInputValue(e.target.value)} />
       <input type="button" id="calculate" value="Calculate" onclick={calculate} />
 
@@ -75,9 +75,10 @@ function App() {
       <div id="results"></div>
     </section>
     <section>
-      Test transferring array from a worker:
+      <h4>Test transferring array from a worker:</h4>
+      Input array size:      
       <input type="text" id="inputArraySize" value={inputArraySize()} oninput={(e) => setArraySize(e.target.value)} />
-      <input type="button" id="createArray" value="Create!" onclick={createArray} />
+      <input type="button" id="createArray" value="Create array!" onclick={createArray} />
       <div id="arrayResults"></div>
     </section>
   </div>
