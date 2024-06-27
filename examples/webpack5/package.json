@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "solid-js": "^1.8.7",
-    "workerpool": "file:../../workerpool-9.99.0.tgz"
+    "workerpool": "^9.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.23.5",
