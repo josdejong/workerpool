@@ -4,7 +4,7 @@ import { WorkerUrl } from 'worker-url';
 function App() {
   const WorkerURL = new WorkerUrl(new URL('./worker/worker.ts', import.meta.url))
   const pool = workerpool.pool(WorkerURL.toString(), {
-    maxWorkers: 3,
+    maxWorkers: 4,
   });
 
 
@@ -31,21 +31,56 @@ function App() {
     };
     result.appendChild(a);
   };
+
+  const createArray = () => {
+    const size = parseInt(inputArraySize());
+    const results = document.getElementById('arrayResults')!;
+    const result = document.createElement('div');
+    results.appendChild(result);
+    const p = document.createElement('p')!;
+    const promise = pool.exec('createArray', [size], { on: function (array) {
+      const p = document.createElement('p');
+      p.innerHTML = `Array of size ${array.buffer.byteLength} bytes is created.`;
+      result.appendChild(p);
+    }}).then(function (f) {
+      const p = document.createElement('p');
+      if (f) {
+        p.innerHTML = `${f} Ok. Array has been transferred.`;
+      }
+      else {
+        p.innerHTML = `${f}<b>Warning. Array has been cloned.<b>`;
+      }
+      result.appendChild(p);
+    }).catch(function (error) { 
+        result.innerHTML = `${error}`;
+    });
+
+  };
+
   const [inputValue, setInputValue] = createSignal('30')
-  return <section>
-    Calculate fibonacci:
-    <input type="text" id="input" value={inputValue()} oninput={(e) => setInputValue(e.target.value)} />
-    <input type="button" id="calculate" value="Calculate" onclick={calculate} />
+  const [inputArraySize, setArraySize] = createSignal('100')
 
-    <p>
-      Try entering values in the range of 10 to 50.
-      Verify that the browser stays responsive when working on a large calculation.
-      We have created 3 workers, so the worker pool will handle a maximum of three
-      tasks at a time. When exceeding this, tasks will be put in a queue.
-    </p>
+  return <div>
+    <section>
+      Calculate fibonacci:
+      <input type="text" id="input" value={inputValue()} oninput={(e) => setInputValue(e.target.value)} />
+      <input type="button" id="calculate" value="Calculate" onclick={calculate} />
 
-    <div id="results"></div>
-  </section>
+      <p>
+        Try entering values in the range of 10 to 50.
+        Verify that the browser stays responsive when working on a large calculation.
+        We have created 3 workers, so the worker pool will handle a maximum of three
+        tasks at a time. When exceeding this, tasks will be put in a queue.
+      </p>
+      <div id="results"></div>
+    </section>
+    <section>
+      Test transferring array from a worker:
+      <input type="text" id="inputArraySize" value={inputArraySize()} oninput={(e) => setArraySize(e.target.value)} />
+      <input type="button" id="createArray" value="Create!" onclick={createArray} />
+      <div id="arrayResults"></div>
+    </section>
+  </div>
 }
 
 export default App

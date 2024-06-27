@@ -8,8 +8,7 @@
     "build": "webpack --config webpack.config.cjs --mode=production"
   },
   "dependencies": {
-    "solid-js": "^1.8.7",
-    "workerpool": "8.0.0"
+    "solid-js": "^1.8.7"
   },
   "devDependencies": {
     "@babel/core": "^7.23.5",
