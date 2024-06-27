@@ -18,10 +18,10 @@ function isDetached (buffer: ArrayBuffer) : boolean {
   }
 }
 
-function createArray(size: number) : boolean | Uint8Array {
+function createArray(size: number) : boolean {
   const array = size > 0 ? new Uint8Array(size) : new Uint8Array();
   workerpool.workerEmit(new workerpool.Transfer(array, [array.buffer]));
-  return array; //isDetached(array.buffer);
+  return isDetached(array.buffer);
 }
 
 // create a worker and register public functions
