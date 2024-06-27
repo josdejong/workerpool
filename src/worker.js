@@ -25,8 +25,7 @@ if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof a
     })
   };
   worker.send = function (message, transfer) {
-     //transfer ? postMessage(message, transfer) : postMessage (message);
-     postMessage(message);
+     transfer ? postMessage(message, transfer) : postMessage (message);
   };
 }
 else if (typeof process !== 'undefined') {
