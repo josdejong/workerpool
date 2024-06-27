@@ -4,7 +4,7 @@ import { WorkerUrl } from 'worker-url';
 function App() {
   const WorkerURL = new WorkerUrl(new URL('./worker/worker.ts', import.meta.url))
   const pool = workerpool.pool(WorkerURL.toString(), {
-    maxWorkers: 4,
+    maxWorkers: 3,
   });
 
 
