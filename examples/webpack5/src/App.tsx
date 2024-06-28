@@ -115,7 +115,10 @@ function App() {
       <input type="text" id="input" value={verboseFibonacciInputValue()} oninput={(e) => setVerboseFibonacciInputValue(e.target.value)} />
       <input type="button" id="calculate" value="Calculate" onclick={calculateVerboseFibonacci} />
 
+      <p>Try entering values in the range of 15 to 30.</p>
+      <p>Feedback: </p>
       <div id={verboseFibonacciFeedbackTag}></div>
+      <p/>
       <div id={verboseFibonacciResultsTag}></div>
     </section>
     <section>
