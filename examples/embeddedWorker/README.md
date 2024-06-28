@@ -22,17 +22,16 @@ Then open app.html in your browser.
 
 ## How does it work?
 
-1.   The script worker.js is bundled into `dist/worker.bundle.js` using Webpack
-2.   From the worker bundle, a base64 encoded data url is created and stored in a JavaScript file `dist/worker.embedded.js`. This file looks like:
-     ```js
-     module.exports = 'data:application/javascript;base64,...';
-     ```
-3.   The file app.js loads the embedded worker and passes it to the worker pool like:
+1. The script worker.js is bundled into `dist/worker.bundle.js` using Webpack
+2. From the worker bundle, a base64 encoded data url is created and stored in a JavaScript file `dist/worker.embedded.js`. This file looks like:
+   ```js
+   module.exports = 'data:application/javascript;base64,...';
+   ```
+3. The file app.js loads the embedded worker and passes it to the worker pool like:
+   ```js
+   var workerDataUrl = require('./dist/worker.embedded');
 
-    ```js
-    var workerDataUrl = require('./dist/worker.embedded');
-
-    // create a worker pool
-    var pool = workerpool.pool(workerDataUrl);
-    ```
-4.  The application `app.js` is bundled using Webpack, and the bundle is loaded into app.html.
+   // create a worker pool
+   var pool = workerpool.pool(workerDataUrl);
+   ```
+4. The application `app.js` is bundled using Webpack, and the bundle is loaded into app.html.
