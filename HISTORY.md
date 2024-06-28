@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2024-06-28, version 9.1.3
+
+- Fix transferring from the worker (#455). Thanks @LeonidPolukhin.
+
+
 ## 2024-06-04, version 9.1.2
 
 - Fix: #446 ensure the library can be used with older browsers.
