@@ -1,7 +1,13 @@
 # Webpack5 Workerpool Example
 
+Warning: this example is based on the published `workerpool` package, and is not updated regularly.
+Make sure to use the up-to-date package using `workerpool@latest`.
+
+The following ensures the example uses latest `workerpool` package:
+
 ```bash
 $ npm install
+$ npm install workerpool@latest
 $ npm run start
 $ npm run build
 ```
@@ -51,18 +57,18 @@ The workerpool needs to be transformed to work properly in a webpack5 project. Y
    ```
 
 3. Implement the worker in `worker.ts`:
-    ```js
-    // worker.ts
+   ```js
+   // worker.ts
     import workerpool from 'workerpool'
-    
-    // a deliberately inefficient implementation of the fibonacci sequence
-    function fibonacci(n) {
-      if (n < 2) return n;
-      return fibonacci(n - 2) + fibonacci(n - 1);
-    }
 
-    // create a worker and register public functions
-    workerpool.worker({
+   // a deliberately inefficient implementation of the fibonacci sequence
+   function fibonacci(n) {
+     if (n < 2) return n;
+     return fibonacci(n - 2) + fibonacci(n - 1);
+   }
+
+   // create a worker and register public functions
+   workerpool.worker({
       fibonacci: fibonacci
-    });
-    ```
+   });
+   ```
