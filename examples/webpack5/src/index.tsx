@@ -1,7 +1,8 @@
-/* @refresh reload */
-import { render } from 'solid-js/web'
-import App from './App'
+import { createRoot } from "react-dom/client";
+import React from "react";
 
-const root = document.getElementById('app')
+import App from "./App";
 
-render(() => <App />, root!)
+const container = document.getElementById("app");
+const root = createRoot(container!);
+root.render(<App />);
