@@ -23,11 +23,15 @@ function asyncAbortHandlerNeverResolves() {
         resolve();
     }, 5000); 
     me.worker.addAbortListener(function () {
-      return new Promise( function(res) {
-        clearTimeout(timeout);
-        setTimeout(res, 1000000000);
+      clearTimeout(timeout);
+      return new Promise((res) => {
+        setTimeout(() => {
+          res();
+          resolve();
+        // set the timeout high so it will not resolve before the external
+        // timeout triggers and exits the worker 
+        }, 1000000000);
       });
-
     });
   });
 }
