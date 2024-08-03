@@ -10,6 +10,11 @@ var Transfer = require('./transfer');
  */
 var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 
+/**
+ * Special message by parent which causes a child process worker to perform cleaup
+ * steps before determining if the child process worker should be terminated.
+*/
+var CLEANUP_METHOD_ID = '__workerpool-cleanup__';
 // var nodeOSPlatform = require('./environment').nodeOSPlatform;
 
 // create a worker API for sending and receiving messages which works both on
@@ -130,35 +135,55 @@ worker.cleanupAndExit = function(code) {
   var _exit = function() {
     worker.exit(code);
   }
+
+  if(!worker.terminationHandler) {
+    return _exit();
+  }
+  
+  var result = worker.terminationHandler(code);
+  if (isPromise(result)) {
+    result.then(_exit, _exit);
+  } else {
+    _exit();
+  }
+}
+
+worker.tryCleanup = function() {
+  var _exit = function() {
+    worker.exit();
+  }
+
   var _abort = function() {
     worker.abortListeners = [];
   }
 
   if (worker.abortListeners.length) {
-    const promises = worker.abortListeners.filter((listener) => listener());
-
-    const settlePromise = Promise.allSettled(promises).then(_abort);
-    const timeoutPromise = new Promise((resolve) => {
-      setTimeout(resolve, worker.abortListenerTimeout);
-    }).then(_exit);
-    Promise.race([
-          settlePromise,
-          timeoutPromise
-    ]).catch((err) => {
-      _exit()
+    const promises = worker.abortListeners.map((listener) => {
+      return listener();
     });
-  } else {
-    if(!worker.terminationHandler) {
-      return _exit();
-    }
-    
-    var result = worker.terminationHandler(code);
-    if (isPromise(result)) {
-      result.then(_exit, _exit);
-    } else {
+
+    let timerId;
+    const timeoutPromise = new Promise((_resolve, reject) => {
+      timerId = setTimeout(() => {
+        reject(1);
+      }, worker.abortListenerTimeout);
+    });
+
+    const settlePromise = Promise.allSettled(promises).then(function() {
+      clearTimeout(timerId);
+      _abort();
+    }, function() {
+      clearTimeout(timerId);
       _exit();
-    }
+    });
+
+    return Promise.race([
+      settlePromise,
+      timeoutPromise
+    ]);
   }
+
+  return new Promise(function(_resolve, reject) { reject(); });
 }
 
 var currentRequestId = null;
@@ -166,6 +191,26 @@ var currentRequestId = null;
 worker.on('message', function (request) {
   if (request === TERMINATE_METHOD_ID) {
     return worker.cleanupAndExit(0);
+  }
+
+  if (request.method === CLEANUP_METHOD_ID) {
+    return worker.tryCleanup().then(function (result) {
+      worker.send({
+        id: request.id,
+        method: CLEANUP_METHOD_ID,
+        error: null,
+        result: result
+      });
+    }).catch(function(err) {
+      worker.send({
+        id: request.id,
+        method: CLEANUP_METHOD_ID,
+        error: convertError(err),
+        result: null
+      });
+
+      worker.exit();
+    });
   }
   try {
     var method = worker.methods[request.method];
@@ -199,7 +244,7 @@ worker.on('message', function (request) {
               worker.send({
                 id: request.id,
                 result: null,
-                error: convertError(err)
+                error: convertError(err),
               });
               currentRequestId = null;
             });

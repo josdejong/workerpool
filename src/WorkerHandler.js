@@ -10,6 +10,12 @@ const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} =
  */
 var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 
+/**
+ * Special message by parent which causes a child process worker to perform cleaup
+ * steps before determining if the child process worker should be terminated.
+ */
+var CLEANUP_METHOD_ID = '__workerpool-cleanup__';
+
 function ensureWorkerThreads() {
   var WorkerThreads = tryRequireWorkerThreads()
   if (!WorkerThreads) {
@@ -275,7 +281,7 @@ function WorkerHandler(script, _options) {
           if (task.options && typeof task.options.on === 'function') {
             task.options.on(response.payload);
           }
-        } else {
+	      } else {
           // remove the task from the queue
           delete me.processing[id];
 
@@ -293,6 +299,19 @@ function WorkerHandler(script, _options) {
             task.resolver.resolve(response.result);
           }
         }
+      }
+
+      if (response.method === CLEANUP_METHOD_ID) {
+        var trackedTask = me.tracking[response.id];
+        if (trackedTask !== undefined) {
+          if (response.error) {
+            trackedTask.resolver.reject(objectToError(response.error))
+          } else {
+            trackedTask.resolver.resolve(trackedTask.result);            
+          }
+          me.traking && clearTimeout(me.tracking[id].timeoutId);
+        }
+        delete me.tracking[id];
       }
     }
   });
@@ -337,7 +356,7 @@ function WorkerHandler(script, _options) {
   });
 
   this.processing = Object.create(null); // queue with tasks currently in progress
-
+  this.tracking = Object.create(null); // queue with tasks being monitored for cleanup status
   this.terminating = false;
   this.terminated = false;
   this.cleaning = false;
@@ -399,17 +418,34 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
   var me = this;
   return resolver.promise.catch(function (error) {
     if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
+      me.tracking[id] = {
+        id,
+        resolver: Promise.defer()
+      };
+      
       // remove this task from the queue. It is already rejected (hence this
       // catch event), and else it will be rejected again when terminating
       delete me.processing[id];
 
-      // terminate worker
-      return me.terminateAndNotify(true)
-        .then(function() {
-          throw error;
-        }, function(err) {
-          throw err;
-        });
+      me.tracking[id].resolver.promise = me.tracking[id].resolver.promise.catch(function(err) {
+        return me.terminateAndNotify(true)
+          .then(function() { 
+            throw err;
+          }, function(err) {
+            throw err;
+          }); 
+      });
+      
+      me.worker.send({
+        id,
+        method: CLEANUP_METHOD_ID 
+      });
+
+      me.tracking[id].timeoutId = setTimeout(function() {
+        me.tracking[id] && me.tracking[id].resolver.reject(error);
+      }, 1000);
+
+      return me.tracking[id].resolver.promise;
     } else {
       throw error;
     }
@@ -439,9 +475,12 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     for (var id in this.processing) {
       if (this.processing[id] !== undefined) {
         this.processing[id].resolver.reject(new Error('Worker terminated'));
+        
       }
     }
+
     this.processing = Object.create(null);
+    this.tracking = Object.create(null);
   }
 
   if (typeof callback === 'function') {
@@ -452,6 +491,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     var cleanup = function(err) {
       me.terminated = true;
       me.cleaning = false;
+
       if (me.worker != null && me.worker.removeAllListeners) {
         // removeAllListeners is only available for child_process
         me.worker.removeAllListeners('message');
