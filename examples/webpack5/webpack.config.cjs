@@ -1,11 +1,12 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WorkerUrlPlugin = require('worker-url/plugin');
+
 module.exports = {
     mode: "development",
     entry: path.resolve(__dirname, "./src/index.tsx"),
     output: {
-        filename: "[name].[hash:8].js",
+        filename: "[name].[fullhash:8].js",
         path: path.resolve(__dirname, "./dist"),
     },
     resolve: {
@@ -21,11 +22,18 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.tsx?/,
-                use: [
-                    'babel-loader'
-                ],
-                exclude: /node_moudles/
+                test: /\.(ts|js)x?$/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: [
+                            "@babel/preset-env",
+                            "@babel/preset-react",
+                            "@babel/preset-typescript",
+                        ],
+                    },
+                },
+                exclude: /node_modules/
             },
         ]
     },

@@ -55,6 +55,8 @@ To load workerpool in a web worker in the browser:
 importScripts('workerpool.js');
 ```
 
+Setting up the workerpool with React or webpack5 requires additional configuration steps, as outlined in the [webpack5 section](examples%2Fwebpack5%2FREADME.md).
+
 ## Use
 
 ### Offload functions dynamically
