@@ -5,6 +5,10 @@
 var Transfer = require('./transfer');
 
 /**
+ * worker must handle async cleanup handlers. Use custom Promise implementation. 
+*/
+var Promise = require('./Promise').Promise;
+/**
  * Special message sent by parent which causes the worker to terminate itself.
  * Not a "message object"; this string is the entire message.
  */
@@ -16,6 +20,9 @@ var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 */
 var CLEANUP_METHOD_ID = '__workerpool-cleanup__';
 // var nodeOSPlatform = require('./environment').nodeOSPlatform;
+
+
+var TIMEOUT_DEFAULT = 1_000;
 
 // create a worker API for sending and receiving messages which works both on
 // node.js and in the browser
@@ -154,22 +161,28 @@ worker.tryCleanup = function() {
   }
 
   var _abort = function() {
-    worker.abortListeners = [];
+    if (!worker.abortListeners.length) {
+      worker.abortListeners = [];
+    }
   }
 
   if (worker.abortListeners.length) {
-    const promises = worker.abortListeners.map((listener) => {
-      return listener();
-    });
+    let promises = [];
+    for (var i = 0; i < worker.abortListeners.length; i++) {
+      promises.push(
+        worker.abortListeners[i]()
+      )
+    }
 
     let timerId;
     const timeoutPromise = new Promise((_resolve, reject) => {
-      timerId = setTimeout(() => {
-        reject(1);
+      timerId = setTimeout(function() {
+        reject();
       }, worker.abortListenerTimeout);
     });
 
-    const settlePromise = Promise.allSettled(promises).then(function() {
+    // Once a promise settles we need to clear the timeout to prevet a rejection if the listeners resolved
+    const settlePromise = Promise.all(promises).then(function() {
       clearTimeout(timerId);
       _abort();
     }, function() {
@@ -177,12 +190,13 @@ worker.tryCleanup = function() {
       _exit();
     });
 
-    return Promise.race([
+    // Use Promise.all  
+    return Promise.all([
       settlePromise,
       timeoutPromise
     ]);
   }
-
+  // if there are no listeners just reject in a promise and let the worker cleanup start
   return new Promise(function(_resolve, reject) { reject(); });
 }
 
@@ -194,18 +208,18 @@ worker.on('message', function (request) {
   }
 
   if (request.method === CLEANUP_METHOD_ID) {
-    return worker.tryCleanup().then(function (result) {
+    return worker.tryCleanup().then(function () {
       worker.send({
         id: request.id,
         method: CLEANUP_METHOD_ID,
         error: null,
-        result: result
+        result: null
       });
     }).catch(function(err) {
       worker.send({
         id: request.id,
         method: CLEANUP_METHOD_ID,
-        error: convertError(err),
+        error: err ? convertError(err) : null,
         result: null
       });
 
@@ -298,9 +312,9 @@ worker.register = function (methods, options) {
   }
 
   if (options) {
-    worker.terminationHandler = options.onTerminate;
+    worker.terminationHandler = options.onTerminate || TIMEOUT_DEFAULT;
     // register listener timeout or default to 1 second
-    worker.abortListenerTimeout = options.abortListenerTimeout || 1000;
+    worker.abortListenerTimeout = options.abortListenerTimeout || TIMEOUT_DEFAULT;
   }
 
   worker.send('ready');
