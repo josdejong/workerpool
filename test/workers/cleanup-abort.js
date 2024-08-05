@@ -2,16 +2,14 @@ var workerpool = require("../..");
 
 function asyncTimeout() {
   var me = this;
-  return new Promise((resolve) => {
+  return new Promise(function (resolve) {
     let timeout = setTimeout(() => {
         resolve();
     }, 5000); 
 
     me.worker.addAbortListener(async function () {
-
         clearTimeout(timeout);
         resolve();
-        await Promise.resolve();
     });
   });
 }
@@ -30,7 +28,7 @@ function asyncAbortHandlerNeverResolves() {
           resolve();
         // set the timeout high so it will not resolve before the external
         // timeout triggers and exits the worker 
-        }, 1000000000);
+        }, 1_000_000_000);
       });
     });
   });
