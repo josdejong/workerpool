@@ -2,6 +2,7 @@
  * worker must be started as a child process or a web worker.
  * It listens for RPC messages from the parent process.
  */
+const { addAbortListener } = require('events');
 var Transfer = require('./transfer');
 
 /**
@@ -29,6 +30,21 @@ var TIMEOUT_DEFAULT = 1_000;
 var worker = {
   exit: function() {}
 };
+
+// api for in worker communication with parent process
+// works in both node.js and the browser
+var publicWorker = {
+  /**
+   * 
+   * @param {() => Promise<void>} listener 
+   */
+  addAbortListener: function(listener) {
+    worker.abortListeners.push(listener);
+  },
+
+  emit: worker.emit
+};
+
 if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
   // worker in the browser
   worker.on = function (event, callback) {
@@ -108,7 +124,7 @@ worker.methods = {};
  */
 worker.methods.run = function run(fn, args) {
   var f = new Function('return (' + fn + ').apply(this, arguments);');
-  f.worker = _buildMethodWorkerApi();
+  f.worker = publicWorker;
   return f.apply(f, args);
 };
 
@@ -181,7 +197,7 @@ worker.tryCleanup = function() {
       }, worker.abortListenerTimeout);
     });
 
-    // Once a promise settles we need to clear the timeout to prevet a rejection if the listeners resolved
+    // Once a promise settles we need to clear the timeout to prevet fulfulling the promise twice 
     const settlePromise = Promise.all(promises).then(function() {
       clearTimeout(timerId);
       _abort();
@@ -190,7 +206,7 @@ worker.tryCleanup = function() {
       _exit();
     });
 
-    // Use Promise.all  
+
     return Promise.all([
       settlePromise,
       timeoutPromise
@@ -213,14 +229,12 @@ worker.on('message', function (request) {
         id: request.id,
         method: CLEANUP_METHOD_ID,
         error: null,
-        result: null
       });
     }).catch(function(err) {
       worker.send({
         id: request.id,
         method: CLEANUP_METHOD_ID,
         error: err ? convertError(err) : null,
-        result: null
       });
 
       worker.exit();
@@ -306,7 +320,7 @@ worker.register = function (methods, options) {
     for (var name in methods) {
       if (methods.hasOwnProperty(name)) {
         worker.methods[name] = methods[name];
-        worker.methods[name].worker = _buildMethodWorkerApi();
+        worker.methods[name].worker = publicWorker;
       }
     }
   }
@@ -339,20 +353,6 @@ worker.emit = function (payload) {
   }
 };
 
-/**
- * Builds an api for attaching to a method for
- * worker functionality availble from within a task context
- * @returns {Object}
- */
-function _buildMethodWorkerApi() {
-  var binding = {};
-  binding.addAbortListener = function(listener) {
-    worker.abortListeners.push(listener);
-  };
-  binding.emit = worker.emit;
-
-  return binding;
-}
 
 if (typeof exports !== 'undefined') {
   exports.add = worker.register;
