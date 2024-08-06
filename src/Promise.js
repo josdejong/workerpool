@@ -142,7 +142,8 @@ function Promise(handler, parent) {
     }
     else {
       var timer = setTimeout(function () {
-        _reject(new TimeoutError('Promise timed out after ' + delay + ' ms'));
+        const error = new TimeoutError('Promise timed out after ' + delay + ' ms');
+        _reject(error);
       }, delay);
 
       me.always(function () {
