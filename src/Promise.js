@@ -142,7 +142,7 @@ function Promise(handler, parent) {
     }
     else {
       var timer = setTimeout(function () {
-        const error = new TimeoutError('Promise timed out after ' + delay + ' ms', delay);
+        const error = new TimeoutError('Promise timed out after ' + delay + ' ms');
         _reject(error);
       }, delay);
 
@@ -277,13 +277,11 @@ Promise.CancellationError = CancellationError;
 /**
  * Create a timeout error
  * @param {String} [message]
- * @param {Number} [delay]
  * @extends Error
  */
-function TimeoutError(message, delay) {
+function TimeoutError(message) {
   this.message = message || 'timeout exceeded';
   this.stack = (new Error()).stack;
-  this.delay = delay || 0;
 }
 
 TimeoutError.prototype = new Error();
