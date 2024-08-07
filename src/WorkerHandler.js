@@ -321,6 +321,11 @@ function WorkerHandler(script, _options) {
   // listen for worker messages error and exit
   this.worker.on('error', onError);
   this.worker.on('exit', function (exitCode, signalCode) {
+
+    if (exitCode === 0) {
+      return;
+    }
+    
     var message = 'Workerpool Worker terminated Unexpectedly\n';
 
     message += '    exitCode: `' + exitCode + '`\n';
