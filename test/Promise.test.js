@@ -183,30 +183,6 @@ describe ('Promise', function () {
 
   });
 
-  describe('finally', function () {
-    it('should call finally when resolved', function(done) {
-      new Promise(function(resolve, reject) {
-        setImmediate(resolve, 0);
-      }).then(() => {
-        assert.ok(true, "should call then on resolve");
-      }).finally(() => {
-        assert.ok(true, "should call finally after resolve");
-        done();
-      });
-    });
-
-    it('should call finally when rejected', function(done) {
-      new Promise(function(resolve, reject) {
-        setImmediate(() => {reject(new Error("My Error"))}, 0);
-      }).catch((err) => {
-        assert.strictEqual(err.toString(), "My Error");
-      }).finally(() => {
-        assert.ok(true, "should call finally after resolve");
-        done();
-      });
-    });
-  });
-
   describe('always', function () {
     it('should call always when resolved', function (done) {
       var promise = new Promise(function (resolve, reject) {
@@ -230,6 +206,42 @@ describe ('Promise', function () {
 
       promise.always(function (result) {
         assert.strictEqual(result, 'err');
+        done();
+      });
+    });
+  });
+
+  describe('finally', function () {
+    it('should call finally when resolved', function(done) {
+      var isFullfilled = false;
+      var finallyRan = false;
+      return new Promise(function(resolve, reject) {
+        resolve(); 
+      }).then(function () {
+        isFullfilled = true; 
+      }).finally(function(value) {
+        assert.ok(isFullfilled, "should call finally after resolve");
+        assert.equal(value, undefined);
+        finallyRan = true;
+      }).then(() => {
+        assert.equal(finallyRan, true);
+        done(); 
+      });
+    });
+
+    it('should call finally when rejected', function(done) {
+      var isFullfilled = false;
+      var finallyRan = false;
+      return new Promise(function(_resolve, reject) {
+        reject(new Error('An error has occured')); 
+      }).catch((_err) => {
+        isFullfilled = true; 
+      }).finally(function (value) {
+        assert.ok(isFullfilled, "should call finally after reject");
+        assert.equal(value, undefined);
+        finallyRan = true;
+      }).then(function () {
+        assert.equal(finallyRan, true);
         done();
       });
     });
