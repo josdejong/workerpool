@@ -2,7 +2,7 @@
 
 **workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** basically implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern). There is a pool of workers to execute tasks. New tasks are put in a queue. A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
-**workerpool** runs on node.js, Chrome, Firefox, Opera, Safari, and IE10+.
+**workerpool** runs on Node.js and in the browser.
 
 ## Features
 
@@ -54,6 +54,8 @@ To load workerpool in a web worker in the browser:
 ```js
 importScripts('workerpool.js');
 ```
+
+Setting up the workerpool with React or webpack5 requires additional configuration steps, as outlined in the [webpack5 section](examples%2Fwebpack5%2FREADME.md).
 
 ## Use
 
@@ -197,19 +199,22 @@ The following options are available:
 - `workerTerminateTimeout: number`. The timeout in milliseconds to wait for a worker to cleanup it's resources on termination before stopping it forcefully. Default value is `1000`.
 - `forkArgs: String[]`. For `process` worker type. An array passed as `args` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `forkOpts: Object`. For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options). See nodejs documentation for available options.
+- `workerOpts: Object`. For `web` worker type. An object passed to the [constructor of the web worker](https://html.spec.whatwg.org/multipage/workers.html#dom-worker). See [WorkerOptions specification](https://html.spec.whatwg.org/multipage/workers.html#workeroptions) for available options. 
 - `workerThreadOpts: Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options). See nodejs documentation for available options.
 - `onCreateWorker: Function`. A callback that is called whenever a worker is being created. It can be used to allocate resources for each worker for example. The callback is passed as argument an object with the following properties:
   - `forkArgs: String[]`: the `forkArgs` option of this pool
   - `forkOpts: Object`: the `forkOpts` option of this pool
+  - `workerOpts: Object`: the `workerOpts` option of this pool
   - `script: string`: the `script` option of this pool
     Optionally, this callback can return an object containing one or more of the above properties. The provided properties will be used to override the Pool properties for the worker being created.
 - `onTerminateWorker: Function`. A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated.
+- `emitStdStreams: boolean`. For `process` or `thread` worker type. If `true`, the worker will emit `stdout` and `stderr` events instead of passing it through to the parent streams. Default value is `false`.
 
 > Important note on `'workerType'`: when sending and receiving primitive data types (plain JSON) from and to a worker, the different worker types (`'web'`, `'process'`, `'thread'`) can be used interchangeably. However, when using more advanced data types like buffers, the API and returned results can vary. In these cases, it is best not to use the `'auto'` setting but have a fixed `'workerType'` and good unit testing in place.
 
 A worker pool contains the following functions:
 
-- `Pool.exec(method: Function | string, params: Array | null [, options: Object]) : Promise.<*, Error>`<br>
+- `Pool.exec(method: Function | string, params: Array | null [, options: Object]) : Promise<any, Error>`<br>
   Execute a function on a worker with given arguments.
 
   - When `method` is a string, a method with this name must exist at the worker and must be registered to make it accessible via the pool. The function will be executed on the worker with given parameters.
@@ -218,7 +223,7 @@ A worker pool contains the following functions:
     - `on: (payload: any) => void`. An event listener, to handle events sent by the worker for this execution. See [Events](#events) for more details.
     - `transfer: Object[]`. A list of transferable objects to send to the worker. Not supported by `process` worker type. See [example](./examples/transferableObjects.js) for usage.
 
-- `Pool.proxy() : Promise.<Object, Error>`<br>
+- `Pool.proxy() : Promise<Object, Error>`<br>
   Create a proxy for the worker pool. The proxy contains a proxy for all methods available on the worker. All methods return promises resolving the methods result.
 
 - `Pool.stats() : Object`<br>
@@ -236,22 +241,22 @@ A worker pool contains the following functions:
   }
   ```
 
-- `Pool.terminate([force: boolean [, timeout: number]])`
+- `Pool.terminate([force: boolean [, timeout: number]]) : Promise<void, Error>`
 
   If parameter `force` is false (default), workers will finish the tasks they are working on before terminating themselves. Any pending tasks will be rejected with an error 'Pool terminated'. When `force` is true, all workers are terminated immediately without finishing running tasks. If `timeout` is provided, worker will be forced to terminate when the timeout expires and the worker has not finished.
 
 The function `Pool.exec` and the proxy functions all return a `Promise`. The promise has the following functions available:
 
-- `Promise.then(fn: Function.<result: *>)`<br>
+- `Promise.then(fn: Function<result: any>) : Promise<any, Error>`<br>
   Get the result of the promise once resolve.
-- `Promise.catch(fn: Function.<error: Error>)`<br>
+- `Promise.catch(fn: Function<error: Error>) : Promise<any, Error>`<br>
   Get the error of the promise when rejected.
 - `Promise.finally(fn: Function<void>)`<br>
   Logic to run when the Promise either `resolves` or `rejects`
-- `Promise.cancel()`<br>
+- `Promise.cancel() : Promise<any, Error>`<br>
   A running task can be cancelled. The worker executing the task is enforced to terminate immediately.
   The promise will be rejected with a `Promise.CancellationError`.
-- `Promise.timeout(delay: number)`<br>
+- `Promise.timeout(delay: number) : Promise<any, Error>`<br>
   Cancel a running task when it is not resolved or rejected within given delay in milliseconds. The timer will start when the task is actually started, not when the task is created and queued.
   The worker executing the task is enforced to terminate immediately.
   The promise will be rejected with a `Promise.TimeoutError`.
@@ -323,13 +328,13 @@ const pool3 = workerpool.pool({ maxWorkers: 7 });
 
 A worker is constructed as:
 
-`workerpool.worker([methods: Object.<String, Function>] [, options: Object])`
+`workerpool.worker([methods: Object<String, Function>] [, options: Object]) : void`
 
-Argument `methods` is optional can can be an object with functions available in the worker. Registered functions will be available via the worker pool.
+Argument `methods` is optional and can be an object with functions available in the worker. Registered functions will be available via the worker pool.
 
 The following options are available:
 
-- `onTerminate: ([code: number]) => Promise.<void> | void`. A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The difference with pool's `onTerminateWorker` is that this callback runs in the worker context, while `onTerminateWorker` is executed on the main thread.
+- `onTerminate: ([code: number]) => Promise<void> | void`. A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The difference with pool's `onTerminateWorker` is that this callback runs in the worker context, while `onTerminateWorker` is executed on the main thread.
 
 
 Example usage:
@@ -392,7 +397,7 @@ workerpool.worker({
 
 You can send data back from workers to the pool while the task is being executed using the `workerEmit` function:
 
-`workerEmit(payload: any)`
+`workerEmit(payload: any) : unknown`
 
 This function only works inside a worker **and** during a task.
 
@@ -514,7 +519,7 @@ To see the coverage results, open the generated report in your browser:
 
 ## License
 
-Copyright (C) 2014-2023 Jos de Jong <wjosdejong@gmail.com>
+Copyright (C) 2014-2024 Jos de Jong <wjosdejong@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

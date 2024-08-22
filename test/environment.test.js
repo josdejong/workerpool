@@ -8,10 +8,11 @@ describe('Environment Detection', function () {
     assert.strictEqual(isNode(undefined), false)
     assert.strictEqual(isNode({}), false)
     assert.strictEqual(isNode({ versions: {} }), false)
+    assert.strictEqual(isNode({ versions: { node: '10.0.0' } }), false)
   })
 
   it('is platform assigned to be node', function () {
-    assert.strictEqual(isNode({ versions: { node: '10.0.0' } }), true)
+    assert.strictEqual(isNode(process), true)
   })
 })
 

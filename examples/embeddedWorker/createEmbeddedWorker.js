@@ -36,6 +36,13 @@ function createWorkerBundle(workerFile, workerBundleFile) {
         filename: workerBundleFile,
         path: __dirname
       },
+      resolve: {
+        fallback: {
+          "os": false,
+          "child_process": false,
+          "worker_threads": false
+        }
+      },
       mode: 'production'
     };
 

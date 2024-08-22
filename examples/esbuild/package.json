@@ -1,0 +1,18 @@
+{
+  "name": "bundler",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node ./build.mjs",
+    "watch": "node ./build.mjs -w"
+  },
+  "dependencies": {
+    "workerpool": "../../"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "@types/workerpool": "6.4.7",
+    "esbuild": "0.19.8",
+    "esbuild-plugin-polyfill-node": "0.3.0"
+  }
+}
