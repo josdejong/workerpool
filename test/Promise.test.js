@@ -223,7 +223,7 @@ describe ('Promise', function () {
         assert.ok(isFullfilled, "should call finally after resolve");
         assert.equal(value, undefined);
         finallyRan = true;
-      }).then(() => {
+      }).then(function() {
         assert.equal(finallyRan, true);
         done(); 
       });
