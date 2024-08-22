@@ -207,7 +207,7 @@ Promise.prototype.finally = function (fn) {
   const res = function() {
     return me;
   }
-  const final = () => {
+  const final = function() {
     const wrapper = Promise.defer();
     wrapper.promise.then(res);
     wrapper.resolve(fn());
