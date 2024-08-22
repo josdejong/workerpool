@@ -197,17 +197,24 @@ Promise.prototype.always = function (fn) {
 };
 
 /**
- * Execute given callback when the promise either resolves or rejects.
- * Same semantics as Node's Promise.finally()
- * @param {Function} fn
- * @returns {Promise} promise
- */
+  * Execute given callback when the promise either resolves or rejects.
+  * Same semantics as Node's Promise.finally()
+  * @param {Function} fn
+  * @returns {Promise} promise
+  */
 Promise.prototype.finally = function (fn) {
-  const onFinally = callback => Promise.resolve(fn()).then(callback);
-  return this.then(
-    result => onFinally(() => result),
-    reason => onFinally(() => Promise.reject(reason))
-  );
+  var me = this;
+  const res = function() {
+    return me;
+  }
+  const final = () => {
+    const wrapper = Promise.defer();
+    wrapper.promise.then(res);
+    wrapper.resolve(fn());
+    return wrapper.promise;
+  };
+
+  return this.then(final, final);
 }
 
 /**
