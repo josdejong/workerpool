@@ -245,6 +245,25 @@ describe ('Promise', function () {
         done();
       });
     });
+
+    it('should return value from finally in promise chain', function(done) {
+      var isFullfilled = false;
+      var finallyRan = false;
+      return new Promise(function(_resolve, reject) {
+        reject(new Error('An error has occured')); 
+      }).catch((_err) => {
+        isFullfilled = true; 
+      }).finally(function (value) {
+        assert.ok(isFullfilled, "should call finally after reject");
+        assert.equal(value, undefined);
+        finallyRan = true;
+        return 'test value';
+      }).then(function (value) {
+        assert.equal(finallyRan, true);
+        assert.equal(value, "test value");
+        done();
+      });
+    });
   });
 
   describe('status', function () {
