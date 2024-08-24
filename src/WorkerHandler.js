@@ -1,8 +1,8 @@
 'use strict';
 
-var Promise = require('./Promise');
+var {Promise} = require('./Promise');
 var environment = require('./environment');
-var requireFoolWebpack = require('./requireFoolWebpack');
+const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} = require("./validateOptions");
 
 /**
  * Special message sent by parent which causes a child process worker to terminate itself.
@@ -29,7 +29,7 @@ function ensureWebWorker() {
 
 function tryRequireWorkerThreads() {
   try {
-    return requireFoolWebpack('worker_threads');
+    return require('worker_threads');
   } catch(error) {
     if (typeof error === 'object' && error !== null && error.code === 'MODULE_NOT_FOUND') {
       // no worker_threads available (old version of node.js)
@@ -64,31 +64,34 @@ function getDefaultWorker() {
 function setupWorker(script, options) {
   if (options.workerType === 'web') { // browser only
     ensureWebWorker();
-    return setupBrowserWorker(script, Worker);
+    return setupBrowserWorker(script, options.workerOpts, Worker);
   } else if (options.workerType === 'thread') { // node.js only
     WorkerThreads = ensureWorkerThreads();
-    return setupWorkerThreadWorker(script, WorkerThreads, options.workerThreadOpts);
+    return setupWorkerThreadWorker(script, WorkerThreads, options);
   } else if (options.workerType === 'process' || !options.workerType) { // node.js only
-    return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
+    return setupProcessWorker(script, resolveForkOptions(options), require('child_process'));
   } else { // options.workerType === 'auto' or undefined
     if (environment.platform === 'browser') {
       ensureWebWorker();
-      return setupBrowserWorker(script, Worker);
+      return setupBrowserWorker(script, options.workerOpts, Worker);
     }
     else { // environment.platform === 'node'
       var WorkerThreads = tryRequireWorkerThreads();
       if (WorkerThreads) {
-        return setupWorkerThreadWorker(script, WorkerThreads);
+        return setupWorkerThreadWorker(script, WorkerThreads, options);
       } else {
-        return setupProcessWorker(script, resolveForkOptions(options), requireFoolWebpack('child_process'));
+        return setupProcessWorker(script, resolveForkOptions(options), require('child_process'));
       }
     }
   }
 }
 
-function setupBrowserWorker(script, Worker) {
+function setupBrowserWorker(script, workerOpts, Worker) {
+  // validate the options right before creating the worker (not when creating the pool)
+  validateOptions(workerOpts, workerOptsNames, 'workerOpts')
+
   // create the web worker
-  var worker = new Worker(script);
+  var worker = new Worker(script, workerOpts);
 
   worker.isBrowserWorker = true;
   // add node.js API to the web worker
@@ -103,11 +106,14 @@ function setupBrowserWorker(script, Worker) {
   return worker;
 }
 
-function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
+function setupWorkerThreadWorker(script, WorkerThreads, options) {
+  // validate the options right before creating the worker thread (not when creating the pool)
+  validateOptions(options?.workerThreadOpts, workerThreadOptsNames, 'workerThreadOpts')
+
   var worker = new WorkerThreads.Worker(script, {
-    stdout: false, // automatically pipe worker.STDOUT to process.STDOUT
-    stderr: false,  // automatically pipe worker.STDERR to process.STDERR
-    ...workerThreadOptions
+    stdout: options?.emitStdStreams ?? false, // pipe worker.STDOUT to process.STDOUT if not requested
+    stderr: options?.emitStdStreams ?? false,  // pipe worker.STDERR to process.STDERR if not requested
+    ...options?.workerThreadOpts
   });
   worker.isWorkerThread = true;
   worker.send = function(message, transfer) {
@@ -123,10 +129,18 @@ function setupWorkerThreadWorker(script, WorkerThreads, workerThreadOptions) {
     this.terminate();
   };
 
+  if (options?.emitStdStreams) {
+    worker.stdout.on('data', (data) => worker.emit("stdout", data))
+    worker.stderr.on('data', (data) => worker.emit("stderr", data))
+  }
+
   return worker;
 }
 
 function setupProcessWorker(script, options, child_process) {
+  // validate the options right before creating the child process (not when creating the pool)
+  validateOptions(options.forkOpts, forkOptsNames, 'forkOpts')
+
   // no WorkerThreads, fallback to sub-process based workers
   var worker = child_process.fork(
     script,
@@ -139,6 +153,11 @@ function setupProcessWorker(script, options, child_process) {
   worker.send = function (message) {
     return send.call(worker, message);
   };
+
+  if (options.emitStdStreams) {
+    worker.stdout.on('data', (data) => worker.emit("stdout", data))
+    worker.stderr.on('data', (data) => worker.emit("stderr", data))
+  }
 
   worker.isChildProcess = true;
   return worker;
@@ -171,7 +190,8 @@ function resolveForkOptions(opts) {
     forkArgs: opts.forkArgs,
     forkOpts: Object.assign({}, opts.forkOpts, {
       execArgv: (opts.forkOpts && opts.forkOpts.execArgv || [])
-      .concat(execArgv)
+      .concat(execArgv),
+      stdio: opts.emitStdStreams ? "pipe": undefined
     })
   });
 }
@@ -192,12 +212,23 @@ function objectToError (obj) {
   return temp
 }
 
+function handleEmittedStdPayload(handler, payload) {
+  // TODO: refactor if parallel task execution gets added
+  if (Object.keys(handler.processing).length !== 1) {
+    return;
+  }
+  var task = Object.values(handler.processing)[0]
+  if (task.options && typeof task.options.on === 'function') {
+    task.options.on(payload);
+  }
+}
+
 /**
  * A WorkerHandler controls a single worker. This worker can be a child process
  * on node.js or a WebWorker in a browser environment.
  * @param {String} [script] If no script is provided, a default worker with a
  *                          function run will be created.
- * @param {WorkerPoolOptions} _options See docs
+ * @param {import('./types.js').WorkerPoolOptions} [_options] See docs
  * @constructor
  */
 function WorkerHandler(script, _options) {
@@ -209,6 +240,7 @@ function WorkerHandler(script, _options) {
   this.debugPort = options.debugPort;
   this.forkOpts = options.forkOpts;
   this.forkArgs = options.forkArgs;
+  this.workerOpts = options.workerOpts;
   this.workerThreadOpts = options.workerThreadOpts
   this.workerTerminateTimeout = options.workerTerminateTimeout;
 
@@ -219,6 +251,14 @@ function WorkerHandler(script, _options) {
 
   // queue for requests that are received before the worker is ready
   this.requestQueue = [];
+
+  this.worker.on("stdout", function (data) {
+    handleEmittedStdPayload(me, {"stdout": data.toString()})
+  })
+  this.worker.on("stderr", function (data) {
+    handleEmittedStdPayload(me, {"stderr": data.toString()})
+  })
+
   this.worker.on('message', function (response) {
     if (me.terminated) {
       return;
@@ -318,7 +358,7 @@ WorkerHandler.prototype.methods = function () {
  * @param {String} method
  * @param {Array} [params]
  * @param {{resolve: Function, reject: Function}} [resolver]
- * @param {ExecOptions}  [options]
+ * @param {import('./types.js').ExecOptions}  [options]
  * @return {Promise.<*, Error>} result
  */
 WorkerHandler.prototype.exec = function(method, params, resolver, options) {
@@ -450,9 +490,9 @@ WorkerHandler.prototype.terminate = function (force, callback) {
         if (this.worker.ready) {
           this.worker.send(TERMINATE_METHOD_ID);
         } else {
-          this.requestQueue.push(TERMINATE_METHOD_ID);
+          this.requestQueue.push({ message: TERMINATE_METHOD_ID });
         }
-        
+
         // mark that the worker is cleaning up resources
         // to prevent new tasks from being executed
         this.cleaning = true;
@@ -487,7 +527,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
 WorkerHandler.prototype.terminateAndNotify = function (force, timeout) {
   var resolver = Promise.defer();
   if (timeout) {
-    resolver.promise.timeout = timeout;
+    resolver.promise.timeout(timeout);
   }
   this.terminate(force, function(err, worker) {
     if (err) {

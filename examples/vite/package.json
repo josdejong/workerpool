@@ -1,0 +1,21 @@
+{
+  "name": "bundler",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "solid-js": "^1.8.7",
+    "workerpool": "8.0.0"
+  },
+  "devDependencies": {
+    "@types/workerpool": "^6.4.7",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.13",
+    "vite-plugin-solid": "^2.7.2"
+  }
+}

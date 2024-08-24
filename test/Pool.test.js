@@ -1,5 +1,5 @@
 var assert = require('assert');
-var Promise = require('../src/Promise');
+var {Promise} = require('../src/Promise');
 var Pool = require('../src/Pool');
 var tryRequire = require('./utils').tryRequire
 
@@ -78,6 +78,15 @@ describe('Pool', function () {
       it('supports passing options to threads', function() {
         const maxYoungGenerationSizeMb = 200
         var pool = createPool({ minWorkers:1, workerType: 'thread', workerThreadOpts: { resourceLimits: { maxYoungGenerationSizeMb } } });
+        var worker = pool.workers[0].worker;
+
+        assert.strictEqual(worker.isWorkerThread, true);
+        assert.strictEqual(worker.resourceLimits.maxYoungGenerationSizeMb, maxYoungGenerationSizeMb);
+      });
+
+      it('supports passing options to threads via mode auto', function() {
+        const maxYoungGenerationSizeMb = 200
+        var pool = createPool({ minWorkers:1, workerType: 'auto', workerThreadOpts: { resourceLimits: { maxYoungGenerationSizeMb } } });
         var worker = pool.workers[0].worker;
 
         assert.strictEqual(worker.isWorkerThread, true);
@@ -177,6 +186,106 @@ describe('Pool', function () {
       assert(terminatedWorkers.includes('env_value2'), 'terminatedWorkers should include the value with counter = 2');
     });
   });
+  
+  it('supports stdout/stderr capture via fork', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStdStreams: true});
+
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
+      on: function (payload) {
+        receivedEvents.push(payload)
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvents, [{
+        stdout: 'stdout message\n'
+      }, {
+        stderr: 'stderr message\n'
+      }]);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('excludes stdout/stderr capture via fork', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process'});
+
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
+      on: function (payload) {
+        receivedEvents.push(payload)
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvents, []);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('supports stdout/stderr capture via threads', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads', emitStdStreams: true});
+
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
+      on: function (payload) {
+        receivedEvents.push(payload)
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvents, [{
+        stdout: 'stdout message\n'
+      }, {
+        stderr: 'stderr message\n'
+      }]);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
+
+  it('excludes stdout/stderr capture via threads', function(done) {
+    var pool = createPool(__dirname + '/workers/console.js', {workerType: 'threads'});
+
+    var receivedEvents = []
+    pool.exec("stdStreams", [], {
+      on: function (payload) {
+        receivedEvents.push(payload)
+      }
+    })
+    .then(function (result) {
+      assert.strictEqual(result, 'done');
+      assert.deepStrictEqual(receivedEvents, []);
+
+      pool.terminate();
+      done();
+    })
+    .catch(function (err) {
+      console.log(err);
+      assert('Should not throw an error');
+      done(err);
+    });
+  })
 
   it('should offload a function to a worker', function (done) {
     var pool = createPool({maxWorkers: 10});
@@ -735,7 +844,7 @@ describe('Pool', function () {
       var count = cpus.length + 2;
       var tasksCount = cpus.length * 2;
       var pool = createPool({minWorkers: count});
-      
+
       var tasks = []
       for(var i=0;i<tasksCount;i++) {
         tasks.push(pool.exec(add, [i, i*2]));
@@ -812,7 +921,7 @@ describe('Pool', function () {
             // this will throw if the process with pid `workerPid` does not exist
             process.kill(workerPid, 0);
           });
-        
+
           done();
         })
         .catch(done);
@@ -1136,7 +1245,7 @@ describe('Pool', function () {
     pool.exec('transfer', [size])
           .then(function (result) {
             assert.strictEqual(result.byteLength, size);
-            
+
             pool.terminate();
             done();
           })
@@ -1203,6 +1312,62 @@ describe('Pool', function () {
 
     return pool.terminate().then(function () {
       assert(handlerCalled === false);
+    });
+  });
+
+  describe('validate', () => {
+    it('should not allow unknown properties in forkOpts', function() {
+      var pool = createPool({
+        workerType: 'process',
+        forkOpts: { foo: 42 }
+      });
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "forkOpts" contains an unknown option "foo"/);
+    });
+
+    it('should not allow inherited properties in forkOpts', function() {
+      var pool = createPool({
+        workerType: 'process'
+      });
+
+      // prototype pollution
+      Object.prototype.env = { NODE_OPTIONS: '--inspect-brk=0.0.0.0:1337' };
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "forkOpts" contains an inherited option "env"/);
+
+      delete Object.prototype.env;
+      after(() => { delete Object.prototype.env });
+    });
+
+    it('should not allow unknown properties in workerThreadOpts', function() {
+      var pool = createPool({
+        workerType: 'thread',
+        workerThreadOpts: { foo: 42 }
+      });
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "workerThreadOpts" contains an unknown option "foo"/);
+    });
+
+    it('should not allow inherited properties in workerThreadOpts', function() {
+      var pool = createPool({
+        workerType: 'thread'
+      });
+
+      // prototype pollution
+      Object.prototype.env = { NODE_OPTIONS: '--inspect-brk=0.0.0.0:1337' };
+
+      assert.throws(function () {
+        pool.exec(add, [3, 4]);
+      }, /Error: Object "workerThreadOpts" contains an inherited option "env"/);
+
+      delete Object.prototype.env;
+      after(() => { delete Object.prototype.env });
     });
   });
 });

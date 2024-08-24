@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Worker pool in the browser</title>
+
+  <script src="../../dist/workerpool.js"></script>
+</head>
+<body>
+
+<script>
+  // create a worker pool
+  const options = {
+    workerOpts: {
+      name: 'NamedWorker'
+    }
+  }
+  var pool = workerpool.pool('../workers/browserWorker.js', options);
+
+  pool.exec('getName')
+    .then(result => {
+        document.write('Workers in pool have the name "' + result + '" given in workerOpts');
+    })
+
+</script>
+
+</body>
+</html>

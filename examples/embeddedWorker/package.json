@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build-embedded-worker": "node createEmbeddedWorker.js",
-    "build-app": "webpack ./app.js -o ./dist --mode=production",
+    "build-app": "webpack --config webpack.config.cjs",
     "build": "npm run build-embedded-worker && npm run build-app"
   },
   "dependencies": {},
