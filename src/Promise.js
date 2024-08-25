@@ -222,10 +222,9 @@ Promise.prototype.finally = function (fn) {
     return me;
   }
   const final = function() {
-    const wrapper = Promise.defer();
-    wrapper.promise.then(res);
-    wrapper.resolve(fn());
-    return wrapper.promise;
+    return new Promise(function (resolve) {
+      resolve(fn())
+    }).then(res);
   };
 
   return this.then(final, final);
