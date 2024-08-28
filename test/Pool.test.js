@@ -1324,18 +1324,17 @@ describe('Pool', function () {
       }
     });
     
-    return pool.exec('asyncTimeout', [],  {
-    })
-    .timeout(200)
-    .catch(function (err) {
-      assert(err instanceof Promise.TimeoutError);
-      let stats = pool.stats();
-      assert(stats.activeTasks === 0);
-    }).then(function() { 
-      return pool.exec(add, [1, 2]) 
-    }).then(function() {
-      assert.strictEqual(workerCount, 1);
-    });
+    return pool.exec('asyncTimeout', [])
+      .timeout(200)
+      .catch(function (err) {
+        assert(err instanceof Promise.TimeoutError);
+        let stats = pool.stats();
+        assert(stats.activeTasks === 0);
+      }).then(function() { 
+        return pool.exec(add, [1, 2]) 
+      }).then(function() {
+        assert.strictEqual(workerCount, 1);
+      });
   });
 
   it('should not terminate worker if abort listener is defined dedicated worker with Cancellation', function () {
@@ -1416,11 +1415,12 @@ describe('Pool', function () {
       },
       maxWorkers: 1,
     });
+
     function asyncTimeout() {
       var me = this;
-      return new Promise(function () {
+      return new Promise(function (_resolve, reject) {
         let timeout = setTimeout(function() {
-            resolve();
+            reject(new Error("should not be thrown"));
         }, 5000); 
         me.worker.addAbortListener(function () {
           return new Promise(function (resolve) {
@@ -1470,6 +1470,7 @@ describe('Pool', function () {
       assert(stats.busyWorkers === 1);
     }).always(function() {
       return pool.exec(add, [1, 2]).then(function() {
+        var stats = pool.stats();
         assert.strictEqual(workerCount, 1);
       });
     });

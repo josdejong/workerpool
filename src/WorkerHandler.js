@@ -281,7 +281,7 @@ function WorkerHandler(script, _options) {
           if (task.options && typeof task.options.on === 'function') {
             task.options.on(response.payload);
           }
-	      } else {
+        } else {
           // remove the task from the queue
           delete me.processing[id];
 
@@ -449,7 +449,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
        * We need this timeout in either case of a Timeout or Cancellation Error as if
        * the worker does not send a message we stil need to give a window of time for a response.
        * 
-       * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup\
+       * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup
        * operations will occure.
       */
       me.tracking[id].timeoutId = setTimeout(function() {

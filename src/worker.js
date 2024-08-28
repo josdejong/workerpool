@@ -141,7 +141,7 @@ worker.methods.methods = function methods() {
  */
 worker.terminationHandler = undefined;
 
-worker.abortListenerTimeout = 1000;
+worker.abortListenerTimeout = TIMEOUT_DEFAULT;
 
 /**
  * Abort handlers for resolving errors which may cause a timeout or cancellation
@@ -183,18 +183,10 @@ worker.tryCleanup = function() {
   }
 
   if (worker.abortListeners.length) {
-    let promises = [];
-    for (var i = 0; i < worker.abortListeners.length; i++) {
-      promises.push(
-        worker.abortListeners[i]()
-      )
-    }
-
+    const promises = worker.abortListeners.map(listener => listener());
     let timerId;
     const timeoutPromise = new Promise((_resolve, reject) => {
-      timerId = setTimeout(function() {
-        reject();
-      }, worker.abortListenerTimeout);
+      timerId = setTimeout(reject, worker.abortListenerTimeout);
     });
 
     // Once a promise settles we need to clear the timeout to prevet fulfulling the promise twice 
