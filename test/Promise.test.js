@@ -224,7 +224,7 @@ describe ('Promise', function () {
         assert.equal(value, undefined);
         finallyRan = true;
       }).then(function() {
-        assert.equal(finallyRan, true);
+        assert.ok(finallyRan, "finallyRan should be called");
 
         done();
       });
