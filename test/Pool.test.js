@@ -1455,7 +1455,7 @@ describe('Pool', function () {
   it('should invoke timeout for abort handler if timeout period is reached with Timeout', function () {
     var workerCount = 0;
     var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
-      maxWorkers: 1,
+      maxWorkers: 2,
       onCreateWorker: function() {
         workerCount += 1;
       }
