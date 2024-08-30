@@ -211,6 +211,26 @@ Promise.prototype.always = function (fn) {
 };
 
 /**
+  * Execute given callback when the promise either resolves or rejects.
+  * Same semantics as Node's Promise.finally()
+  * @param {Function} fn
+  * @returns {Promise} promise
+  */
+Promise.prototype.finally = function (fn) {
+  var me = this;
+  const res = function() {
+    return me;
+  }
+  const final = function() {
+    return new Promise(function (resolve) {
+      resolve(fn())
+    }).then(res);
+  };
+
+  return this.then(final, final);
+}
+
+/**
  * Create a promise which resolves when all provided promises are resolved,
  * and fails when any of the promises resolves.
  * @param {Promise[]} promises
