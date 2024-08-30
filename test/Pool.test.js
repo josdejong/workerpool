@@ -1472,6 +1472,9 @@ describe('Pool', function () {
       return pool.exec(add, [1, 2]).then(function() {
         var stats = pool.stats();
         assert.strictEqual(workerCount, 1);
+        assert.strictEqual(stats.totalWorkers, 1);
+        assert.strictEqual(stats.idleWorkers, 1);
+        assert.strictEqual(stats.busyWorkers, 0);
       });
     });
   });
@@ -1499,8 +1502,19 @@ describe('Pool', function () {
         var stats = pool.stats();
         assert(stats.busyWorkers === 1);
       }).always(function() {
+        assert.strictEqual(workerCount, 1);
+
+        var stats = pool.stats();
+        assert.strictEqual(stats.busyWorkers, 0);
+        assert.strictEqual(stats.idleWorkers, 1);
+        assert.strictEqual(stats.totalWorkers, 1);
         return pool.exec(add, [1, 2]).then(function() {
           assert.strictEqual(workerCount, 1);
+          var stats = pool.stats();
+
+          assert.strictEqual(stats.busyWorkers, 0);
+          assert.strictEqual(stats.idleWorkers, 1);
+          assert.strictEqual(stats.totalWorkers, 1);
         });
       });
     });
