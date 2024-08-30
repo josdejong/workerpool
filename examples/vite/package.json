@@ -16,6 +16,6 @@
     "@types/workerpool": "^6.4.7",
     "typescript": "^5.3.2",
     "vite": "^5.0.13",
-    "vite-plugin-solid": "^2.7.2"
+    "vite-plugin-solid": "^2.10.2"
   }
 }
