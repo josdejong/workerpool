@@ -391,6 +391,38 @@ workerpool.worker({
 });
 ```
 
+Tasks may configure an `abort handler` to perform cleanup operations when `timeout` or `cancel` is called on a `task`. the `abortListenerTimeout` option can be configured to control when cleanup should be aborted in the case an `abortHandler` never resolves. This timeout trigger will cause the given worker to be cleaned up. Allowing a new worker to be created if need be.
+
+```js
+function asyncTimeout() {
+  var me = this;
+  return new Promise(function (resolve) {
+    let timeout = setTimeout(() => {
+        resolve();
+    }, 5000); 
+
+    // An abort listener allows for cleanup for a given worker
+    // such that it may be resused for future tasks
+    // if an execption is thrown within scope of the handler
+    // the worker instance will be destroyed.
+    me.worker.addAbortListener(async function () {
+        clearTimeout(timeout);
+        resolve();
+    });
+  });
+}
+
+// create a worker and register public functions
+workerpool.worker(
+  {
+    asyncTimeout: asyncTimeout,
+  },
+  {
+    abortListenerTimeout: 1000
+  }
+);
+```
+
 ### Events
 
 You can send data back from workers to the pool while the task is being executed using the `workerEmit` function:
