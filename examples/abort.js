@@ -31,7 +31,7 @@ const main = async () => {
 
     const canceledTask = pool.exec('asyncAbortHandlerNeverResolves').cancel().catch((err) => {
         console.log("task canceled");
-        console.log("timeout occured: ", err.message);
+        console.log("cancel occured: ", err.message);
         console.log("worker count ", workerCount);
         return pool.exec(add, [1, 2]).then((sum) => {
             console.log('add result', sum);

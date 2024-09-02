@@ -447,7 +447,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
        * Here we use the workerTerminateTimeout as the worker will be terminated if the timeout does invoke.
        * 
        * We need this timeout in either case of a Timeout or Cancellation Error as if
-       * the worker does not send a message we stil need to give a window of time for a response.
+       * the worker does not send a message we still need to give a window of time for a response.
        * 
        * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup
        * operations will occure.
