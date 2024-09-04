@@ -318,7 +318,7 @@ worker.register = function (methods, options) {
   }
 
   if (options) {
-    worker.terminationHandler = options.onTerminate || TIMEOUT_DEFAULT;
+    worker.terminationHandler = options.onTerminate;
     // register listener timeout or default to 1 second
     worker.abortListenerTimeout = options.abortListenerTimeout || TIMEOUT_DEFAULT;
   }
