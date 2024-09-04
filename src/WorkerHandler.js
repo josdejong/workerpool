@@ -443,7 +443,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
 
       /**
        * Sets a timeout to reject the cleanup operation if the message sent to the worker
-       * does not recieve a response.  see worker._tryCleanup for worker cleanup operations.
+       * does not receive a response. see worker._tryCleanup for worker cleanup operations.
        * Here we use the workerTerminateTimeout as the worker will be terminated if the timeout does invoke.
        * 
        * We need this timeout in either case of a Timeout or Cancellation Error as if
