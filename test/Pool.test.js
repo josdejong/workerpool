@@ -643,7 +643,7 @@ describe('Pool', function () {
 
     // TODO: test whether a task in the queue can be neatly cancelled
 
-  it.only('should timeout a task', function () {
+  it('should timeout a task', function () {
     var pool = createPool({maxWorkers: 10});
 
     function forever() {

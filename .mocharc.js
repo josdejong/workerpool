@@ -2,5 +2,5 @@
 
 module.exports = {
   timeout: 5000,
-  'forbid-only': false
+  'forbid-only': Boolean(process.env.CI)
 };
