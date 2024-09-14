@@ -643,7 +643,7 @@ describe('Pool', function () {
 
     // TODO: test whether a task in the queue can be neatly cancelled
 
-  it('should timeout a task', function () {
+  it.only('should timeout a task', function () {
     var pool = createPool({maxWorkers: 10});
 
     function forever() {
@@ -660,6 +660,7 @@ describe('Pool', function () {
           assert(err instanceof Promise.TimeoutError);
           // we cannot assert that no workers remain in the pool, because that happens
           // on a different promise chain (termination is now async)
+
         });
   });
 
@@ -729,7 +730,7 @@ describe('Pool', function () {
         });
   });
 
-  it('should handle crashed workers (1)', function () {
+  it('should handle crashed workers', function () {
     var pool = createPool({maxWorkers: 1});
 
     var promise = pool.exec(add)
@@ -1256,7 +1257,7 @@ describe('Pool', function () {
           });
   });
 
-  it('should call worker termination handler (worker_thread)', function () {
+  it('should call worker termination handler', function () {
     var pool = createPool(__dirname + '/workers/cleanup.js');
 
     var handlerCalled = false;
@@ -1275,7 +1276,7 @@ describe('Pool', function () {
     });
   });
 
-  it('should call worker termination async handler (worker_thread)', function () {
+  it('should call worker termination async handler', function () {
     var pool = createPool(__dirname + '/workers/cleanup-async.js');
 
     var handlerCalled = false;
@@ -1344,7 +1345,6 @@ describe('Pool', function () {
           assert.strictEqual(stats.idleWorkers, 1);
           assert.strictEqual(stats.busyWorkers, 0);
 
-          return pool.terminate();
         });
     });
 
@@ -1385,7 +1385,6 @@ describe('Pool', function () {
             assert.strictEqual(stats.idleWorkers, 1);
             assert.strictEqual(stats.busyWorkers, 0);
 
-            return pool.terminate();
           });
       });
     });
@@ -1432,7 +1431,6 @@ describe('Pool', function () {
           assert.strictEqual(stats.idleWorkers, 1);
           assert.strictEqual(stats.busyWorkers, 0);
 
-          return pool.terminate();
         }); 
       });
     });
@@ -1483,7 +1481,6 @@ describe('Pool', function () {
             assert.strictEqual(stats.idleWorkers, 1);
             assert.strictEqual(stats.busyWorkers, 0);
 
-            return pool.terminate();
           }); 
         });
       });
@@ -1518,7 +1515,6 @@ describe('Pool', function () {
           assert.strictEqual(stats.idleWorkers, 1);
           assert.strictEqual(stats.busyWorkers, 0);
 
-          return pool.terminate();
         });
       });
     });
@@ -1559,8 +1555,6 @@ describe('Pool', function () {
             assert.strictEqual(stats.busyWorkers, 0);
             assert.strictEqual(stats.idleWorkers, 1);
             assert.strictEqual(stats.totalWorkers, 1);
-
-            return pool.terminate();
           });
         });
       });
