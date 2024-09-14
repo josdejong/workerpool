@@ -15,7 +15,7 @@ describe('Pool', function () {
   function createPool(script, options) {
     var pool = new Pool(script, options);
 
-    after(() => {
+    afterEach(() => {
       return pool.terminate();
     });
 

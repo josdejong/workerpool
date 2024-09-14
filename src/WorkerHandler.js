@@ -250,26 +250,7 @@ function WorkerHandler(script, _options) {
   this.workerOpts = options.workerOpts;
   this.workerThreadOpts = options.workerThreadOpts
   this.workerTerminateTimeout = options.workerTerminateTimeout;
-  this.trackingEmitter = new EventEmitter();
 
-  this.trackingEmitter.on('addTask', function(id, error) {
-      /**
-       * Sets a timeout to reject the cleanup operation if the message sent to the worker
-       * does not receive a response. see worker._tryCleanup for worker cleanup operations.
-       * Here we use the workerTerminateTimeout as the worker will be terminated if the timeout does invoke.
-       * 
-       * We need this timeout in either case of a Timeout or Cancellation Error as if
-       * the worker does not send a message we still need to give a window of time for a response.
-       * 
-       * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup
-       * operations will occure.
-      */
-      if(me.tracking[id]) {
-        me.tracking[id].timeoutId = setTimeout(function() {
-          me.tracking[id].resolver.reject(error);
-        }, 1_000);
-      }
-  });
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
     this.worker.ready = true;
@@ -345,7 +326,7 @@ function WorkerHandler(script, _options) {
         me.processing[id].resolver.reject(error);
       }
     }
-
+    
     me.processing = Object.create(null);
   }
 
@@ -465,7 +446,23 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
         id,
         method: CLEANUP_METHOD_ID 
       });
-      me.trackingEmitter.emit('addTask', id, error);
+      
+      
+      /**
+        * Sets a timeout to reject the cleanup operation if the message sent to the worker
+        * does not receive a response. see worker._tryCleanup for worker cleanup operations.
+        * Here we use the workerTerminateTimeout as the worker will be terminated if the timeout does invoke.
+        * 
+        * We need this timeout in either case of a Timeout or Cancellation Error as if
+        * the worker does not send a message we still need to give a window of time for a response.
+        * 
+        * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup
+        * operations will occure.
+      */
+      me.tracking[id].timeoutId = setTimeout(function() {
+          me.tracking[id].resolver.reject(error);
+      }, me.workerTerminateTimeout);
+
       return me.tracking[id].resolver.promise;
     } else {
       throw error;
@@ -501,7 +498,15 @@ WorkerHandler.prototype.terminate = function (force, callback) {
 
     this.processing = Object.create(null);
   }
-  
+
+  // If we are terminating, cancel all tracked task for cleanup
+  for (var task of Object.values(me.tracking)) {
+    clearTimeout(task.timeoutId);
+    task.resolver.reject(new Error('Worker Terminating'));
+  }
+
+  me.tracking = Object.create(null);
+
   if (typeof callback === 'function') {
     this.terminationHandler = callback;
   }
