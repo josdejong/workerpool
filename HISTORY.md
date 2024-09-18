@@ -2,6 +2,13 @@
 https://github.com/josdejong/workerpool
 
 
+## unpublished changes since version 9.1.3
+
+- Feat: implement `Promise.finally()` on the custom promise class (#388).
+  Thanks @joshLong145 and @wmertens.
+- Fix #460: `vite` example not working (#461). Thanks @datashaman.
+
+
 ## 2024-06-28, version 9.1.3
 
 - Fix transferring from the worker (#455). Thanks @LeonidPolukhin.

@@ -251,6 +251,8 @@ The function `Pool.exec` and the proxy functions all return a `Promise`. The pro
   Get the result of the promise once resolve.
 - `Promise.catch(fn: Function<error: Error>) : Promise<any, Error>`<br>
   Get the error of the promise when rejected.
+- `Promise.finally(fn: Function<void>)`<br>
+  Logic to run when the Promise either `resolves` or `rejects`
 - `Promise.cancel() : Promise<any, Error>`<br>
   A running task can be cancelled. The worker executing the task is enforced to terminate immediately.
   The promise will be rejected with a `Promise.CancellationError`.
