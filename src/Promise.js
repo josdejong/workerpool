@@ -224,7 +224,7 @@ Promise.prototype.finally = function (fn) {
   const final = function() {
     return new Promise(function (resolve) {
       resolve(fn())
-    }).then(res);
+    });
   };
 
   return this.then(final, final);
