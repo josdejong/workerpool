@@ -257,7 +257,7 @@ describe ('Promise', function () {
       assert.strictEqual(p.pending, false);
     });
 
-    it('should continue promsie chain from finally if not rejected', function(done) {
+    it('should continue promise chain from finally if not rejected', function(done) {
       var isFullfilled = false;
       var finallyRan = false;
       var p = new Promise(function(resolve, _reject) {
@@ -277,6 +277,95 @@ describe ('Promise', function () {
         assert.strictEqual(p.pending, false);
         done();
       });
+    });
+
+    it('should not pass arguments to finally (resolving)', function(done) {
+      return new Promise(resolve => resolve(42))
+        .finally((arg) => {
+          assert.strictEqual(arg, undefined)
+          done()
+        })
+    });
+
+    it('should not pass arguments to finally (rejecting)', function(done) {
+      return new Promise((resolve, reject) => reject('Some error'))
+        .finally((arg) => {
+          assert.strictEqual(arg, undefined)
+          done()
+        })
+    });
+
+    it('should not return arguments from finally', function(done) {
+      return new Promise((resolve) => resolve())
+        .finally(() => {
+          return 42
+        })
+        .then((arg) => {
+          assert.strictEqual(arg, undefined)
+          done()
+        })
+    });
+
+    it('should pass previous value along when calling finally', function(done) {
+      let finallyCalled = false
+
+      return new Promise((resolve) => resolve(42))
+        .finally(() => {
+          finallyCalled = true
+          return 123
+        })
+        .then((arg) => {
+          assert.strictEqual(arg, 42)
+          assert.strictEqual(finallyCalled, true)
+          done()
+        })
+    });
+
+    it('should rethrow previous error along when calling finally', function(done) {
+      let finallyCalled = false
+
+      return new Promise((resolve, reject) => reject('some error'))
+        .finally(() => {
+          finallyCalled = true
+          return 123
+        })
+        .catch((err) => {
+          assert.strictEqual(err, 'some error')
+          assert.strictEqual(finallyCalled, true)
+          done()
+        })
+    });
+
+    it('should await a Promise returned by finally (resolving)', function(done) {
+      let finallyCalled = false
+
+      new Promise((resolve) => resolve(42))
+        .finally(() => {
+          return new Promise(resolve => setTimeout(resolve, 100)).then(() => {
+            finallyCalled = true
+          })
+        })
+        .then((arg) => {
+          assert.strictEqual(arg, 42)
+          assert.strictEqual(finallyCalled, true)
+          done()
+        })
+    });
+
+    it('should await a Promise returned by finally (rejecting)', function(done) {
+      let finallyCalled = false
+
+      new Promise((resolve, reject) => reject('some error'))
+        .finally(() => {
+          return new Promise(resolve => setTimeout(resolve, 100)).then(() => {
+            finallyCalled = true
+          })
+        })
+        .catch((err) => {
+          assert.strictEqual(err, 'some error')
+          assert.strictEqual(finallyCalled, true)
+          done()
+        })
     });
   });
 
