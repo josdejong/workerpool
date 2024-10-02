@@ -2,7 +2,7 @@
  * worker must be started as a child process or a web worker.
  * It listens for RPC messages from the parent process.
  */
-const { addAbortListener } = require('events');
+
 var Transfer = require('./transfer');
 
 /**

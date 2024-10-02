@@ -1,6 +1,5 @@
 'use strict';
 
-const { EventEmitter } = require('node:events');
 var {Promise} = require('./Promise');
 var environment = require('./environment');
 const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} = require("./validateOptions");
