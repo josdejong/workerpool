@@ -220,7 +220,9 @@ Promise.prototype.finally = function (fn) {
   const me = this;
 
   const final = function() {
-    return new Promise((resolve) => resolve()).then(fn).then(() => me);
+    return new Promise((resolve) => resolve())
+      .then(fn)
+      .then(() => me);
   };
 
   return this.then(final, final);
