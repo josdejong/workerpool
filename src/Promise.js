@@ -217,17 +217,11 @@ Promise.prototype.always = function (fn) {
   * @returns {Promise} promise
   */
 Promise.prototype.finally = function (fn) {
-  var me = this;
-  const res = function() {
-    return me;
-  }
-  const final = function() {
-    return new Promise(function (resolve) {
-      resolve(fn())
-    }).then(res);
-  };
-
-  return this.then(final, final);
+  return this.then(
+    (value) => new Promise(resolve => resolve()).then(fn).then(() => value),
+    (err) => new Promise(resolve => resolve()).then(fn).then(() => {
+      throw err;
+    }));
 }
 
 /**

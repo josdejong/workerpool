@@ -280,7 +280,7 @@ describe ('Promise', function () {
     });
 
     it('should not pass arguments to finally (resolving)', function(done) {
-      return new Promise(resolve => resolve(42))
+      new Promise(resolve => resolve(42))
         .finally((arg) => {
           assert.strictEqual(arg, undefined)
           done()
@@ -288,7 +288,7 @@ describe ('Promise', function () {
     });
 
     it('should not pass arguments to finally (rejecting)', function(done) {
-      return new Promise((resolve, reject) => reject('Some error'))
+      new Promise((resolve, reject) => reject('Some error'))
         .finally((arg) => {
           assert.strictEqual(arg, undefined)
           done()
@@ -296,7 +296,7 @@ describe ('Promise', function () {
     });
 
     it('should not return arguments from finally', function(done) {
-      return new Promise((resolve) => resolve())
+      new Promise((resolve) => resolve())
         .finally(() => {
           return 42
         })
@@ -309,7 +309,7 @@ describe ('Promise', function () {
     it('should pass previous value along when calling finally', function(done) {
       let finallyCalled = false
 
-      return new Promise((resolve) => resolve(42))
+      new Promise((resolve) => resolve(42))
         .finally(() => {
           finallyCalled = true
           return 123
@@ -324,7 +324,7 @@ describe ('Promise', function () {
     it('should rethrow previous error along when calling finally', function(done) {
       let finallyCalled = false
 
-      return new Promise((resolve, reject) => reject('some error'))
+      new Promise((resolve, reject) => reject('some error'))
         .finally(() => {
           finallyCalled = true
           return 123
@@ -366,6 +366,30 @@ describe ('Promise', function () {
           assert.strictEqual(finallyCalled, true)
           done()
         })
+    });
+
+    it('should propagate cancelling a Promise via finally', function(done) {
+      let isResolved = false
+      let finallyCalled = false
+
+      const promise = new Promise((resolve, _reject) => {
+        setTimeout(resolve, 100)
+      })
+        .then(() => {
+          // we should not reach this
+          isResolved = true
+        })
+        .finally(() => {
+          finallyCalled = true
+        })
+
+      promise.cancel()
+
+      setTimeout(() => {
+        assert.strictEqual(isResolved, false)
+        assert.strictEqual(finallyCalled, true)
+        done()
+      }, 200)
     });
   });
 
