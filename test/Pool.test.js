@@ -1315,6 +1315,20 @@ describe('Pool', function () {
     });
   });
 
+  it('should terminate inside finally', function () {
+    const pool = new Pool()
+
+    function forever() {
+      return new Promise(resolve => setTimeout(resolve, Infinity))
+    }
+
+    return pool.exec(forever)
+      .timeout(50)
+      .finally(() => {
+        return pool.terminate()
+      });
+  });
+
   describe('validate', () => {
     it('should not allow unknown properties in forkOpts', function() {
       var pool = createPool({
