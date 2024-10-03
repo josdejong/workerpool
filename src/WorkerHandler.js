@@ -305,11 +305,12 @@ function WorkerHandler(script, _options) {
         var trackedTask = me.tracking[response.id];
         if (trackedTask !== undefined) {
           if (response.error) {
+            clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.reject(objectToError(response.error))
           } else {
+            me.tracking && clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.resolve(trackedTask.result);            
           }
-          me.tracking && clearTimeout(me.tracking[id].timeoutId);
         }
         delete me.tracking[id];
       }

@@ -205,7 +205,7 @@ worker.tryCleanup = function() {
     ]);
   }
   // if there are no listeners just reject in a promise and let the worker cleanup start
-  return new Promise(function(_resolve, reject) { reject(); });
+  return new Promise(function(_resolve, reject) { reject(new Error('Cleanup failed, exiting worker')); });
 }
 
 var currentRequestId = null;
@@ -228,8 +228,6 @@ worker.on('message', function (request) {
         method: CLEANUP_METHOD_ID,
         error: err ? convertError(err) : null,
       });
-
-      worker.exit();
     });
   }
   try {
