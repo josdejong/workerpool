@@ -24,6 +24,7 @@ const commonPlugin = [
         browser: true
     }),
     commonjs({
+        strictRequires: 'auto',
         ignore: ['os', 'worker_threads', 'child_process']
     }),
     babel({
