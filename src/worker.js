@@ -154,7 +154,7 @@ worker.abortListeners = [];
  * @param {Number} code 
  * @returns 
  */
-worker.cleanupAndExit = function(code) {
+worker.terminateAndExit = function(code) {
   var _exit = function() {
     worker.exit(code);
   }
@@ -171,7 +171,28 @@ worker.cleanupAndExit = function(code) {
   }
 }
 
-worker.tryCleanup = function() {
+
+
+/**
+  * Called within the worker message handler to run abort handlers if registered to perform cleanup operations.
+  * @param {Integer} [requestId] id of task which is currently executing in the worker
+  * @return {Promise<void>}
+*/
+worker.cleanup = function(requestId) {
+
+  if (!worker.abortListeners.length) {
+    worker.send({
+      id: requestId,
+      method: CLEANUP_METHOD_ID,
+      error: convertError(new Error('Worker terminating')),
+    });
+
+    // If there are no handlers registered, reject the promise with an error as we want the handler to be notified
+    // that cleanup should begin and the handler should be GCed.
+    return new Promise(function(reject) { reject(new Error("Worker terminating")); }); 
+  }
+  
+
   var _exit = function() {
     worker.exit();
   }
@@ -182,54 +203,58 @@ worker.tryCleanup = function() {
     }
   }
 
-  if (worker.abortListeners.length) {
-    const promises = worker.abortListeners.map(listener => listener());
-    let timerId;
-    const timeoutPromise = new Promise((_resolve, reject) => {
-      timerId = setTimeout(reject, worker.abortListenerTimeout);
+  const promises = worker.abortListeners.map(listener => listener());
+  let timerId;
+  const timeoutPromise = new Promise((_resolve, reject) => {
+    timerId = setTimeout(function () { 
+      reject(new Error('Timeout occured waiting for abort handler, killing worker'));
+    }, worker.abortListenerTimeout);
+  });
+
+  // Once a promise settles we need to clear the timeout to prevet fulfulling the promise twice 
+  const settlePromise = Promise.all(promises).then(function() {
+    clearTimeout(timerId);
+    _abort();
+  }, function() {
+    clearTimeout(timerId);
+    _exit();
+  });
+
+  // Returns a promise which will result in one of the following cases
+  // - Resolve once all handlers resolve
+  // - Reject if one or more handlers exceed the 'abortListenerTimeout' interval
+  // - Reject if one or more handlers reject
+  // Upon one of the above cases a message will be sent to the handler with the result of the handler execution
+  // which will either kill the worker if the result contains an error, or 
+  return Promise.all([
+    settlePromise,
+    timeoutPromise
+  ]).then(function() {
+    worker.send({
+      id: requestId,
+      method: CLEANUP_METHOD_ID,
+      error: null,
     });
-
-    // Once a promise settles we need to clear the timeout to prevet fulfulling the promise twice 
-    const settlePromise = Promise.all(promises).then(function() {
-      clearTimeout(timerId);
-      _abort();
-    }, function() {
-      clearTimeout(timerId);
-      _exit();
+  }, function(err) {
+    worker.send({
+      id: requestId,
+      method: CLEANUP_METHOD_ID,
+      error: err ? convertError(err) : null,
     });
-
-
-    return Promise.all([
-      settlePromise,
-      timeoutPromise
-    ]);
-  }
-  // if there are no listeners just reject in a promise and let the worker cleanup start
-  return new Promise(function(_resolve, reject) { reject(new Error('Cleanup failed, exiting worker')); });
+  });
 }
 
 var currentRequestId = null;
 
 worker.on('message', function (request) {
   if (request === TERMINATE_METHOD_ID) {
-    return worker.cleanupAndExit(0);
+    return worker.terminateAndExit(0);
   }
 
   if (request.method === CLEANUP_METHOD_ID) {
-    return worker.tryCleanup().then(function () {
-      worker.send({
-        id: request.id,
-        method: CLEANUP_METHOD_ID,
-        error: null,
-      });
-    }).catch(function(err) {
-      worker.send({
-        id: request.id,
-        method: CLEANUP_METHOD_ID,
-        error: err ? convertError(err) : null,
-      });
-    });
+    return worker.cleanup(request.id);
   }
+
   try {
     var method = worker.methods[request.method];
 
