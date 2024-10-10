@@ -152,7 +152,7 @@ worker.abortListeners = [];
 /**
  * Cleanup and exit the worker.
  * @param {Number} code 
- * @returns 
+ * @returns {Promise<void>}
  */
 worker.terminateAndExit = function(code) {
   var _exit = function() {
@@ -166,8 +166,13 @@ worker.terminateAndExit = function(code) {
   var result = worker.terminationHandler(code);
   if (isPromise(result)) {
     result.then(_exit, _exit);
+
+    return result;
   } else {
     _exit();
+    return new Promise(function (_resolve, reject) {
+      reject(new Error("Worker terminating"));
+    });
   }
 }
 
