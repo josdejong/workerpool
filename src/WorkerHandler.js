@@ -10,6 +10,12 @@ const {validateOptions, forkOptsNames, workerThreadOptsNames, workerOptsNames} =
  */
 var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 
+/**
+ * Special message by parent which causes a child process worker to perform cleaup
+ * steps before determining if the child process worker should be terminated.
+ */
+var CLEANUP_METHOD_ID = '__workerpool-cleanup__';
+
 function ensureWorkerThreads() {
   var WorkerThreads = tryRequireWorkerThreads()
   if (!WorkerThreads) {
@@ -294,6 +300,20 @@ function WorkerHandler(script, _options) {
           }
         }
       }
+
+      if (response.method === CLEANUP_METHOD_ID) {
+        var trackedTask = me.tracking[response.id];
+        if (trackedTask !== undefined) {
+          if (response.error) {
+            clearTimeout(trackedTask.timeoutId);
+            trackedTask.resolver.reject(objectToError(response.error))
+          } else {
+            me.tracking && clearTimeout(trackedTask.timeoutId);
+            trackedTask.resolver.resolve(trackedTask.result);            
+          }
+        }
+        delete me.tracking[id];
+      }
     }
   });
 
@@ -306,6 +326,7 @@ function WorkerHandler(script, _options) {
         me.processing[id].resolver.reject(error);
       }
     }
+    
     me.processing = Object.create(null);
   }
 
@@ -337,7 +358,7 @@ function WorkerHandler(script, _options) {
   });
 
   this.processing = Object.create(null); // queue with tasks currently in progress
-
+  this.tracking = Object.create(null); // queue with tasks being monitored for cleanup status
   this.terminating = false;
   this.terminated = false;
   this.cleaning = false;
@@ -399,17 +420,50 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
   var me = this;
   return resolver.promise.catch(function (error) {
     if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
+      me.tracking[id] = {
+        id,
+        resolver: Promise.defer()
+      };
+      
       // remove this task from the queue. It is already rejected (hence this
       // catch event), and else it will be rejected again when terminating
       delete me.processing[id];
 
-      // terminate worker
-      return me.terminateAndNotify(true)
-        .then(function() {
-          throw error;
-        }, function(err) {
-          throw err;
-        });
+      me.tracking[id].resolver.promise = me.tracking[id].resolver.promise.catch(function(err) {
+        delete me.tracking[id];
+
+        var promise = me.terminateAndNotify(true)
+          .then(function() { 
+            throw err;
+          }, function(err) {
+            throw err;
+          });
+
+        return promise;
+      });
+ 
+      me.worker.send({
+        id,
+        method: CLEANUP_METHOD_ID 
+      });
+      
+      
+      /**
+        * Sets a timeout to reject the cleanup operation if the message sent to the worker
+        * does not receive a response. see worker.tryCleanup for worker cleanup operations.
+        * Here we use the workerTerminateTimeout as the worker will be terminated if the timeout does invoke.
+        * 
+        * We need this timeout in either case of a Timeout or Cancellation Error as if
+        * the worker does not send a message we still need to give a window of time for a response.
+        * 
+        * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup
+        * operations will occure.
+      */
+      me.tracking[id].timeoutId = setTimeout(function() {
+          me.tracking[id].resolver.reject(error);
+      }, me.workerTerminateTimeout);
+
+      return me.tracking[id].resolver.promise;
     } else {
       throw error;
     }
@@ -441,8 +495,17 @@ WorkerHandler.prototype.terminate = function (force, callback) {
         this.processing[id].resolver.reject(new Error('Worker terminated'));
       }
     }
+
     this.processing = Object.create(null);
   }
+
+  // If we are terminating, cancel all tracked task for cleanup
+  for (var task of Object.values(me.tracking)) {
+    clearTimeout(task.timeoutId);
+    task.resolver.reject(new Error('Worker Terminating'));
+  }
+
+  me.tracking = Object.create(null);
 
   if (typeof callback === 'function') {
     this.terminationHandler = callback;
@@ -452,6 +515,7 @@ WorkerHandler.prototype.terminate = function (force, callback) {
     var cleanup = function(err) {
       me.terminated = true;
       me.cleaning = false;
+
       if (me.worker != null && me.worker.removeAllListeners) {
         // removeAllListeners is only available for child_process
         me.worker.removeAllListeners('message');
