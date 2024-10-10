@@ -194,7 +194,7 @@ worker.cleanup = function(requestId) {
 
     // If there are no handlers registered, reject the promise with an error as we want the handler to be notified
     // that cleanup should begin and the handler should be GCed.
-    return new Promise(function(reject) { reject(new Error("Worker terminating")); }); 
+    return new Promise(function(resolve) { resolve(); });
   }
   
 
