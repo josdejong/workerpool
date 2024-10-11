@@ -38,21 +38,21 @@
     "prepublishOnly": "npm run test"
   },
   "devDependencies": {
-    "@babel/core": "7.25.2",
-    "@babel/preset-env": "7.25.4",
+    "@babel/core": "7.25.8",
+    "@babel/preset-env": "7.25.8",
     "@rollup/plugin-babel": "6.0.4",
     "@rollup/plugin-commonjs": "28.0.0",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "15.3.0",
     "@rollup/plugin-terser": "0.4.4",
-    "@types/node": "22.7.0",
+    "@types/node": "22.7.5",
     "c8": "10.1.2",
     "core-js": "3.38.1",
     "date-format": "4.0.14",
     "find-process": "1.4.7",
     "fs-extra": "11.2.0",
     "mocha": "10.7.3",
-    "rollup": "4.22.4",
-    "typescript": "5.6.2"
+    "rollup": "4.24.0",
+    "typescript": "5.6.3"
   }
 }
