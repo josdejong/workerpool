@@ -2,8 +2,10 @@
 https://github.com/josdejong/workerpool
 
 
-## unpublished changes since version 9.1.3
+## 2024-10-11, version 9.2.0
 
+- Feat: implement support for abort handlers in the workers (#448).
+  Thanks @joshLong145.
 - Feat: implement `Promise.finally()` on the custom promise class (#388).
   Thanks @joshLong145 and @wmertens.
 - Fix #460: `vite` example not working (#461). Thanks @datashaman.
