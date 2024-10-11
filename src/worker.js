@@ -2,21 +2,49 @@
  * worker must be started as a child process or a web worker.
  * It listens for RPC messages from the parent process.
  */
+
 var Transfer = require('./transfer');
 
+/**
+ * worker must handle async cleanup handlers. Use custom Promise implementation. 
+*/
+var Promise = require('./Promise').Promise;
 /**
  * Special message sent by parent which causes the worker to terminate itself.
  * Not a "message object"; this string is the entire message.
  */
 var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 
+/**
+ * Special message by parent which causes a child process worker to perform cleaup
+ * steps before determining if the child process worker should be terminated.
+*/
+var CLEANUP_METHOD_ID = '__workerpool-cleanup__';
 // var nodeOSPlatform = require('./environment').nodeOSPlatform;
+
+
+var TIMEOUT_DEFAULT = 1_000;
 
 // create a worker API for sending and receiving messages which works both on
 // node.js and in the browser
 var worker = {
   exit: function() {}
 };
+
+// api for in worker communication with parent process
+// works in both node.js and the browser
+var publicWorker = {
+  /**
+   * 
+   * @param {() => Promise<void>} listener 
+   */
+  addAbortListener: function(listener) {
+    worker.abortListeners.push(listener);
+  },
+
+  emit: worker.emit
+};
+
 if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
   // worker in the browser
   worker.on = function (event, callback) {
@@ -95,7 +123,8 @@ worker.methods = {};
  * @returns {*}
  */
 worker.methods.run = function run(fn, args) {
-  var f = new Function('return (' + fn + ').apply(null, arguments);');
+  var f = new Function('return (' + fn + ').apply(this, arguments);');
+  f.worker = publicWorker;
   return f.apply(f, args);
 };
 
@@ -112,12 +141,20 @@ worker.methods.methods = function methods() {
  */
 worker.terminationHandler = undefined;
 
+worker.abortListenerTimeout = TIMEOUT_DEFAULT;
+
+/**
+ * Abort handlers for resolving errors which may cause a timeout or cancellation
+ * to occur from a worker context
+ */
+worker.abortListeners = [];
+
 /**
  * Cleanup and exit the worker.
  * @param {Number} code 
- * @returns 
+ * @returns {Promise<void>}
  */
-worker.cleanupAndExit = function(code) {
+worker.terminateAndExit = function(code) {
   var _exit = function() {
     worker.exit(code);
   }
@@ -125,21 +162,104 @@ worker.cleanupAndExit = function(code) {
   if(!worker.terminationHandler) {
     return _exit();
   }
-
+  
   var result = worker.terminationHandler(code);
   if (isPromise(result)) {
     result.then(_exit, _exit);
+
+    return result;
   } else {
     _exit();
+    return new Promise(function (_resolve, reject) {
+      reject(new Error("Worker terminating"));
+    });
   }
+}
+
+
+
+/**
+  * Called within the worker message handler to run abort handlers if registered to perform cleanup operations.
+  * @param {Integer} [requestId] id of task which is currently executing in the worker
+  * @return {Promise<void>}
+*/
+worker.cleanup = function(requestId) {
+
+  if (!worker.abortListeners.length) {
+    worker.send({
+      id: requestId,
+      method: CLEANUP_METHOD_ID,
+      error: convertError(new Error('Worker terminating')),
+    });
+
+    // If there are no handlers registered, reject the promise with an error as we want the handler to be notified
+    // that cleanup should begin and the handler should be GCed.
+    return new Promise(function(resolve) { resolve(); });
+  }
+  
+
+  var _exit = function() {
+    worker.exit();
+  }
+
+  var _abort = function() {
+    if (!worker.abortListeners.length) {
+      worker.abortListeners = [];
+    }
+  }
+
+  const promises = worker.abortListeners.map(listener => listener());
+  let timerId;
+  const timeoutPromise = new Promise((_resolve, reject) => {
+    timerId = setTimeout(function () { 
+      reject(new Error('Timeout occured waiting for abort handler, killing worker'));
+    }, worker.abortListenerTimeout);
+  });
+
+  // Once a promise settles we need to clear the timeout to prevet fulfulling the promise twice 
+  const settlePromise = Promise.all(promises).then(function() {
+    clearTimeout(timerId);
+    _abort();
+  }, function() {
+    clearTimeout(timerId);
+    _exit();
+  });
+
+  // Returns a promise which will result in one of the following cases
+  // - Resolve once all handlers resolve
+  // - Reject if one or more handlers exceed the 'abortListenerTimeout' interval
+  // - Reject if one or more handlers reject
+  // Upon one of the above cases a message will be sent to the handler with the result of the handler execution
+  // which will either kill the worker if the result contains an error, or 
+  return Promise.all([
+    settlePromise,
+    timeoutPromise
+  ]).then(function() {
+    worker.send({
+      id: requestId,
+      method: CLEANUP_METHOD_ID,
+      error: null,
+    });
+  }, function(err) {
+    worker.send({
+      id: requestId,
+      method: CLEANUP_METHOD_ID,
+      error: err ? convertError(err) : null,
+    });
+  });
 }
 
 var currentRequestId = null;
 
 worker.on('message', function (request) {
   if (request === TERMINATE_METHOD_ID) {
-    return worker.cleanupAndExit(0);
+    return worker.terminateAndExit(0);
   }
+
+  if (request.method === CLEANUP_METHOD_ID) {
+    return worker.cleanup(request.id);
+  }
+
   try {
     var method = worker.methods[request.method];
 
@@ -172,7 +292,7 @@ worker.on('message', function (request) {
               worker.send({
                 id: request.id,
                 result: null,
-                error: convertError(err)
+                error: convertError(err),
               });
               currentRequestId = null;
             });
@@ -220,12 +340,15 @@ worker.register = function (methods, options) {
     for (var name in methods) {
       if (methods.hasOwnProperty(name)) {
         worker.methods[name] = methods[name];
+        worker.methods[name].worker = publicWorker;
       }
     }
   }
 
   if (options) {
     worker.terminationHandler = options.onTerminate;
+    // register listener timeout or default to 1 second
+    worker.abortListenerTimeout = options.abortListenerTimeout || TIMEOUT_DEFAULT;
   }
 
   worker.send('ready');
@@ -249,6 +372,7 @@ worker.emit = function (payload) {
     });
   }
 };
+
 
 if (typeof exports !== 'undefined') {
   exports.add = worker.register;

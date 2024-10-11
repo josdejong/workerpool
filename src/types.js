@@ -36,6 +36,7 @@
 /**
  * @typedef {Object} WorkerRegisterOptions
  * @property {(code: number | undefined) => PromiseLike<void> | void} [onTerminate] A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The difference with pool's `onTerminateWorker` is that this callback runs in the worker context, while onTerminateWorker is executed on the main thread.
+  * @property {number} [abortListenerTimeout] The timeout in milliseconds to wait for a worker to clean up it's resources if an abort listener does not resolve, before stopping the worker forcefully. Default value is `1000`.
  */
 
 /**
