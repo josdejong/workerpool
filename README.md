@@ -13,7 +13,7 @@
 - Cancel running tasks
 - Set a timeout on tasks
 - Handles crashed workers
-- Small: 7 kB minified and gzipped
+- Small: 9 kB minified and gzipped
 - Supports transferable objects (only for web workers and worker_threads)
 
 ## Why
