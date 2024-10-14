@@ -443,13 +443,13 @@ pool.exec('eventExample', [], {
 ### Worker API
 Workers have access to a `worker` api which contains the following methods
 
-- emit: (payload: {message: string, transfer: unknown | Transfer}): void
-- addAbortListener: (listener: () => Promise<void>): void
+- `emit: (payload: unknown | Transfer): void`
+- `addAbortListener: (listener: () => Promise<void>): void`
 
 
 Worker termination may be recoverable through `abort listeners` which are registered through `worker.addAbortListener`. If all registered listeners resolve then the worker will not be terminated, allowing for worker reuse in some cases.
 
-NOTE: For operations to successfully clean up, a worker implementation should be **async**. If the worker thread is blocked, then the worker will be killed.
+NOTE: For operations to successfully clean up, a worker implementation should be *async*. If the worker thread is blocked, then the worker will be killed.
 
 ```js
 function asyncTimeout() {
