@@ -393,7 +393,9 @@ workerpool.worker({
 });
 ```
 
-Tasks may configure an `abort handler` to perform cleanup operations when `timeout` or `cancel` is called on a `task`. the `abortListenerTimeout` option can be configured to control when cleanup should be aborted in the case an `abortHandler` never resolves. This timeout trigger will cause the given worker to be cleaned up. Allowing a new worker to be created if need be.
+Worker termination may be recoverable through `abort listeners` which are registered through `worker.addAbortListener`. If all registered listeners resolve then the worker will not be terminated, allowing for worker reuse in some cases.
+
+NOTE: For operations to successfully clean up, a worker implementation should be **async**. If the worker thread is blocked, then the worker will be killed.
 
 ```js
 function asyncTimeout() {
