@@ -393,40 +393,6 @@ workerpool.worker({
 });
 ```
 
-Worker termination may be recoverable through `abort listeners` which are registered through `worker.addAbortListener`. If all registered listeners resolve then the worker will not be terminated, allowing for worker reuse in some cases.
-
-NOTE: For operations to successfully clean up, a worker implementation should be **async**. If the worker thread is blocked, then the worker will be killed.
-
-```js
-function asyncTimeout() {
-  var me = this;
-  return new Promise(function (resolve) {
-    let timeout = setTimeout(() => {
-        resolve();
-    }, 5000); 
-
-    // An abort listener allows for cleanup for a given worker
-    // such that it may be resused for future tasks
-    // if an execption is thrown within scope of the handler
-    // the worker instance will be destroyed.
-    me.worker.addAbortListener(async function () {
-        clearTimeout(timeout);
-        resolve();
-    });
-  });
-}
-
-// create a worker and register public functions
-workerpool.worker(
-  {
-    asyncTimeout: asyncTimeout,
-  },
-  {
-    abortListenerTimeout: 1000
-  }
-);
-```
-
 ### Events
 
 You can send data back from workers to the pool while the task is being executed using the `workerEmit` function:
@@ -470,6 +436,71 @@ pool.exec('eventExample', [], {
       console.log('Done!');
     }
   },
+});
+```
+
+### Worker API
+Workers have access to a `worker` api which contains the following methods
+
+- emit: (payload: {message: string, transfer: unknown | Transfer}): void
+- addAbortListener: (listener: () => Promise<void>): void
+
+
+Worker termination may be recoverable through `abort listeners` which are registered through `worker.addAbortListener`. If all registered listeners resolve then the worker will not be terminated, allowing for worker reuse in some cases.
+
+NOTE: For operations to successfully clean up, a worker implementation should be **async**. If the worker thread is blocked, then the worker will be killed.
+
+```js
+function asyncTimeout() {
+  var me = this;
+  return new Promise(function (resolve) {
+    let timeout = setTimeout(() => {
+        resolve();
+    }, 5000); 
+
+    // An abort listener allows for cleanup for a given worker
+    // such that it may be resused for future tasks
+    // if an execption is thrown within scope of the handler
+    // the worker instance will be destroyed.
+    me.worker.addAbortListener(async function () {
+        clearTimeout(timeout);
+        resolve();
+    });
+  });
+}
+
+// create a worker and register public functions
+workerpool.worker(
+  {
+    asyncTimeout: asyncTimeout,
+  },
+  {
+    abortListenerTimeout: 1000
+  }
+);
+```
+
+
+Events may also be emitted from the `worker` api through `worker.emit`
+
+```js
+// file myWorker.js
+const workerpool = require('workerpool');
+
+function eventExample(delay) {
+  this.worker.emit({
+    status: "in_progress",
+  });
+  workerpool.workerEmit({
+    status: 'complete',
+  });
+
+  return true;
+}
+
+// create a worker and register functions
+workerpool.worker({
+  eventExample: eventExample,
 });
 ```
 
