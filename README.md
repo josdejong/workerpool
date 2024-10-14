@@ -458,11 +458,9 @@ function asyncTimeout() {
     let timeout = setTimeout(() => {
         resolve();
     }, 5000); 
-
-    // An abort listener allows for cleanup for a given worker
-    // such that it may be resused for future tasks
-    // if an execption is thrown within scope of the handler
-    // the worker instance will be destroyed.
+    
+    // Register a listener which will resolve before the time out
+    // above triggers.
     me.worker.addAbortListener(async function () {
         clearTimeout(timeout);
         resolve();
