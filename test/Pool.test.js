@@ -8,19 +8,21 @@ function add(a, b) {
 }
 
 describe('Pool', function () {
-
   // Creating pool with this function ensures that the pool is terminated
   // at the end of the test, which avoid hanging the test suite if terminate()
-  // hadn't been called for some reasons
+  // hadn't been called for some reason
+  let createdPools = []
   function createPool(script, options) {
-    var pool = new Pool(script, options);
-
-    after(() => {
-      return pool.terminate();
-    });
-
+    const pool = new Pool(script, options);
+    createdPools.push(pool);
     return pool;
   }
+
+  afterEach(async () => {
+    while (createdPools.length > 0) {
+      await createdPools.shift().terminate();
+    }
+  });
 
   describe('nodeWorker', function() {
     function add(a,b) {
