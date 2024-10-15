@@ -209,7 +209,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -232,7 +232,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -259,7 +259,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -282,7 +282,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -387,7 +387,7 @@ describe('Pool', function () {
             done();
           })
           .catch(function () {
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
           });
     });
   });
@@ -416,7 +416,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
           });
     });
   });
@@ -434,7 +434,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
           });
     });
   });
@@ -471,7 +471,7 @@ describe('Pool', function () {
           done();
         })
         .catch(function () {
-          assert('Should not throw an error');
+          assert.fail('Should not throw an error');
         });
   });
 
@@ -484,7 +484,7 @@ describe('Pool', function () {
 
     pool.exec(testAsync)
         .then(function () {
-          assert('Should not resolve');
+          assert.fail('Should not resolve');
         })
         .catch(function (err) {
           assert.strictEqual(err.toString(), 'Error: I reject!');
@@ -653,7 +653,7 @@ describe('Pool', function () {
     return pool.exec(forever)
         .timeout(50)
         .then(function (result) {
-          assert('promise should never resolve');
+          assert.fail('promise should never resolve');
         })
       //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
@@ -698,7 +698,7 @@ describe('Pool', function () {
             .catch(done);
         })
         .catch(function (err) {
-          assert('promise should not throw');
+          assert.fail('promise should not throw');
         });
   });
 
@@ -721,7 +721,7 @@ describe('Pool', function () {
     pool.exec(sleep)
         .timeout(delay)
         .then(function (result) {
-          assert('promise should never resolve');
+          assert.fail('promise should never resolve');
         })
         .catch(function (err) {
           assert(err instanceof Promise.TimeoutError);
@@ -1211,7 +1211,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
             done(err);
           });
   });
@@ -1234,7 +1234,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
             done(err);
           });
   });
@@ -1252,7 +1252,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
             done(err);
           });
   });

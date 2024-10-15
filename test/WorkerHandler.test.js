@@ -107,7 +107,7 @@ describe('WorkerHandler', function () {
     handler.exec('run', [String(add), [2, 4]])
         /*
         .then(function (result) {
-          assert('Should not complete request');
+          assert.fail('Should not complete request');
         })
         */
         .catch(function (err) {
@@ -202,7 +202,7 @@ describe('WorkerHandler', function () {
 
     var promise = handler.exec('run', [String(forever)])
         .then(function () {
-          assert('promise should never resolve');
+          assert.fail('promise should never resolve');
         })
         //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
@@ -230,7 +230,7 @@ describe('WorkerHandler', function () {
     handler.exec('run', [String(forever)])
         .timeout(50)
         .then(function () {
-          assert('promise should never resolve');
+          assert.fail('promise should never resolve');
         })
         //.catch(Promise.TimeoutError, function (err) { // TODO: not yet supported
         .catch(function (err) {
@@ -281,7 +281,7 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(add), [2, 4]])
         .then(function () {
-          assert('Promise should not be resolved');
+          assert.fail('Promise should not be resolved');
         })
         .catch(function (err) {
           assert(err instanceof Error);
@@ -306,7 +306,7 @@ describe('WorkerHandler', function () {
 
     handler.exec('run', [String(add), [2, 4]])
         .then(function () {
-          assert('Promise should not be resolved');
+          assert.fail('Promise should not be resolved');
         })
         .catch(function (err) {
           assert(err instanceof Error);
@@ -497,7 +497,7 @@ describe('WorkerHandler', function () {
       .then(function () {
         done();
       }).catch(function (err) {
-        assert('Promise should not be rejected');
+        assert.fail('Promise should not be rejected');
       });
     });
 
@@ -508,7 +508,7 @@ describe('WorkerHandler', function () {
 
       handler.terminateAndNotify(true, 50)
       .then(function () {
-        assert('Promise should not be resolved');
+        assert.fail('Promise should not be resolved');
       }).catch(function (err) {
         assert.ok(err instanceof Promise.TimeoutError);
         done();
