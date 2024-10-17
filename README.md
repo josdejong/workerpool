@@ -197,6 +197,7 @@ The following options are available:
   - In case of `'process'`, `child_process` will be used. Only available in a node.js environment.
   - In case of `'thread'`, `worker_threads` will be used. If `worker_threads` are not available, an error is thrown. Only available in a node.js environment.
 - `workerTerminateTimeout: number`. The timeout in milliseconds to wait for a worker to cleanup it's resources on termination before stopping it forcefully. Default value is `1000`.
+- `abortListenerTimeout: number`. The timeout in milliseconds to wait for abort listener's before stopping it forcefully, triggering cleanup. Default value is `1000`.
 - `forkArgs: String[]`. For `process` worker type. An array passed as `args` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `forkOpts: Object`. For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options). See nodejs documentation for available options.
 - `workerOpts: Object`. For `web` worker type. An object passed to the [constructor of the web worker](https://html.spec.whatwg.org/multipage/workers.html#dom-worker). See [WorkerOptions specification](https://html.spec.whatwg.org/multipage/workers.html#workeroptions) for available options. 
@@ -393,38 +394,6 @@ workerpool.worker({
 });
 ```
 
-Tasks may configure an `abort handler` to perform cleanup operations when `timeout` or `cancel` is called on a `task`. the `abortListenerTimeout` option can be configured to control when cleanup should be aborted in the case an `abortHandler` never resolves. This timeout trigger will cause the given worker to be cleaned up. Allowing a new worker to be created if need be.
-
-```js
-function asyncTimeout() {
-  var me = this;
-  return new Promise(function (resolve) {
-    let timeout = setTimeout(() => {
-        resolve();
-    }, 5000); 
-
-    // An abort listener allows for cleanup for a given worker
-    // such that it may be resused for future tasks
-    // if an execption is thrown within scope of the handler
-    // the worker instance will be destroyed.
-    me.worker.addAbortListener(async function () {
-        clearTimeout(timeout);
-        resolve();
-    });
-  });
-}
-
-// create a worker and register public functions
-workerpool.worker(
-  {
-    asyncTimeout: asyncTimeout,
-  },
-  {
-    abortListenerTimeout: 1000
-  }
-);
-```
-
 ### Events
 
 You can send data back from workers to the pool while the task is being executed using the `workerEmit` function:
@@ -468,6 +437,69 @@ pool.exec('eventExample', [], {
       console.log('Done!');
     }
   },
+});
+```
+
+### Worker API
+Workers have access to a `worker` api which contains the following methods
+
+- `emit: (payload: unknown | Transfer): void`
+- `addAbortListener: (listener: () => Promise<void>): void`
+
+
+Worker termination may be recoverable through `abort listeners` which are registered through `worker.addAbortListener`. If all registered listeners resolve then the worker will not be terminated, allowing for worker reuse in some cases.
+
+NOTE: For operations to successfully clean up, a worker implementation should be *async*. If the worker thread is blocked, then the worker will be killed.
+
+```js
+function asyncTimeout() {
+  var me = this;
+  return new Promise(function (resolve) {
+    let timeout = setTimeout(() => {
+        resolve();
+    }, 5000); 
+    
+    // Register a listener which will resolve before the time out
+    // above triggers.
+    me.worker.addAbortListener(async function () {
+        clearTimeout(timeout);
+        resolve();
+    });
+  });
+}
+
+// create a worker and register public functions
+workerpool.worker(
+  {
+    asyncTimeout: asyncTimeout,
+  },
+  {
+    abortListenerTimeout: 1000
+  }
+);
+```
+
+
+Events may also be emitted from the `worker` api through `worker.emit`
+
+```js
+// file myWorker.js
+const workerpool = require('workerpool');
+
+function eventExample(delay) {
+  this.worker.emit({
+    status: "in_progress",
+  });
+  workerpool.workerEmit({
+    status: 'complete',
+  });
+
+  return true;
+}
+
+// create a worker and register functions
+workerpool.worker({
+  eventExample: eventExample,
 });
 ```
 

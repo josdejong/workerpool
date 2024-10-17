@@ -35,13 +35,18 @@ var worker = {
 // works in both node.js and the browser
 var publicWorker = {
   /**
-   * 
-   * @param {() => Promise<void>} listener 
-   */
+   * Registers listeners which will trigger when a task is timed out or cancled. If all listeners resolve, the worker executing the given task will not be terminated.
+   * *Note*: If there is a blocking operation within a listener, the worker will be terminated.
+   * @param {() => Promise<void>} listener
+  */
   addAbortListener: function(listener) {
     worker.abortListeners.push(listener);
   },
 
+  /**
+    * Emit an event from the worker thread to the main thread.
+    * @param {any} payload
+  */
   emit: worker.emit
 };
 
