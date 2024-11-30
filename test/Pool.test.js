@@ -1571,7 +1571,6 @@ describe('Pool', function () {
       pool.exec('stdoutStreamOnAbort', [], {
         on: function (payload) {
           assert.strictEqual(payload.stdout.trim(), "Hello, world!");
-          console.log(payload);
           pool.terminate();
           done();
         }
