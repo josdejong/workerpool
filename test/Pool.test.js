@@ -1354,7 +1354,7 @@ describe('Pool', function () {
         maxWorkers: 1,
         onCreateWorker: () => {
           workerCount += 1;
-        }
+        },
       });
       
       let task = pool.exec('asyncTimeout', [],  {});
@@ -1558,6 +1558,25 @@ describe('Pool', function () {
           });
         });
       });
+    });
+
+    it('should trigger event stdout in abort handler', function (done) {
+      var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
+        maxWorkers: 1,
+        workerType: 'process',
+        emitStdStreams: true, 
+        workerTerminateTimeout: 1000,
+      });
+
+      pool.exec('stdoutStreamOnAbort', [], {
+        on: function (payload) {
+          assert.strictEqual(payload.stdout.trim(), "Hello, world!");
+          console.log(payload);
+          pool.terminate();
+          done();
+        }
+      }).timeout(100);
+
     });
   });
 

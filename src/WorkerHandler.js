@@ -220,13 +220,15 @@ function objectToError (obj) {
 
 function handleEmittedStdPayload(handler, payload) {
   // TODO: refactor if parallel task execution gets added
-  if (Object.keys(handler.processing).length !== 1) {
-    return;
-  }
   var task = Object.values(handler.processing)[0]
-  if (task.options && typeof task.options.on === 'function') {
+  if (task && task.options && typeof task.options.on === 'function') {
     task.options.on(payload);
   }
+  
+  task = Object.values(handler.tracking)[0];
+  if (task && task.options && typeof task.options.on === "function") {
+    task.options.on(payload);
+  } 
 }
 
 /**
@@ -422,7 +424,8 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
     if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
       me.tracking[id] = {
         id,
-        resolver: Promise.defer()
+        resolver: Promise.defer(),
+        options: me.processing[id].options,
       };
       
       // remove this task from the queue. It is already rejected (hence this
