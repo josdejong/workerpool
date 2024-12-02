@@ -301,6 +301,16 @@ function WorkerHandler(script, _options) {
             task.resolver.resolve(response.result);
           }
         }
+      }else {
+        // if the task is not the current, it might be tracked for cleanup
+        var task = me.tracking[id];
+        if (task !== undefined) {
+          if (response.isEvent) {
+            if (task.options && typeof task.options.on === 'function') {
+              task.options.on(response.payload);
+            }
+          }
+        } 
       }
 
       if (response.method === CLEANUP_METHOD_ID) {

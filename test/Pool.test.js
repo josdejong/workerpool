@@ -1575,7 +1575,23 @@ describe('Pool', function () {
           done();
         }
       }).timeout(100);
+    });
 
+    it('should trigger event in abort handler', function (done) {
+      var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
+        maxWorkers: 1,
+        workerType: 'process',
+        emitStdStreams: true, 
+        workerTerminateTimeout: 1000,
+      });
+
+      pool.exec('eventEmitOnAbort', [], {
+        on: function (payload) {
+          assert.strictEqual(payload.status, 'cleanup_success');
+          pool.terminate();
+          done();
+        }
+      }).timeout(100);
     });
   });
 
