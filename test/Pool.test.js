@@ -1574,7 +1574,7 @@ describe('Pool', function () {
           pool.terminate();
           done();
         }
-      }).timeout(100);
+      }).timeout(50);
     });
 
     it('should trigger event in abort handler', function (done) {
@@ -1591,7 +1591,7 @@ describe('Pool', function () {
           pool.terminate();
           done();
         }
-      }).timeout(100);
+      }).timeout(50);
     });
   });
 
