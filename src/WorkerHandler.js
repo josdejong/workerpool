@@ -301,7 +301,7 @@ function WorkerHandler(script, _options) {
             task.resolver.resolve(response.result);
           }
         }
-      }else {
+      } else {
         // if the task is not the current, it might be tracked for cleanup
         var task = me.tracking[id];
         if (task !== undefined) {
