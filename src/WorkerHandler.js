@@ -488,7 +488,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
  * @return {boolean} Returns true if the worker is busy
  */
 WorkerHandler.prototype.busy = function () {
-  return this.cleaning || Object.keys(this.processing).length > 0;
+  return this.cleaning || Object.keys(this.processing).length > 0 || Object.keys(this.tracking).length > 0;
 };
 
 /**
