@@ -445,7 +445,9 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
       me.tracking[id] = {
         id,
         resolver: Promise.defer(),
-        options: options,
+        options: options ?? {
+          workerAbortStart: () => {}
+        },
       };
       
       // remove this task from the queue. It is already rejected (hence this
