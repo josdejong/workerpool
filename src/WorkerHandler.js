@@ -446,7 +446,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
         id,
         resolver: Promise.defer(),
         options: options ?? {
-          workerAbortStart: () => {}
+          onAbortStart: () => {}
         },
       };
       
@@ -471,7 +471,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
         id,
         method: CLEANUP_METHOD_ID 
       });
-      me.tracking[id].options.workerAbortStart({
+      me.tracking[id].options.onAbortStart({
         id,
         taskResolver: me.tracking[id].resolver,
       });

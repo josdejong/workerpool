@@ -1331,7 +1331,7 @@ describe('Pool', function () {
       });
       
       pool.exec('asyncTimeout', [],{
-        workerAbortStart: async function(args) {
+        onAbortStart: async function(args) {
           // wait for the promise to resolve,
           // then check pool stats
           await args.taskResolver.promise;
@@ -1366,7 +1366,7 @@ describe('Pool', function () {
       });
       
       let task = pool.exec('asyncTimeout', [],  {
-        workerAbortStart: async function(args) {
+        onAbortStart: async function(args) {
           // wait for the promise to resolve,
           // then check pool stats.
           await args.taskResolver.promise;
@@ -1427,7 +1427,7 @@ describe('Pool', function () {
       }
 
       const _ = pool.exec(asyncTimeout, [],  {
-        workerAbortStart: async function(args) {
+        onAbortStart: async function(args) {
           // wait for the promise to resolve,
           // then check pool stats.
           await args.taskResolver.promise;
@@ -1477,7 +1477,7 @@ describe('Pool', function () {
       }
 
       const task = pool.exec(asyncTimeout, [],  {
-        workerAbortStart: async function(args) {
+        onAbortStart: async function(args) {
           // wait for the promise to resolve,
           // then check pool stats.
           await args.taskResolver.promise;
