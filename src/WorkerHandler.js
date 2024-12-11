@@ -251,6 +251,7 @@ function WorkerHandler(script, _options) {
   this.workerOpts = options.workerOpts;
   this.workerThreadOpts = options.workerThreadOpts
   this.workerTerminateTimeout = options.workerTerminateTimeout;
+  this.onAbortResolution = options.onAbortResolution;
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
@@ -318,10 +319,19 @@ function WorkerHandler(script, _options) {
         if (trackedTask !== undefined) {
           if (response.error) {
             clearTimeout(trackedTask.timeoutId);
-            trackedTask.resolver.reject(objectToError(response.error))
+            trackedTask.resolver.reject(objectToError(response.error));
+            me.onAbortResolution({
+              error: response.error,
+              id,
+              isTerminating: true
+            });
           } else {
             me.tracking && clearTimeout(trackedTask.timeoutId);
-            trackedTask.resolver.resolve(trackedTask.result);            
+            trackedTask.resolver.resolve(trackedTask.result);
+            me.onAbortResolution({
+              id,
+              isTerminating: false,
+            })            
           }
         }
         delete me.tracking[id];
@@ -459,7 +469,10 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
         id,
         method: CLEANUP_METHOD_ID 
       });
-      
+      me.tracking[id].options.workerAbortStart({
+        id,
+        taskResolver: me.tracking[id].resolver,
+      });
       
       /**
         * Sets a timeout to reject the cleanup operation if the message sent to the worker
