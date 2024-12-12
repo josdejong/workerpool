@@ -317,6 +317,7 @@ function WorkerHandler(script, _options) {
       if (response.method === CLEANUP_METHOD_ID) {
         var trackedTask = me.tracking[response.id];
         if (trackedTask !== undefined) {
+          delete me.tracking[id];
           if (response.error) {
             clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.reject(objectToError(response.error));
@@ -334,7 +335,6 @@ function WorkerHandler(script, _options) {
             })            
           }
         }
-        delete me.tracking[id];
       }
     }
   });
