@@ -220,13 +220,11 @@ function objectToError (obj) {
 
 function handleEmittedStdPayload(handler, payload) {
   // TODO: refactor if parallel task execution gets added
-  if (Object.keys(handler.processing).length !== 1) {
-    return;
-  }
-  var task = Object.values(handler.processing)[0]
-  if (task.options && typeof task.options.on === 'function') {
-    task.options.on(payload);
-  }
+  Object.values(handler.processing)
+    .forEach(task => task?.options?.on(payload));
+  
+  Object.values(handler.tracking)
+    .forEach(task => task?.options?.on(payload)); 
 }
 
 /**
@@ -299,6 +297,16 @@ function WorkerHandler(script, _options) {
             task.resolver.resolve(response.result);
           }
         }
+      } else {
+        // if the task is not the current, it might be tracked for cleanup
+        var task = me.tracking[id];
+        if (task !== undefined) {
+          if (response.isEvent) {
+            if (task.options && typeof task.options.on === 'function') {
+              task.options.on(response.payload);
+            }
+          }
+        } 
       }
 
       if (response.method === CLEANUP_METHOD_ID) {
@@ -422,7 +430,8 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
     if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
       me.tracking[id] = {
         id,
-        resolver: Promise.defer()
+        resolver: Promise.defer(),
+        options: options,
       };
       
       // remove this task from the queue. It is already rejected (hence this

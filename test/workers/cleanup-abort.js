@@ -5,8 +5,7 @@ function asyncTimeout() {
   return new Promise(function (resolve) {
     let timeout = setTimeout(() => {
         resolve();
-    }, 5000); 
-
+    }, 5000);
     me.worker.addAbortListener(async function () {
         clearTimeout(timeout);
         resolve();
@@ -34,11 +33,36 @@ function asyncAbortHandlerNeverResolves() {
   });
 }
 
+function stdoutStreamOnAbort() {
+  var me = this;
+  return new Promise(function (resolve) {
+    me.worker.addAbortListener(async function () {
+        console.log("Hello, world!");
+        resolve();
+    });
+  });
+}
+
+function eventEmitOnAbort() {
+  var me = this;
+  return new Promise(function (resolve) {
+    me.worker.addAbortListener(async function () {
+        workerpool.workerEmit({
+          status: 'cleanup_success',
+        });
+        resolve();
+    });
+  });
+}
+
+
 // create a worker and register public functions
 workerpool.worker(
   {
     asyncTimeout: asyncTimeout,
     asyncAbortHandlerNeverResolves: asyncAbortHandlerNeverResolves,
+    stdoutStreamOnAbort: stdoutStreamOnAbort,
+    eventEmitOnAbort: eventEmitOnAbort,
   },
   {
     abortListenerTimeout: 1000
