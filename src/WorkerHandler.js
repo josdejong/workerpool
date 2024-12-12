@@ -220,15 +220,11 @@ function objectToError (obj) {
 
 function handleEmittedStdPayload(handler, payload) {
   // TODO: refactor if parallel task execution gets added
-  var task = Object.values(handler.processing)[0]
-  if (task && task.options && typeof task.options.on === 'function') {
-    task.options.on(payload);
-  }
+  Object.values(handler.processing)
+    .forEach(task => task?.options?.on(payload));
   
-  task = Object.values(handler.tracking)[0];
-  if (task && task.options && typeof task.options.on === "function") {
-    task.options.on(payload);
-  } 
+  Object.values(handler.tracking)
+    .forEach(task => task?.options?.on(payload)); 
 }
 
 /**
