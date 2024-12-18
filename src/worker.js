@@ -81,7 +81,10 @@ else if (typeof process !== 'undefined') {
     var parentPort  = WorkerThreads.parentPort;
     worker.send = parentPort.postMessage.bind(parentPort);
     worker.on = parentPort.on.bind(parentPort);
-    worker.exit = process.exit.bind(process);
+    worker.exit = function (code) {
+      process.exitCode = code;
+      parentPort.postMessage('__workerpool-terminate__');
+    };
   } else {
     worker.on = process.on.bind(process);
     // ignore transfer argument since it is not supported by process
@@ -92,7 +95,10 @@ else if (typeof process !== 'undefined') {
     worker.on('disconnect', function () {
       process.exit(1);
     });
-    worker.exit = process.exit.bind(process);
+    worker.exit = function (code) {
+      process.exitCode = code;
+      process.send('__workerpool-terminate__');
+    };
   }
 }
 else {
@@ -102,8 +108,8 @@ else {
 function convertError(error) {
   return Object.getOwnPropertyNames(error).reduce(function(product, name) {
     return Object.defineProperty(product, name, {
-	value: error[name],
-	enumerable: true
+    value: error[name],
+    enumerable: true
     });
   }, {});
 }

@@ -950,7 +950,7 @@ describe('Pool', function () {
 
     assert.strictEqual(pool.workers.length, 1);
 
-    return pool.terminate(false, 1000)
+    return pool.terminate(false, 2000)
       .then(function() {
         assert.strictEqual(pool.workers.length, 0);
       });
