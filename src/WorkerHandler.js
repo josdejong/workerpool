@@ -247,7 +247,7 @@ function WorkerHandler(script, _options) {
   this.workerOpts = options.workerOpts;
   this.workerThreadOpts = options.workerThreadOpts
   this.workerTerminateTimeout = options.workerTerminateTimeout;
-  this.onAbortResolution = options.onAbortResolution;
+  this.onAbortResolution = options.onAbortResolution || (() => null);
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
