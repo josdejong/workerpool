@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 9.3.0
+
+- Feat: support for events and std streams to parents from an abort handler.
+  Thanks @joshLong145.
+
+
 ## 2024-10-11, version 9.2.0
 
 - Feat: implement support for abort handlers in the workers (#448).

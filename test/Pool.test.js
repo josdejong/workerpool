@@ -8,19 +8,21 @@ function add(a, b) {
 }
 
 describe('Pool', function () {
-
   // Creating pool with this function ensures that the pool is terminated
   // at the end of the test, which avoid hanging the test suite if terminate()
-  // hadn't been called for some reasons
+  // hadn't been called for some reason
+  let createdPools = []
   function createPool(script, options) {
-    var pool = new Pool(script, options);
-
-    after(() => {
-      return pool.terminate();
-    });
-
+    const pool = new Pool(script, options);
+    createdPools.push(pool);
     return pool;
   }
+
+  afterEach(async () => {
+    while (createdPools.length > 0) {
+      await createdPools.shift().terminate();
+    }
+  });
 
   describe('nodeWorker', function() {
     function add(a,b) {
@@ -209,7 +211,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -232,7 +234,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -259,7 +261,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -282,7 +284,7 @@ describe('Pool', function () {
     })
     .catch(function (err) {
       console.log(err);
-      assert('Should not throw an error');
+      assert.fail('Should not throw an error');
       done(err);
     });
   })
@@ -387,7 +389,7 @@ describe('Pool', function () {
             done();
           })
           .catch(function () {
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
           });
     });
   });
@@ -416,7 +418,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
           });
     });
   });
@@ -434,7 +436,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
           });
     });
   });
@@ -471,7 +473,7 @@ describe('Pool', function () {
           done();
         })
         .catch(function () {
-          assert('Should not throw an error');
+          assert.fail('Should not throw an error');
         });
   });
 
@@ -484,7 +486,7 @@ describe('Pool', function () {
 
     pool.exec(testAsync)
         .then(function () {
-          assert('Should not resolve');
+          assert.fail('Should not resolve');
         })
         .catch(function (err) {
           assert.strictEqual(err.toString(), 'Error: I reject!');
@@ -653,7 +655,7 @@ describe('Pool', function () {
     return pool.exec(forever)
         .timeout(50)
         .then(function (result) {
-          assert('promise should never resolve');
+          assert.fail('promise should never resolve');
         })
       //.catch(Promise.CancellationError, function (err) { // TODO: not yet supported
         .catch(function (err) {
@@ -698,7 +700,7 @@ describe('Pool', function () {
             .catch(done);
         })
         .catch(function (err) {
-          assert('promise should not throw');
+          assert.fail('promise should not throw');
         });
   });
 
@@ -721,7 +723,7 @@ describe('Pool', function () {
     pool.exec(sleep)
         .timeout(delay)
         .then(function (result) {
-          assert('promise should never resolve');
+          assert.fail('promise should never resolve');
         })
         .catch(function (err) {
           assert(err instanceof Promise.TimeoutError);
@@ -1211,7 +1213,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
             done(err);
           });
   });
@@ -1234,7 +1236,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
             done(err);
           });
   });
@@ -1252,7 +1254,7 @@ describe('Pool', function () {
           })
           .catch(function (err) {
             console.log(err);
-            assert('Should not throw an error');
+            assert.fail('Should not throw an error');
             done(err);
           });
   });
