@@ -395,7 +395,7 @@ WorkerHandler.prototype.methods = function () {
  * @param {import('./types.js').ExecOptions}  [options]
  * @return {Promise.<*, Error>} result
  */
-WorkerHandler.prototype.exec = function(method, params, resolver, options) {
+WorkerHandler.prototype.exec = function(method, params, resolver, options, terminationHandler) {
   if (!resolver) {
     resolver = Promise.defer();
   }
@@ -455,14 +455,22 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
               id,
               isTerminating: true
             });
-            throw err;
+           if (terminationHandler) {
+              return terminationHandler();
+            } else {
+              throw err;
+            }
           }, function(err) {
             me.onAbortResolution({
               error: err,
               id,
               isTerminating: true
             });
-            throw err;
+            if (terminationHandler) {
+              return terminationHandler();
+            } else {
+              throw err;
+            }
           });
 
         return promise;
@@ -494,6 +502,9 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
 
       return me.tracking[id].resolver.promise;
     } else {
+      if (terminationHandler) {
+        return terminationHandler();
+      }
       throw error;
     }
   })
