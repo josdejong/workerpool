@@ -247,7 +247,6 @@ function WorkerHandler(script, _options) {
   this.workerOpts = options.workerOpts;
   this.workerThreadOpts = options.workerThreadOpts
   this.workerTerminateTimeout = options.workerTerminateTimeout;
-  this.onAbortResolution = options.onAbortResolution || (() => null);
 
   // The ready message is only sent if the worker.add method is called (And the default script is not used)
   if (!script) {
@@ -290,7 +289,7 @@ function WorkerHandler(script, _options) {
             me.terminate();
           }
 
-          // resolve the task's promise
+          // resolve the task's promis
           if (response.error) {
             task.resolver.reject(objectToError(response.error));
           }
@@ -319,11 +318,13 @@ function WorkerHandler(script, _options) {
             trackedTask.resolver.reject(objectToError(response.error));
           } else {
             me.tracking && clearTimeout(trackedTask.timeoutId);
-            trackedTask.resolver.resolve(trackedTask.result);
-            me.onAbortResolution({
-              id,
-              isTerminating: false,
-            })            
+            trackedTask.resolver.resolve(trackedTask.result); 
+            if (trackedTask.options) {
+              trackedTask.options.onAbortResolution && trackedTask.options.onAbortResolution({
+                id,
+                isTerminating: false,
+              }) 
+            }
           }
         }
       }
@@ -437,7 +438,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         id,
         resolver: Promise.defer(),
         options: options ?? {
-          onAbortStart: () => {}
+          onAbortResolution: () => {},
         },
       };
       
@@ -450,22 +451,26 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
 
         var promise = me.terminateAndNotify(true)
           .then(function(args) {
-            me.onAbortResolution({
-              error: args,
-              id,
-              isTerminating: true
-            });
-           if (terminationHandler) {
+            if (options) {
+              options.onAbortResolution && options.onAbortResolution({
+                error: err,
+                id,
+                isTerminating: true
+              });
+            }
+            if (terminationHandler) {
               return terminationHandler();
             } else {
               throw err;
             }
           }, function(err) {
-            me.onAbortResolution({
-              error: err,
-              id,
-              isTerminating: true
-            });
+            if (options) {
+              options.onAbortResolution && options.onAbortResolution({
+                error: err,
+                id,
+                isTerminating: true
+              });
+            }
             if (terminationHandler) {
               return terminationHandler();
             } else {
@@ -480,11 +485,13 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         id,
         method: CLEANUP_METHOD_ID 
       });
-      me.tracking[id].options.onAbortStart({
-        id,
-        taskResolver: me.tracking[id].resolver,
-      });
       
+      if (options) {
+        options.onAbortStart && options.onAbortStart({
+          id,
+          taskResolver: me.tracking[id].resolver,
+        });
+      }
       /**
         * Sets a timeout to reject the cleanup operation if the message sent to the worker
         * does not receive a response. see worker.tryCleanup for worker cleanup operations.
@@ -498,14 +505,18 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
       */
       me.tracking[id].timeoutId = setTimeout(function() {
           me.tracking[id].resolver.reject(error);
+          if (terminationHandler) {
+           return terminationHandler();
+          }      
       }, me.workerTerminateTimeout);
 
       return me.tracking[id].resolver.promise;
     } else {
       if (terminationHandler) {
         return terminationHandler();
+      } else {
+        throw error;
       }
-      throw error;
     }
   })
 };

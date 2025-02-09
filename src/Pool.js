@@ -52,8 +52,6 @@ function Pool(script, options) {
   this.onCreateWorker = options.onCreateWorker || (() => null);
   /** @readonly */
   this.onTerminateWorker = options.onTerminateWorker || (() => null);
-  /** @readonly */
-  this.onAbortResolution = options.onAbortResolution || (() => null);
 
   /** @readonly */
   this.emitStdStreams = options.emitStdStreams || false

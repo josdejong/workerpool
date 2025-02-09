@@ -24,13 +24,15 @@
  * @property {import('worker_threads').WorkerOptions} [workerThreadOpts] Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options).
  * @property {boolean} [emitStdStreams] Capture stdout and stderr from the worker and emit them via the `stdout` and `stderr` events. Not supported by the `web` worker type.
  * @property { (arg: WorkerArg) => WorkerArg | undefined } [onCreateWorker] A callback that is called whenever a worker is being created. It can be used to allocate resources for each worker for example. Optionally, this callback can return an object containing one or more of the `WorkerArg` properties. The provided properties will be used to override the Pool properties for the worker being created.
- * @property { (arg: WorkerArg) => void } [onTerminateWorker] A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated.
+ * @property { (arg: WorkerArg) => void } [onTerminateWorker] A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated. 
  */
 
 /**
  * @typedef {Object} ExecOptions
  * @property {(payload: any) => unknown} [on] An event listener, to handle events sent by the worker for this execution.
  * @property {Object[]} [transfer] A list of transferable objects to send to the worker. Not supported by `process` worker type. See ./examples/transferableObjects.js for usage.
+ * @property {(payload: {id: number,  error: Error | undefined, isTerminating: boolean}) => void } [onAbortResolution] An event listener triggered when whenever an abort operation concludes.
+ * @property {(payload: {id number, taskResolver: any) => void } [onAbortStart] an event listener triggered when a task throws a Timeout or Canceltion exception and cleanup is starting. 
  */
 
 /**
