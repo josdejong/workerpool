@@ -8,10 +8,6 @@ const pool = workerpool.pool(__dirname + "/workers/cleanupAbort.js", {
   onCreateWorker: function (args) {
     console.log("New worker created");
   },
-  onAbortResolution: function (args) {
-    console.log("abort operation concluded for task:", args.id);
-    console.log("is worker terminating", args.isTerminating);
-  },
   onTerminateWorker: function () {
     console.log("worker terminated");
   },
@@ -26,11 +22,15 @@ const main = async () => {
   let abortResolverSuccess;
   await pool
     .exec("asyncTimeout", [], {
-      onAbortStart: async function (args) {
-        console.log(
-          "abort operation started from task timeout, in onAbortStart",
-        );
-        abortResolverSuccess = args.taskResolver.promise;
+        onAbortResolution: function (args) {
+          console.log("abort operation concluded for task:", args.id);
+          console.log("is worker terminating", args.isTerminating);
+        },
+        onAbortStart: async function (args) {
+          console.log(
+            "abort operation started from task timeout, in onAbortStart",
+          );
+          abortResolverSuccess = args.taskResolver.promise;
       },
     })
     .timeout(100)
@@ -53,6 +53,10 @@ const main = async () => {
         );
         abortResolverFailure = args.taskResolver.promise;
       },
+      onAbortResolution: function (args) {
+        console.log("abort operation concluded for task:", args.id);
+        console.log("is worker terminating", args.isTerminating);
+      }
     })
     .cancel()
     .catch((err) => {
