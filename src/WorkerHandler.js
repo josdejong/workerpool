@@ -437,9 +437,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
       me.tracking[id] = {
         id,
         resolver: Promise.defer(),
-        options: options ?? {
-          onAbortResolution: () => {},
-        },
+        options: options,
       };
       
       // remove this task from the queue. It is already rejected (hence this
@@ -450,7 +448,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         delete me.tracking[id];
 
         var promise = me.terminateAndNotify(true)
-          .then(function(args) {
+          .then(function() {
             if (options) {
               options.onAbortResolution && options.onAbortResolution({
                 error: err,
@@ -504,10 +502,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         * operations will occure.
       */
       me.tracking[id].timeoutId = setTimeout(function() {
-          me.tracking[id].resolver.reject(error);
-          if (terminationHandler) {
-           return terminationHandler();
-          }      
+          me.tracking[id].resolver.reject(error);       
       }, me.workerTerminateTimeout);
 
       return me.tracking[id].resolver.promise;
