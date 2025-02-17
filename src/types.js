@@ -32,7 +32,7 @@
  * @property {(payload: any) => unknown} [on] An event listener, to handle events sent by the worker for this execution.
  * @property {Object[]} [transfer] A list of transferable objects to send to the worker. Not supported by `process` worker type. See ./examples/transferableObjects.js for usage.
  * @property {(payload: {id: number,  error: Error | undefined, isTerminating: boolean}) => void } [onAbortResolution] An event listener triggered when whenever an abort operation concludes.
- * @property {(payload: {id number, taskResolver: any) => void } [onAbortStart] an event listener triggered when a task throws a Timeout or Canceltion exception and cleanup is starting. 
+ * @property {(payload: {id number, AbortResolver: import('./Promise.js').Promise<void>}) => void } [onAbortStart] an event listener triggered when a task throws a Timeout or Canceltion exception and cleanup is starting. 
  */
 
 /**
