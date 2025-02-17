@@ -27,12 +27,27 @@
  * @property { (arg: WorkerArg) => void } [onTerminateWorker] A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated. 
  */
 
+
+/**
+  * @typedef {Object} AbortStartArgs
+  * @property {number} [id] identifier of the task which is starting its abort operation.
+  * @property {PromiseLike<void>} [abortResolver] PromiseLike Object which resolves or rejects when the abort operation concludes.
+  *
+  */
+
+/**
+  * @typedef {Object} AbortResolutionArgs
+  * @property {Error | undefined} [error] An error which occured during the abort operation. If an error did not occure the value will be `undefined`.
+  * @property {number} [id] identifier of the task.
+  * @property {boolean} [isTerminating] A flag which indicates the termination status of the worker which ececuted the task. 
+  */
+
 /**
  * @typedef {Object} ExecOptions
  * @property {(payload: any) => unknown} [on] An event listener, to handle events sent by the worker for this execution.
  * @property {Object[]} [transfer] A list of transferable objects to send to the worker. Not supported by `process` worker type. See ./examples/transferableObjects.js for usage.
- * @property {(payload: any) => void} [onAbortResolution] An event listener triggered when whenever an abort operation concludes.
- * @property {(payload: any) => void} [onAbortStart] An event listener triggered when a task throws a Timeout or Canceltion exception and cleanup is starting. 
+ * @property {(payload: any) => AbortResolutionArgs} [onAbortResolution] An event listener triggered when whenever an abort operation concludes.
+ * @property {(payload: AbortStartArgs) => void} [onAbortStart] An event listener triggered when a task throws a Timeout or Canceltion exception and cleanup is starting. 
  */
 
 /**
