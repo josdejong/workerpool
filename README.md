@@ -1,5 +1,9 @@
 # workerpool
 
+[![NPM Version](https://img.shields.io/npm/v/workerpool)](https://www.npmjs.com/package/workerpool)
+[![NPM Downloads](https://img.shields.io/npm/dm/workerpool)](https://npm-compare.com/workerpool/#timeRange=FIVE_YEARS)
+[![NPM License](https://img.shields.io/npm/l/workerpool)](https://github.com/josdejong/workerpool/blob/master/LICENSE)
+
 **workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** basically implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern). There is a pool of workers to execute tasks. New tasks are put in a queue. A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
 
 **workerpool** runs on Node.js and in the browser.
