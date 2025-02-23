@@ -1474,7 +1474,7 @@ describe("Pool", function () {
           onAbortStart: async function (args) {
             // wait for the promise to resolve,
             // then check pool stats
-            await args.abortResolver;
+            await args.abortPromise;
             var stats = pool.stats();
             assert.strictEqual(stats.busyWorkers, 0);
             pool.terminate();
@@ -1501,7 +1501,7 @@ describe("Pool", function () {
         onAbortStart: async function (args) {
           // wait for the promise to resolve,
           // then check pool stats.
-          await args.abortResolver;
+          await args.abortPromise;
           var stats = pool.stats();
           assert.strictEqual(stats.totalWorkers, 1);
           assert.strictEqual(stats.busyWorkers, 0);
@@ -1539,7 +1539,7 @@ describe("Pool", function () {
         onAbortStart: function (args) {
           // wait for the promise to resolve,
           // then check pool stats.
-          assert.doesNotReject(args.abortResolver);
+          assert.doesNotReject(args.abortPromise);
         },
         abortResolver
       });
@@ -1595,7 +1595,7 @@ describe("Pool", function () {
           onAbortStart: async function (args) {
             // wait for the promise to resolve,
             // then check pool stats.
-            await args.abortResolver;
+            await args.abortPromise;
             var stats = pool.stats();
             assert.strictEqual(stats.totalWorkers, 1);
             assert.strictEqual(stats.busyWorkers, 0);
@@ -1637,7 +1637,7 @@ describe("Pool", function () {
       pool
         .exec(asyncTimeout, [], {
           onAbortStart: function (args) {
-            assert.doesNotReject(args.abortResolver)
+            assert.doesNotReject(args.abortPromise)
           },
           abortResolver
         })
@@ -1684,7 +1684,7 @@ describe("Pool", function () {
         onAbortStart: async function (args) {
           // wait for the promise to resolve,
           // then check pool stats.
-          await args.abortResolver;
+          await args.abortPromise;
           var stats = pool.stats();
           assert.strictEqual(stats.totalWorkers, 1);
           assert.strictEqual(stats.busyWorkers, 0);

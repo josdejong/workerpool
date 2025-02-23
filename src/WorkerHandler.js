@@ -493,7 +493,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
       if (options) {
         options.onAbortStart && options.onAbortStart({
           id,
-          abortResolver: me.tracking[id].resolver.promise,
+          abortPromise: me.tracking[id].resolver.promise,
         });
       }
       /**

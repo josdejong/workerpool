@@ -31,7 +31,7 @@
 /**
   * @typedef {Object} AbortStartArgs
   * @property {number} [id] identifier of the task which is starting its abort operation.
-  * @property {PromiseLike<void>} [abortResolver] PromiseLike Object which resolves or rejects when the abort operation concludes.
+  * @property {PromiseLike<void>} [abortPromise] PromiseLike Object which resolves or rejects when the abort operation concludes.
   *
   */
 
