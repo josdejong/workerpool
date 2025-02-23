@@ -434,9 +434,15 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
   var me = this;
   return resolver.promise.catch(function (error) {
     if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
+      let abortResolver;
+      if (options && options.abortResolver)
+        abortResolver = options.abortResolver;
+      else
+        abortResolver = Promise.defer();
+
       me.tracking[id] = {
         id,
-        resolver: Promise.defer(),
+        resolver: abortResolver,
         options: options,
       };
 
@@ -502,7 +508,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         * operations will occure.
       */
       me.tracking[id].timeoutId = setTimeout(function() {
-          me.tracking[id].resolver.reject(error);
+        me.tracking[id].resolver.reject(error);
         delete me.tracking[id];
       }, me.workerTerminateTimeout);
 
