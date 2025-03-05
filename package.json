@@ -34,12 +34,15 @@
     "test": "npm run build && mocha test && npm run test:types",
     "test:types": "tsc -p test/types",
     "test:debug": "npm run build && mocha debug test",
+    "lint": "biome check",
+    "format": "biome check --write",
     "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo Coverage report is available at ./coverage/index.html",
     "prepublishOnly": "npm run test"
   },
   "devDependencies": {
     "@babel/core": "7.25.8",
     "@babel/preset-env": "7.25.8",
+    "@biomejs/biome": "1.9.4",
     "@rollup/plugin-babel": "6.0.4",
     "@rollup/plugin-commonjs": "28.0.0",
     "@rollup/plugin-json": "6.1.0",
