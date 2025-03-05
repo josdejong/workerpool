@@ -3,7 +3,7 @@
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist", "coverage", "types", "examples", "package.json"]
+    "ignore": ["dist", "coverage", "types", "examples/*/*", "package.json"]
   },
   "formatter": {
     "enabled": true,
