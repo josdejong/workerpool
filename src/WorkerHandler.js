@@ -434,11 +434,10 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
   var me = this;
   return resolver.promise.catch(function (error) {
     if (error instanceof Promise.CancellationError || error instanceof Promise.TimeoutError) {
-      let abortResolver;
-      if (options && options.abortResolver)
-        abortResolver = options.abortResolver;
-      else
-        abortResolver = Promise.defer();
+
+      const abortResolver = options && options.abortResolver
+        ? options.abortResolver
+        : Promise.defer();
 
       me.tracking[id] = {
         id,
