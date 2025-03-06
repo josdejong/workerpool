@@ -14,10 +14,6 @@ const pool = workerpool.pool(__dirname + "/workers/cleanupAbort.js", {
   maxWorkers: 1,
 });
 
-function add(a, b) {
-  return a + b;
-}
-
 const main = async () => {
   let abortResolverSuccess;
   await pool
@@ -30,7 +26,7 @@ const main = async () => {
           console.log(
             "abort operation started from task timeout, in onAbortStart",
           );
-          abortResolverSuccess = args.taskResolver.promise;
+          abortResolverSuccess = args.abortPromise;
       },
     })
     .timeout(100)
@@ -39,7 +35,7 @@ const main = async () => {
     });
 
   await abortResolverSuccess.catch((err) => {
-    console.log("", err);
+    console.log("abort operation concluded ", err);
   });
 
   console.log("pool status after abort operation:", pool.stats());
@@ -51,11 +47,12 @@ const main = async () => {
         console.log(
           "abort operation started from task cancel, in onAbortStart",
         );
-        abortResolverFailure = args.taskResolver.promise;
+        abortResolverFailure = args.abortPromise;
       },
       onAbortResolution: function (args) {
         console.log("abort operation concluded for task:", args.id);
         console.log("is worker terminating", args.isTerminating);
+        console.log("no min workers are set, no new worker should be created");
       }
     })
     .cancel()
