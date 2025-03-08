@@ -314,17 +314,12 @@ function WorkerHandler(script, _options) {
         if (trackedTask !== undefined) {
           delete me.tracking[id];
           if (response.error) {
+            console.log(response)
             clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.reject(objectToError(response.error));
           } else {
             me.tracking && clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.resolve(trackedTask.result);
-            if (trackedTask.options) {
-              trackedTask.options.onAbortResolution && trackedTask.options.onAbortResolution({
-                id,
-                isTerminating: false,
-              })
-            }
           }
         }
       }
@@ -449,6 +444,9 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
       // catch event), and else it will be rejected again when terminating
       delete me.processing[id];
 
+      // set up the 'tracking' promise to monitor the abort phase of the task
+      // the catch is implemented to handle cleanup operations in the event the worker
+      // needs to be terminated.
       me.tracking[id].resolver.promise = me.tracking[id].resolver.promise.catch(function(err) {
         delete me.tracking[id];
 
@@ -484,11 +482,13 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         return promise;
       });
 
+      // send a message to the worker which starts the abort operation on the worker
       me.worker.send({
         id,
         method: CLEANUP_METHOD_ID
       });
 
+      // notify through callback the abort operation is starting
       if (options) {
         options.onAbortStart && options.onAbortStart({
           id,
@@ -505,12 +505,18 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         *
         * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup
         * operations will occure.
+        * There is an offset on the timeout period as it is shared on the worker implementations
+        * wrapping timeout handler so we need to wait slightly longer to account for messages sent
+        * to alert a timeout was reached. This message can be handled, and normal error handling
+        * can still occur
       */
       me.tracking[id].timeoutId = setTimeout(function() {
         me.tracking[id].resolver.reject(error);
         delete me.tracking[id];
-      }, me.workerTerminateTimeout);
+      }, me.workerTerminateTimeout + 5);
 
+
+      // return the tracking promise
       return me.tracking[id].resolver.promise;
     } else {
       if (terminationHandler) {
