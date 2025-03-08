@@ -14,7 +14,7 @@ const pool = workerpool.pool(__dirname + "/workers/cleanupAbort.js", {
   maxWorkers: 1,
 });
 
-const main = async () => {
+const main = async function() {
   let abortResolverSuccess;
   await pool
     .exec("asyncTimeout", [], {
@@ -34,8 +34,8 @@ const main = async () => {
       console.log("timeout handled: ", err.message);
     });
 
-  await abortResolverSuccess.catch((err) => {
-    console.log("abort operation concluded ", err);
+  await abortResolverSuccess.then((err) => {
+    console.log("abort operation resolved for asyncTimeout");
   });
 
   console.log("pool status after abort operation:", pool.stats());
@@ -61,8 +61,9 @@ const main = async () => {
       console.log("cancel occured: ", err.message);
     });
 
-  await abortResolverFailure.catch((e) => {
-    console.log("cancelation handled: ", e.message);
+
+  await abortResolverFailure.then(() => {
+    console.log("cancelation handled for asyncAbortHandlerNeverResolves");
   });
 
   console.log("final pool stats", pool.stats());

@@ -5,7 +5,7 @@ function asyncTimeout() {
   return new Promise(function (resolve) {
     let timeout = setTimeout(() => {
         resolve();
-    }, 5000); 
+    }, 5000);
 
     // An abort listener allows for cleanup for a given worker
     // such that it may be resused for future tasks
@@ -23,7 +23,7 @@ function asyncAbortHandlerNeverResolves() {
   return new Promise((resolve) => {
     let timeout = setTimeout(() => {
         resolve();
-    }, 5000);
+    }, 1_000_000_000);
 
     // An abort listener allows for cleanup for a given worker
     // such that it may be resused for future tasks
@@ -36,7 +36,7 @@ function asyncAbortHandlerNeverResolves() {
           res();
           resolve();
         // set the timeout high so it will not resolve before the external
-        // timeout triggers and exits the worker 
+        // timeout triggers and exits the worker
         }, 1_000_000_000);
       });
     });
