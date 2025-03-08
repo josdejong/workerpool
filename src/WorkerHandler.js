@@ -314,7 +314,6 @@ function WorkerHandler(script, _options) {
         if (trackedTask !== undefined) {
           delete me.tracking[id];
           if (response.error) {
-            console.log(response)
             clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.reject(objectToError(response.error));
           } else {
