@@ -319,6 +319,12 @@ function WorkerHandler(script, _options) {
           } else {
             me.tracking && clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.resolve(trackedTask.result);
+            if (trackedTask.options) {
+               trackedTask.options.onAbortResolution && trackedTask.options.onAbortResolution({
+                 id,
+                 isTerminating: false,
+               })
+             }
           }
         }
       }
@@ -448,7 +454,6 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
       // needs to be terminated.
       me.tracking[id].resolver.promise = me.tracking[id].resolver.promise.catch(function(err) {
         delete me.tracking[id];
-
         var promise = me.terminateAndNotify(true)
           .then(function() {
             if (options) {
