@@ -319,12 +319,10 @@ function WorkerHandler(script, _options) {
           } else {
             me.tracking && clearTimeout(trackedTask.timeoutId);
             trackedTask.resolver.resolve(trackedTask.result);
-            if (trackedTask.options) {
-               trackedTask.options.onAbortResolution && trackedTask.options.onAbortResolution({
-                 id,
-                 isTerminating: false,
-               })
-             }
+            trackedTask && trackedTask.options.onAbortResolution && trackedTask.options.onAbortResolution({
+              id,
+              isTerminating: false,
+            })
           }
         }
       }
@@ -456,26 +454,22 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
         delete me.tracking[id];
         var promise = me.terminateAndNotify(true)
           .then(function() {
-            if (options) {
-              options.onAbortResolution && options.onAbortResolution({
-                error: err,
-                id,
-                isTerminating: true
+            options && options.onAbortResolution && options.onAbortResolution({
+              error: err,
+              id,
+              isTerminating: true
               });
-            }
             if (terminationHandler) {
               return terminationHandler();
             } else {
               throw err;
             }
           }, function(err) {
-            if (options) {
-              options.onAbortResolution && options.onAbortResolution({
-                error: err,
-                id,
-                isTerminating: true
-              });
-            }
+            options && options.onAbortResolution && options.onAbortResolution({
+              error: err,
+              id,
+              isTerminating: true
+            });
             if (terminationHandler) {
               return terminationHandler();
             } else {
@@ -493,12 +487,11 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
       });
 
       // notify through callback the abort operation is starting
-      if (options) {
-        options.onAbortStart && options.onAbortStart({
-          id,
-          abortPromise: me.tracking[id].resolver.promise,
-        });
-      }
+      options && options.onAbortStart && options.onAbortStart({
+        id,
+        abortPromise: me.tracking[id].resolver.promise,
+      });
+
       /**
         * Sets a timeout to reject the cleanup operation if the message sent to the worker
         * does not receive a response. see worker.tryCleanup for worker cleanup operations.
@@ -516,9 +509,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options, termi
       */
       me.tracking[id].timeoutId = setTimeout(function() {
         me.tracking[id].resolver.reject(error);
-        delete me.tracking[id];
       }, me.workerTerminateTimeout + 5);
-
 
       // return the tracking promise
       return me.tracking[id].resolver.promise;
