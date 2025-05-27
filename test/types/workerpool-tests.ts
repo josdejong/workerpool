@@ -117,3 +117,5 @@ wp.worker({ a: () => 1, b: () => 2 }, { onTerminate: () => {} });
 wp.worker(undefined, undefined);
 
 new wp.Transfer("foo", []);
+
+const p: Promise<string> = pool.exec<() => string>('hello').then((a) => a);

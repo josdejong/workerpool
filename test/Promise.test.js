@@ -391,6 +391,15 @@ describe ('Promise', function () {
         done()
       }, 200)
     });
+
+    it('should allow null finally', function(done) {
+      new Promise((resolve) => resolve())
+        .finally(null)
+        .then((arg) => {
+          assert.strictEqual(arg, undefined)
+          done()
+        })
+    });
   });
 
   describe('status', function () {
