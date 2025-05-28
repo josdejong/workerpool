@@ -2,10 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 9.3.0
+## 2025-05-28, version 9.3.0
 
-- Feat: support for events and std streams to parents from an abort handler.
-  Thanks @joshLong145.
+- Feat: support for events and std streams to parents from an
+  abort handler (#478). Thanks @joshLong145.
+- feat: improve compatibility with standard Promise type (#504).
+  Thanks @joshkel.
 
 
 ## 2024-10-11, version 9.2.0
