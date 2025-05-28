@@ -36,6 +36,10 @@ function Promise(handler, parent) {
    * @readonly
    */
   this.pending = true;
+  /**
+   * @readonly
+   */
+  this[Symbol.toStringTag] = 'Promise';
 
   /**
    * Process onSuccess and onFail callbacks: add them to the queue.
@@ -213,7 +217,7 @@ Promise.prototype.always = function (fn) {
 /**
   * Execute given callback when the promise either resolves or rejects.
   * Same semantics as Node's Promise.finally()
-  * @param {Function} fn
+  * @param {Function | null | undefined} [fn]
   * @returns {Promise} promise
   */
 Promise.prototype.finally = function (fn) {
