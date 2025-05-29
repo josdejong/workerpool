@@ -35,7 +35,7 @@
     "test:types": "tsc -p test/types",
     "test:debug": "npm run build && mocha debug test",
     "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo Coverage report is available at ./coverage/index.html",
-    "prepublishOnly": "npm run test"
+    "prepublishOnly": "npm run test && npm run build"
   },
   "devDependencies": {
     "@babel/core": "7.27.3",
