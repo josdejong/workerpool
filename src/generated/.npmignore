@@ -1,0 +1,2 @@
+# the src/generated files must be excluded from git,
+# but included in the npm package.
