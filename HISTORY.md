@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2025-05-29, version 9.3.1
+
+- Fix: #505 npm package missing `/src/generated/` files.
+
+
 ## 2025-05-28, version 9.3.0
 
 - Feat: support for events and std streams to parents from an
