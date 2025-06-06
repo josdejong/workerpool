@@ -229,18 +229,18 @@ Pool.prototype._next = function () {
       // get the first task from the queue
       var me = this;
       var task = this.tasks.shift();
-
+      var terminationHandler = function() {
+        // if the worker crashed and terminated, remove it from the pool
+        if (worker.terminated) {
+          return me._removeWorker(worker);
+        }
+      }
       // check if the task is still pending (and not cancelled -> promise rejected)
       if (task.resolver.promise.pending) {
         // send the request to the worker
-        var promise = worker.exec(task.method, task.params, task.resolver, task.options)
+        var promise = worker.exec(task.method, task.params, task.resolver, task.options, terminationHandler)
           .then(me._boundNext)
-          .catch(function () {
-            // if the worker crashed and terminated, remove it from the pool
-            if (worker.terminated) {
-              return me._removeWorker(worker);
-            }
-          }).then(function() {
+          .then(function() {
             me._next(); // trigger next task in the queue
           });
 
@@ -430,6 +430,7 @@ Pool.prototype._createWorkerHandler = function () {
     workerType: this.workerType,
     workerTerminateTimeout: this.workerTerminateTimeout,
     emitStdStreams: this.emitStdStreams,
+    onAbortResolution: this.onAbortResolution
   });
 }
 
