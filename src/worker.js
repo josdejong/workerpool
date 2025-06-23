@@ -235,11 +235,12 @@ worker.cleanup = function(requestId) {
   // - Reject if one or more handlers exceed the 'abortListenerTimeout' interval
   // - Reject if one or more handlers reject
   // Upon one of the above cases a message will be sent to the handler with the result of the handler execution
-  // which will either kill the worker if the result contains an error, or 
-  return Promise.all([
-    settlePromise,
-    timeoutPromise
-  ]).then(function() {
+  // which will either kill the worker if the result contains an error, or keep it in the pool if the result
+  // does not contain an error.
+  return new Promise(function(resolve, reject) {
+    settlePromise.then(resolve, reject);
+    timeoutPromise.then(resolve, reject);
+  }).then(function() {
     worker.send({
       id: requestId,
       method: CLEANUP_METHOD_ID,
