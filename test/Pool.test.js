@@ -1489,7 +1489,7 @@ describe('Pool', function () {
 
     });
 
-    it('should invoke timeout for abort handler if timeout period is reached with Timeout', function () {
+    it('should invoke timeout for abort handler if timeout period is reached with Timeout', function (done) {
       var workerCount = 0;
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 2,
@@ -1528,7 +1528,7 @@ describe('Pool', function () {
     });
 
 
-    it('should invoke timeout for abort handler if timeout period is reached with Cancellation', function () {
+    it('should invoke timeout for abort handler if timeout period is reached with Cancellation', function (done) {
       var workerCount = 0;
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
