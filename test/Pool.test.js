@@ -1489,16 +1489,22 @@ describe('Pool', function () {
 
     });
 
-    it('should invoke timeout for abort handler if timeout period is reached with Timeout', function () {
+    it('should invoke timeout for abort handler if timeout period is reached with Timeout', function (done) {
       var workerCount = 0;
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 2,
         onCreateWorker: function() {
           workerCount += 1;
+        },
+        onTerminateWorker: function(_) {
+          // call done in the termination callback so we know
+          // the worker was terminated before the test resolves
+          assert.strictEqual(pool.stats().totalWorkers, 0);
+          done();
         }
       });
-    
-      return pool.exec('asyncAbortHandlerNeverResolves', [])
+
+      const _ = pool.exec('asyncAbortHandlerNeverResolves', [])
       .timeout(1000)
       .catch(function (err) {
         assert(err instanceof Promise.TimeoutError);
@@ -1522,18 +1528,24 @@ describe('Pool', function () {
     });
 
 
-    it('should invoke timeout for abort handler if timeout period is reached with Cancellation', function () {
+    it('should invoke timeout for abort handler if timeout period is reached with Cancellation', function (done) {
       var workerCount = 0;
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
         onCreateWorker: function() {
           workerCount += 1;
+        },
+        onTerminateWorker: function(_) {
+          // call done in the termination callback so we know
+          // the worker was terminated before the test resolves
+          assert.strictEqual(pool.stats().totalWorkers, 0);
+          done();
         }
       });
     
       const task = pool.exec('asyncAbortHandlerNeverResolves', [])
-      
-      return new Promise(function(resolve) {
+
+      const _ = new Promise(function(resolve) {
         setTimeout(function() {
           resolve();
         }, 50);

@@ -317,7 +317,8 @@ function WorkerHandler(script, _options) {
             trackedTask.resolver.reject(objectToError(response.error))
           } else {
             me.tracking && clearTimeout(trackedTask.timeoutId);
-            trackedTask.resolver.resolve(trackedTask.result);            
+            // if we do not encounter an error wrap the the original timeout error and reject
+            trackedTask.resolver.reject(new WrappedTimeoutError(trackedTask.error));
           }
         }
         delete me.tracking[id];
@@ -432,6 +433,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
         id,
         resolver: Promise.defer(),
         options: options,
+        error,
       };
       
       // remove this task from the queue. It is already rejected (hence this
@@ -440,6 +442,13 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
 
       me.tracking[id].resolver.promise = me.tracking[id].resolver.promise.catch(function(err) {
         delete me.tracking[id];
+
+        // if we find the error is an instance of WrappedTimeoutError we know the error should not cause termination
+        // as the response from the worker did not contain an error. We still wish to throw the original timeout error
+        // to the caller.
+        if (err instanceof WrappedTimeoutError) {
+          throw err.error;
+        }
 
         var promise = me.terminateAndNotify(true)
           .then(function() { 
@@ -611,6 +620,16 @@ WorkerHandler.prototype.terminateAndNotify = function (force, timeout) {
   });
   return resolver.promise;
 };
+
+/**
+* Wrapper error type to denote that a TimeoutError has already been proceesed
+* and we should skip cleanup operations
+* @param {Promise.TimeoutError} timeoutError
+*/
+function WrappedTimeoutError(timeoutError) {
+  this.error = timeoutError;
+  this.stack = (new Error()).stack;
+}
 
 module.exports = WorkerHandler;
 module.exports._tryRequireWorkerThreads = tryRequireWorkerThreads;

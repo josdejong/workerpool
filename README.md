@@ -204,7 +204,7 @@ The following options are available:
 - `abortListenerTimeout: number`. The timeout in milliseconds to wait for abort listener's before stopping it forcefully, triggering cleanup. Default value is `1000`.
 - `forkArgs: String[]`. For `process` worker type. An array passed as `args` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `forkOpts: Object`. For `process` worker type. An object passed as `options` to [child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options). See nodejs documentation for available options.
-- `workerOpts: Object`. For `web` worker type. An object passed to the [constructor of the web worker](https://html.spec.whatwg.org/multipage/workers.html#dom-worker). See [WorkerOptions specification](https://html.spec.whatwg.org/multipage/workers.html#workeroptions) for available options. 
+- `workerOpts: Object`. For `web` worker type. An object passed to the [constructor of the web worker](https://html.spec.whatwg.org/multipage/workers.html#dom-worker). See [WorkerOptions specification](https://html.spec.whatwg.org/multipage/workers.html#workeroptions) for available options.
 - `workerThreadOpts: Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options). See nodejs documentation for available options.
 - `onCreateWorker: Function`. A callback that is called whenever a worker is being created. It can be used to allocate resources for each worker for example. The callback is passed as argument an object with the following properties:
   - `forkArgs: String[]`: the `forkArgs` option of this pool
@@ -450,7 +450,7 @@ Workers have access to a `worker` api which contains the following methods
 - `emit: (payload: unknown | Transfer): void`
 - `addAbortListener: (listener: () => Promise<void>): void`
 
-
+#### addAbortListener
 Worker termination may be recoverable through `abort listeners` which are registered through `worker.addAbortListener`. If all registered listeners resolve then the worker will not be terminated, allowing for worker reuse in some cases.
 
 NOTE: For operations to successfully clean up, a worker implementation should be *async*. If the worker thread is blocked, then the worker will be killed.
@@ -461,8 +461,8 @@ function asyncTimeout() {
   return new Promise(function (resolve) {
     let timeout = setTimeout(() => {
         resolve();
-    }, 5000); 
-    
+    }, 5000);
+
     // Register a listener which will resolve before the time out
     // above triggers.
     me.worker.addAbortListener(async function () {
@@ -483,7 +483,7 @@ workerpool.worker(
 );
 ```
 
-
+#### emit
 Events may also be emitted from the `worker` api through `worker.emit`
 
 ```js
