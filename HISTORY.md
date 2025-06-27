@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2025-06-27, version 9.3.3
+
+- Fix: #479 terminate worker even if abortListener resolved (#507). 
+  Thanks @joshLong145.
+
+
 ## 2025-05-29, version 9.3.2
 
 - Fix: #505 npm package missing `/src/generated/` files.
