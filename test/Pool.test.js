@@ -458,6 +458,46 @@ describe('Pool', function () {
         });
   });
 
+  it('should handle a nested custom error class thrown by a worker', function (done) {
+    var pool = createPool();
+
+    function test() {
+      class CustomError {
+        constructor(message, details) {
+          this.message = message
+          this.details = details
+        }
+
+        toJSON = () => ({
+          message: this.message,
+          details: this.details
+        })
+      }
+
+      class  NestedCustomData {
+        constructor(value) {
+          this.value = value
+        }
+
+        toJSON = () => ({
+          value: this.value
+        })
+      }
+
+      throw new CustomError('Custom error', new NestedCustomData(42));
+    }
+
+    pool.exec(test)
+        .catch(function (err) {
+          assert.ok(err instanceof Error);
+          assert.strictEqual(err.message, 'Custom error');
+          assert.strictEqual(err.details.value, 42);
+
+          pool.terminate();
+          done();
+        });
+  });
+
   it('should execute a function returning a Promise', function (done) {
     var pool = createPool({maxWorkers: 10});
 

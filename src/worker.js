@@ -100,12 +100,12 @@ else {
 }
 
 function convertError(error) {
-  return Object.getOwnPropertyNames(error).reduce(function(product, name) {
-    return Object.defineProperty(product, name, {
-	value: error[name],
-	enumerable: true
-    });
-  }, {});
+  if (error && error.toJSON) {
+    return JSON.parse(JSON.stringify(error));
+  }
+
+  // turn a class like Error (having non-enumerable properties) into a plain object
+  return JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
 }
 
 /**
