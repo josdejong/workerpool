@@ -2,6 +2,12 @@
 https://github.com/josdejong/workerpool
 
 
+## 2025-09-10, version 9.3.4
+
+- Fix: #516 improve error handling for errors containing nested classes by
+  using their `.toJSON` method when available.
+
+
 ## 2025-06-27, version 9.3.3
 
 - Fix: #479 terminate worker even if abortListener resolved (#507). 
