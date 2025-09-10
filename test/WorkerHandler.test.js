@@ -3,7 +3,7 @@ var {Promise} = require('../src/Promise');
 var WorkerHandler = require('../src/WorkerHandler');
 var path = require('path');
 var childProcess = require('child_process');
-var findProcess = require('find-process');
+var findProcess = require('find-process').default;
 const { CancellationError } = Promise;
 
 function add(a, b) {
