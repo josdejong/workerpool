@@ -1,8 +1,10 @@
 var {Promise} = require('./Promise');
 var WorkerHandler = require('./WorkerHandler');
 var environment = require('./environment');
+var { FIFOQueue, LIFOQueue } = require('./queues');
 var DebugPortAllocator = require('./debug-port-allocator');
 var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
+
 /**
  * A pool to manage workers, which can be created using the function workerpool.pool.
  *
@@ -22,8 +24,9 @@ function Pool(script, options) {
 
   /** @private */
   this.workers = [];  // queue with all workers
+
   /** @private */
-  this.tasks = [];    // queue with tasks awaiting execution
+  this.taskQueue = this._createQueue((options && options.queueStrategy) || 'fifo');  // queue with tasks awaiting execution
 
   options = options || {};
 
@@ -129,12 +132,11 @@ Pool.prototype.exec = function (method, params, options) {
   if (typeof method === 'string') {
     var resolver = Promise.defer();
 
-    if (this.tasks.length >= this.maxQueueSize) {
+    if (this.taskQueue.size() >= this.maxQueueSize) {
       throw new Error('Max queue size of ' + this.maxQueueSize + ' reached');
     }
 
     // add a new task to the queue
-    var tasks = this.tasks;
     var task = {
       method:  method,
       params:  params,
@@ -142,13 +144,15 @@ Pool.prototype.exec = function (method, params, options) {
       timeout: null,
       options: options
     };
-    tasks.push(task);
+    this.taskQueue.push(task);
 
     // replace the timeout method of the Promise with our own,
     // which starts the timer as soon as the task is actually started
+    // TODO: how can i find if the task is still in the queue?
     var originalTimeout = resolver.promise.timeout;
+    var taskQueue = this.taskQueue;
     resolver.promise.timeout = function timeout (delay) {
-      if (tasks.indexOf(task) !== -1) {
+      if (taskQueue.contains(task)) {
         // task is still queued -> start the timer later on
         task.timeout = delay;
         return resolver.promise;
@@ -220,7 +224,7 @@ Pool.prototype.map = function (array, callback) {
  * @private
  */
 Pool.prototype._next = function () {
-  if (this.tasks.length > 0) {
+  if (this.taskQueue.size() > 0) {
     // there are tasks in the queue
 
     // find an available worker
@@ -228,7 +232,7 @@ Pool.prototype._next = function () {
     if (worker) {
       // get the first task from the queue
       var me = this;
-      var task = this.tasks.shift();
+      var task = this.taskQueue.pop();
 
       // check if the task is still pending (and not cancelled -> promise rejected)
       if (task.resolver.promise.pending) {
@@ -287,7 +291,7 @@ Pool.prototype._getWorker = function() {
 
 /**
  * Remove a worker from the pool.
- * Attempts to terminate worker if not already terminated, and ensures the minimum
+ * Attempts to ontains,terminate worker if not already terminated, and ensures the minimum
  * pool size is met.
  * @param {WorkerHandler} worker
  * @return {Promise<WorkerHandler>}
@@ -346,10 +350,26 @@ Pool.prototype.terminate = function (force, timeout) {
   var me = this;
 
   // cancel any pending tasks
-  this.tasks.forEach(function (task) {
-    task.resolver.reject(new Error('Pool terminated'));
-  });
-  this.tasks.length = 0;
+  var taskQueue = this.taskQueue;
+  if (typeof taskQueue[Symbol.iterator] === 'function') { // if the queue is iterable
+    for (var task of taskQueue) {
+      task.resolver.reject(new Error('Pool terminated'));
+    }
+  } else { // fallback when queue is not iterable, safeguard against infinite loop
+    var maxIterations = taskQueue.size();
+    var iterations = 0;
+
+    while (taskQueue.size() > 0 && iterations < maxIterations) {
+      var task = taskQueue.pop();
+      if (task) {
+        task.resolver.reject(new Error('Pool terminated'));
+      } else {
+        break;
+      }
+      iterations++;
+    }
+  }
+  taskQueue.clear();
 
   var f = function (worker) {
     DEBUG_PORT_ALLOCATOR.releasePort(worker.debugPort);
@@ -390,7 +410,7 @@ Pool.prototype.stats = function () {
     busyWorkers:   busyWorkers,
     idleWorkers:   totalWorkers - busyWorkers,
 
-    pendingTasks:  this.tasks.length,
+    pendingTasks:  this.taskQueue.size(),
     activeTasks:   busyWorkers
   };
 };
@@ -433,6 +453,40 @@ Pool.prototype._createWorkerHandler = function () {
   });
 }
 
+/**
+ * Create queue instance based on strategy
+ * @param {'fifo' | 'lifo' | import('./types').TaskQueue} strategy
+ * @returns {import('./types').TaskQueue} Queue instance
+ * @private
+ */
+Pool.prototype._createQueue = function(strategy) {
+  if (typeof strategy === 'string') {
+    switch (strategy) {
+      case 'fifo':
+        return new FIFOQueue();
+      case 'lifo':
+        return new LIFOQueue();
+      default:
+        throw new Error('Unknown queue strategy: ' + strategy);
+    }
+  }
+
+  if (!strategy) {
+    throw new Error('Queue strategy cannot be null or undefined');
+  }
+
+  // validate if custom queue implements required methods
+  var requiredMethods = ['push', 'pop', 'size', 'contains', 'clear'];
+
+  for (var i = 0; i < requiredMethods.length; i++) {
+    var method = requiredMethods[i];
+    if (typeof strategy[method] !== 'function') {
+      throw new Error('Queue strategy must implement method: ' + method);
+    }
+  }
+
+  return strategy;
+}
 /**
  * Ensure that the maxWorkers option is an integer >= 1
  * @param {*} maxWorkers
