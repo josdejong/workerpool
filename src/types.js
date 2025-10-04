@@ -15,21 +15,23 @@
  */
 
 /**
+ * @template [T=any]
  * @typedef {Object} Task
  * @property {string | Function} method - The method name or function to execute
  * @property {any[]} [params] - Parameters to pass to the method
  * @property {Resolver} resolver - Promise resolver for the task result
  * @property {number | null} timeout - Timeout value for the task
- * @property {ExecOptions} [options] - Execution options
+ * @property {ExecOptions<T>} [options] - Execution options
  */
 
 /**
+ * @template [T=any]
  * @interface
  * @typedef {Object} TaskQueue
- * @property {(task: Task) => void} push - Add a task to the queue
- * @property {() => Task | undefined} pop - Remove and return the next task
+ * @property {(task: Task<T>) => void} push - Add a task to the queue
+ * @property {() => Task<T> | undefined} pop - Remove and return the next task
  * @property {() => number} size - Get the current queue size
- * @property {(task: Task) => boolean} contains - Check if the task is in the queue
+ * @property {(task: Task<T>) => boolean} contains - Check if the task is in the queue
  * @property {() => void} clear - Clear all tasks from the queue
  */
 
@@ -58,9 +60,11 @@
  */
 
 /**
+ * @template [T=any]
  * @typedef {Object} ExecOptions
  * @property {(payload: any) => unknown} [on] An event listener, to handle events sent by the worker for this execution.
  * @property {Object[]} [transfer] A list of transferable objects to send to the worker. Not supported by `process` worker type. See ./examples/transferableObjects.js for usage.
+ * @property {T} [metadata] Custom metadata that will be attached to the task. This can be used in combination with a custom queue implementation for example, to prioritize tasks.
  */
 
 /**
