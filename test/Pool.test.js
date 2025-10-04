@@ -987,10 +987,7 @@ describe('Pool', function () {
 
         PriorityQueue.prototype.push = function(task) {
           this.tasks.push(task);
-          // Sort by priority (higher priority first)
-          this.tasks.sort(function(a, b) {
-            return (b.priority || 0) - (a.priority || 0);
-          });
+          this._sort();
         };
 
         PriorityQueue.prototype.pop = function() {
@@ -1009,6 +1006,22 @@ describe('Pool', function () {
           this.tasks.length = 0;
         };
 
+        PriorityQueue.prototype._sort = function() {
+          var self = this;
+          this.tasks.sort(function(a, b) {
+            var priorityA = self._getPriority(a);
+            var priorityB = self._getPriority(b);
+            return priorityA - priorityB; // Lower number = higher priority
+          });
+        };
+
+        PriorityQueue.prototype._getPriority = function(task) {
+          if (task.options && task.options.metadata && typeof task.options.metadata.priority === 'number') {
+            return task.options.metadata.priority;
+          }
+          return 0; // Default priority
+        };
+
         var customQueue = new PriorityQueue();
         var pool = createPool({queueStrategy: customQueue});
 
@@ -1017,33 +1030,50 @@ describe('Pool', function () {
         return pool.terminate();
       });
 
-      it('should process tasks according to custom queue strategy behavior', function () {
-        // Create a reverse queue (LIFO-like but simpler to test)
-        function ReverseQueue() {
+      it('should process tasks according to priority queue behavior', function () {
+        // Create a priority queue that processes tasks based on metadata priority
+        function PriorityQueue() {
           this.tasks = [];
         }
 
-        ReverseQueue.prototype.push = function(task) {
-          this.tasks.unshift(task); // Insert at the beginning instead of the end
+        PriorityQueue.prototype.push = function(task) {
+          this.tasks.push(task);
+          this._sort();
         };
 
-        ReverseQueue.prototype.pop = function() {
-          return this.tasks.shift(); // Take from the beginning
+        PriorityQueue.prototype.pop = function() {
+          return this.tasks.shift();
         };
 
-        ReverseQueue.prototype.size = function() {
+        PriorityQueue.prototype.size = function() {
           return this.tasks.length;
         };
 
-        ReverseQueue.prototype.contains = function(task) {
+        PriorityQueue.prototype.contains = function(task) {
           return this.tasks.includes(task);
         };
 
-        ReverseQueue.prototype.clear = function() {
+        PriorityQueue.prototype.clear = function() {
           this.tasks.length = 0;
         };
 
-        var customQueue = new ReverseQueue();
+        PriorityQueue.prototype._sort = function() {
+          var self = this;
+          this.tasks.sort(function(a, b) {
+            var priorityA = self._getPriority(a);
+            var priorityB = self._getPriority(b);
+            return priorityA - priorityB; // Lower number = higher priority
+          });
+        };
+
+        PriorityQueue.prototype._getPriority = function(task) {
+          if (task.options && task.options.metadata && typeof task.options.metadata.priority === 'number') {
+            return task.options.metadata.priority;
+          }
+          return 5; // Default medium priority
+        };
+
+        var customQueue = new PriorityQueue();
         var pool = createPool({maxWorkers: 1, queueStrategy: customQueue});
         var results = [];
 
@@ -1055,19 +1085,19 @@ describe('Pool', function () {
           });
         }
 
-        // Add tasks - the first task will start immediately, others will be queued
-        var task1 = pool.exec(delayedAdd, [1, 1]).then(function(result) { results.push(result); });
-        var task2 = pool.exec(delayedAdd, [2, 2]).then(function(result) { results.push(result); });
-        var task3 = pool.exec(delayedAdd, [3, 3]).then(function(result) { results.push(result); });
-        var task4 = pool.exec(delayedAdd, [4, 4]).then(function(result) { results.push(result); });
+        // Add tasks with different priorities - the first task will start immediately, others will be queued
+        var task1 = pool.exec(delayedAdd, [1, 1], { metadata: { priority: 5 } }).then(function(result) { results.push(result); });
+        var task2 = pool.exec(delayedAdd, [2, 2], { metadata: { priority: 3 } }).then(function(result) { results.push(result); });
+        var task3 = pool.exec(delayedAdd, [3, 3], { metadata: { priority: 1 } }).then(function(result) { results.push(result); });
+        var task4 = pool.exec(delayedAdd, [4, 4], { metadata: { priority: 2 } }).then(function(result) { results.push(result); });
 
         return Promise.all([task1, task2, task3, task4]).then(function() {
-          // With reverse queue (using unshift for push), execution order should be:
-          // task1 (2) - executed first as it started immediately
-          // task4 (8) - was the last added, so it's first in the reverse queue
-          // task3 (6) - second to last added
-          // task2 (4) - first added to queue, so last in reverse queue
-          assert.deepStrictEqual(results, [2, 8, 6, 4]);
+          // With priority queue, execution order should be:
+          // task1 (2) - executed first as it started immediately (priority 5)
+          // task3 (6) - highest priority 1
+          // task4 (8) - priority 2
+          // task2 (4) - lowest priority 3
+          assert.deepStrictEqual(results, [2, 6, 8, 4]);
           return pool.terminate();
         });
       });
