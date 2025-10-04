@@ -347,26 +347,16 @@ Pool.prototype.terminate = function (force, timeout) {
 
   // cancel any pending tasks
   var taskQueue = this.taskQueue;
-  if (typeof taskQueue[Symbol.iterator] === "function") {
-    // if the queue is iterable
-    for (var task of taskQueue) {
-      task.resolver.reject(new Error("Pool terminated"));
-    }
-  } else {
-    // fallback when queue is not iterable, safeguard against infinite loop
-    var maxIterations = taskQueue.size();
-    var iterations = 0;
 
-    while (taskQueue.size() > 0 && iterations < maxIterations) {
-      var task = taskQueue.pop();
-      if (task) {
-        task.resolver.reject(new Error("Pool terminated"));
-      } else {
-        break;
-      }
-      iterations++;
+  while (taskQueue.size() > 0) {
+    var task = taskQueue.pop();
+    if (task) {
+      task.resolver.reject(new Error("Pool terminated"));
+    } else {
+      break;
     }
   }
+
   taskQueue.clear();
 
   var f = function (worker) {

@@ -7,7 +7,6 @@
  * @property {string} [script] The `script` option of this pool
  */
 
-
 /**
  * @typedef {Object} Resolver
  * @property {Promise} promise - The promise object
@@ -32,7 +31,6 @@
  * @property {() => number} size - Get the current queue size
  * @property {(task: Task) => boolean} contains - Check if the task is in the queue
  * @property {() => void} clear - Clear all tasks from the queue
- * @property {() => Iterator<Task>} [Symbol.iterator] - An iterator to iterate over all tasks in the queue, ignoring the order of the tasks (optional)
  */
 
 /**
@@ -68,7 +66,7 @@
 /**
  * @typedef {Object} WorkerRegisterOptions
  * @property {(code: number | undefined) => PromiseLike<void> | void} [onTerminate] A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The difference with pool's `onTerminateWorker` is that this callback runs in the worker context, while onTerminateWorker is executed on the main thread.
-  * @property {number} [abortListenerTimeout] The timeout in milliseconds to wait for a worker to clean up it's resources if an abort listener does not resolve, before stopping the worker forcefully. Default value is `1000`.
+ * @property {number} [abortListenerTimeout] The timeout in milliseconds to wait for a worker to clean up it's resources if an abort listener does not resolve, before stopping the worker forcefully. Default value is `1000`.
  */
 
 /**
@@ -76,4 +74,4 @@
  * @typedef {{ [M in keyof T]: (...args: Parameters<T[M]>) => import('./Promise.js').Promise<ReturnType<T[M]>>; }} Proxy<T>
  */
 
-module.exports = {}
+module.exports = {};

@@ -1,20 +1,19 @@
-var assert = require('assert');
-var { FIFOQueue, LIFOQueue } = require('../src/queues');
+var assert = require("assert");
+var { FIFOQueue, LIFOQueue } = require("../src/queues");
 
-describe('Queues', function () {
-
-  describe('FIFOQueue', function() {
+describe("Queues", function () {
+  describe("FIFOQueue", function () {
     var queue;
 
-    beforeEach(function() {
+    beforeEach(function () {
       queue = new FIFOQueue();
     });
 
-    it('should create an empty queue', function() {
+    it("should create an empty queue", function () {
       assert.strictEqual(queue.size(), 0);
     });
 
-    it('should push tasks to the queue', function() {
+    it("should push tasks to the queue", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
 
@@ -25,7 +24,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.size(), 2);
     });
 
-    it('should pop tasks in FIFO order', function() {
+    it("should pop tasks in FIFO order", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
       var task3 = { id: 3 };
@@ -40,11 +39,11 @@ describe('Queues', function () {
       assert.strictEqual(queue.size(), 0);
     });
 
-    it('should return undefined when popping from empty queue', function() {
+    it("should return undefined when popping from empty queue", function () {
       assert.strictEqual(queue.pop(), undefined);
     });
 
-    it('should correctly report size', function() {
+    it("should correctly report size", function () {
       assert.strictEqual(queue.size(), 0);
 
       queue.push({ id: 1 });
@@ -60,7 +59,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.size(), 0);
     });
 
-    it('should check if queue contains a task', function() {
+    it("should check if queue contains a task", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
       var task3 = { id: 3 };
@@ -75,24 +74,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.contains(task3), false);
     });
 
-    it('should be iterable', function() {
-      var task1 = { id: 1 };
-      var task2 = { id: 2 };
-      var task3 = { id: 3 };
-
-      queue.push(task1);
-      queue.push(task2);
-      queue.push(task3);
-
-      var tasks = [];
-      for (var task of queue) {
-        tasks.push(task);
-      }
-
-      assert.deepStrictEqual(tasks, [task1, task2, task3]);
-    });
-
-    it('should clear all tasks', function() {
+    it("should clear all tasks", function () {
       queue.push({ id: 1 });
       queue.push({ id: 2 });
       queue.push({ id: 3 });
@@ -105,7 +87,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.pop(), undefined);
     });
 
-    it('should handle mixed operations correctly', function() {
+    it("should handle mixed operations correctly", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
       var task3 = { id: 3 };
@@ -121,18 +103,18 @@ describe('Queues', function () {
     });
   });
 
-  describe('LIFOQueue', function() {
+  describe("LIFOQueue", function () {
     var queue;
 
-    beforeEach(function() {
+    beforeEach(function () {
       queue = new LIFOQueue();
     });
 
-    it('should create an empty queue', function() {
+    it("should create an empty queue", function () {
       assert.strictEqual(queue.size(), 0);
     });
 
-    it('should push tasks to the queue', function() {
+    it("should push tasks to the queue", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
 
@@ -143,7 +125,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.size(), 2);
     });
 
-    it('should pop tasks in LIFO order', function() {
+    it("should pop tasks in LIFO order", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
       var task3 = { id: 3 };
@@ -158,11 +140,11 @@ describe('Queues', function () {
       assert.strictEqual(queue.size(), 0);
     });
 
-    it('should return undefined when popping from empty queue', function() {
+    it("should return undefined when popping from empty queue", function () {
       assert.strictEqual(queue.pop(), undefined);
     });
 
-    it('should correctly report size', function() {
+    it("should correctly report size", function () {
       assert.strictEqual(queue.size(), 0);
 
       queue.push({ id: 1 });
@@ -178,7 +160,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.size(), 0);
     });
 
-    it('should check if queue contains a task', function() {
+    it("should check if queue contains a task", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
       var task3 = { id: 3 };
@@ -193,24 +175,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.contains(task3), false);
     });
 
-    it('should be iterable', function() {
-      var task1 = { id: 1 };
-      var task2 = { id: 2 };
-      var task3 = { id: 3 };
-
-      queue.push(task1);
-      queue.push(task2);
-      queue.push(task3);
-
-      var tasks = [];
-      for (var task of queue) {
-        tasks.push(task);
-      }
-
-      assert.deepStrictEqual(tasks, [task1, task2, task3]);
-    });
-
-    it('should clear all tasks', function() {
+    it("should clear all tasks", function () {
       queue.push({ id: 1 });
       queue.push({ id: 2 });
       queue.push({ id: 3 });
@@ -223,7 +188,7 @@ describe('Queues', function () {
       assert.strictEqual(queue.pop(), undefined);
     });
 
-    it('should handle mixed operations correctly', function() {
+    it("should handle mixed operations correctly", function () {
       var task1 = { id: 1 };
       var task2 = { id: 2 };
       var task3 = { id: 3 };
@@ -239,8 +204,8 @@ describe('Queues', function () {
     });
   });
 
-  describe('Queue comparison', function() {
-    it('should demonstrate FIFO vs LIFO behavior', function() {
+  describe("Queue comparison", function () {
+    it("should demonstrate FIFO vs LIFO behavior", function () {
       var fifoQueue = new FIFOQueue();
       var lifoQueue = new LIFOQueue();
 
