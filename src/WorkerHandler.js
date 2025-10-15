@@ -349,7 +349,9 @@ function WorkerHandler(script, _options) {
 
   var worker = this.worker;
   // listen for worker messages error and exit
-  this.worker.on('error', onError);
+  this.worker.on('error',function (error) {
+    onError(new TerminateError('Workerpool Worker error: ' + error.message, error))
+  });
   this.worker.on('exit', function (exitCode, signalCode) {
     var message = 'Workerpool Worker terminated Unexpectedly\n';
 
@@ -363,7 +365,7 @@ function WorkerHandler(script, _options) {
     message += '    stdout: `' + worker.stdout + '`\n'
     message += '    stderr: `' + worker.stderr + '`\n'
 
-    onError(new Error(message));
+    onError(new TerminateError(message));
   });
 
   this.processing = Object.create(null); // queue with tasks currently in progress
@@ -417,7 +419,7 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
   };
 
   if (this.terminated) {
-    resolver.reject(new Error('Worker is terminated'));
+    resolver.reject(new TerminateError('Worker is terminated'));
   } else if (this.worker.ready) {
     // send the request to the worker
     this.worker.send(request.message, request.transfer);
@@ -631,9 +633,23 @@ function WrappedTimeoutError(timeoutError) {
   this.stack = (new Error()).stack;
 }
 
+class TerminateError extends Error {
+  /**
+   * Create a timeout error
+   * @param {String} [message]
+   * @param {Error=} [cause]
+   */
+  constructor(message, cause) {
+    super(message || 'worker terminated');
+    this.cause = cause;
+  }
+}
+
 module.exports = WorkerHandler;
 module.exports._tryRequireWorkerThreads = tryRequireWorkerThreads;
 module.exports._setupProcessWorker = setupProcessWorker;
 module.exports._setupBrowserWorker = setupBrowserWorker;
 module.exports._setupWorkerThreadWorker = setupWorkerThreadWorker;
 module.exports.ensureWorkerThreads = ensureWorkerThreads;
+module.exports.TerminateError = TerminateError
+
