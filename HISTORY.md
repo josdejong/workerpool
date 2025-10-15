@@ -2,6 +2,17 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 10.0.0
+
+BREAKING CHANGES:
+
+- Feat: introduce a new `TerminateError` class to differentiate between a 
+  crash and a regular error (see #519, #520). The `TerminateError` class 
+  extends from the class `Error` so no breaking changes in that regard. 
+  But some of the error messages are changed so if you have code that depends
+  on the exact error messages you may need to change your code accordingly.
+  Thanks @amaneru55.
+
 ## 2025-09-10, version 9.3.4
 
 - Fix: #516 improve error handling for errors containing nested classes by
