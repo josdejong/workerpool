@@ -2,16 +2,20 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 10.0.0
+## 2025-10-21, version 10.0.0
 
 BREAKING CHANGES:
 
+- Feat: implement `queueStrategy` option (FIFO / LIFO / custom) (#518, #517).
+  This is a new feature without changes in the public API, but the internal
+  property `pool.tasks` is changed into `pool.taskQueue`. So, changes are 
+  required if you rely on this internal property. Thanks @amaneru55
 - Feat: introduce a new `TerminateError` class to differentiate between a 
   crash and a regular error (see #519, #520). The `TerminateError` class 
   extends from the class `Error` so no breaking changes in that regard. 
   But some of the error messages are changed so if you have code that depends
   on the exact error messages you may need to change your code accordingly.
-  Thanks @amaneru55.
+  Thanks @Julusian.
 
 ## 2025-09-10, version 9.3.4
 
