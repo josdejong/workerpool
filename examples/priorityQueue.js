@@ -55,8 +55,9 @@ var priorityPool = workerpool.pool({
 });
 
 // Simple task function
-function log(something) {
-  console.log(something);
+function log(...something) {
+  console.log(...something);
+  return new Promise((resolve) => setTimeout(resolve, 10));
 }
 
 Promise.all([
