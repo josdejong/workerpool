@@ -119,3 +119,33 @@ wp.worker(undefined, undefined);
 new wp.Transfer("foo", []);
 
 const p: Promise<string> = pool.exec<() => string>('hello').then((a) => a);
+
+// Test queue types
+import { FIFOQueue, LIFOQueue } from "../../types/queues";
+
+const fifoQueue = new FIFOQueue();
+const lifoQueue = new LIFOQueue();
+
+// Test that task parameter is correctly typed
+const task = {
+  method: 'test',
+  params: [],
+  resolver: { promise: Promise.resolve(), resolve: () => {}, reject: () => {} },
+  timeout: null,
+  options: undefined
+};
+
+fifoQueue.push(task);
+lifoQueue.push(task);
+
+const poppedFifo = fifoQueue.pop();
+const poppedLifo = lifoQueue.pop();
+
+const size1: number = fifoQueue.size();
+const size2: number = lifoQueue.size();
+
+const contains1: boolean = fifoQueue.contains(task);
+const contains2: boolean = lifoQueue.contains(task);
+
+fifoQueue.clear();
+lifoQueue.clear();

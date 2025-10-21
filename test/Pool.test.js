@@ -344,19 +344,19 @@ describe('Pool', function () {
       return a + b;
     }
 
-    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.taskQueue.size(), 0);
     assert.strictEqual(pool.workers.length, 0);
 
     var task1 = pool.exec(add, [3, 4]);
     var task2 = pool.exec(add, [2, 3]);
 
-    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.taskQueue.size(), 0);
     assert.strictEqual(pool.workers.length, 2);
 
     var task3 = pool.exec(add, [5, 7]);
     var task4 = pool.exec(add, [1, 1]);
 
-    assert.strictEqual(pool.tasks.length, 2);
+    assert.strictEqual(pool.taskQueue.size(), 2);
     assert.strictEqual(pool.workers.length, 2);
 
     Promise.all([
@@ -367,7 +367,7 @@ describe('Pool', function () {
         ])
         .then(function (results) {
           assert.deepStrictEqual(results, [7, 5, 12, 2]);
-          assert.strictEqual(pool.tasks.length, 0);
+          assert.strictEqual(pool.taskQueue.size(), 0);
           assert.strictEqual(pool.workers.length, 2);
 
           pool.terminate();
@@ -583,7 +583,7 @@ describe('Pool', function () {
           assert.strictEqual(reachedTheEnd, true);
 
           assert.strictEqual(pool.workers.length, 1);
-          assert.strictEqual(pool.tasks.length, 0);
+          assert.strictEqual(pool.taskQueue.size(), 0);
 
           return pool.terminate();
         })
@@ -593,15 +593,15 @@ describe('Pool', function () {
         .catch(done);
 
     assert.strictEqual(pool.workers.length, 1);
-    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.taskQueue.size(), 0);
 
     var p2 = pool.exec(one); // will be queued
     assert.strictEqual(pool.workers.length, 1);
-    assert.strictEqual(pool.tasks.length, 1);
+    assert.strictEqual(pool.taskQueue.size(), 1);
 
     p2.cancel();            // cancel immediately
     assert.strictEqual(pool.workers.length, 1);
-    assert.strictEqual(pool.tasks.length, 1);
+    assert.strictEqual(pool.taskQueue.size(), 1);
 
     reachedTheEnd = true;
   });
@@ -651,17 +651,17 @@ describe('Pool', function () {
           oneDone = true;
 
           assert.strictEqual(pool.workers.length, 1);
-          assert.strictEqual(pool.tasks.length, 1);
+          assert.strictEqual(pool.taskQueue.size(), 1);
 
           checkDone();
         });
 
     assert.strictEqual(pool.workers.length, 1);
-    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.taskQueue.size(), 0);
 
     var p2 = pool.exec(one); // will be queued
     assert.strictEqual(pool.workers.length, 1);
-    assert.strictEqual(pool.tasks.length, 1);
+    assert.strictEqual(pool.taskQueue.size(), 1);
 
     var p3 = pool.exec(two)
         .then(function (result) {
@@ -671,14 +671,14 @@ describe('Pool', function () {
           twoDone = true;
 
           assert.strictEqual(pool.workers.length, 1);
-          assert.strictEqual(pool.tasks.length, 0);
+          assert.strictEqual(pool.taskQueue.size(), 0);
 
           checkDone();
         });
 
     p2.cancel();            // cancel immediately
     assert.strictEqual(pool.workers.length, 1);
-    assert.strictEqual(pool.tasks.length, 2);
+    assert.strictEqual(pool.taskQueue.size(), 2);
 
     reachedTheEnd = true;
   });
@@ -843,7 +843,7 @@ describe('Pool', function () {
 
       assert.strictEqual(pool.maxWorkers, 2);
       assert.strictEqual(pool.workers.length, 2);
-      assert.strictEqual(pool.tasks.length, 3);
+      assert.strictEqual(pool.taskQueue.size(), 3);
 
       return Promise.all(tasks).then(function () {
         return pool.terminate();
@@ -896,10 +896,210 @@ describe('Pool', function () {
       assert.strictEqual(pool.minWorkers, count);
       assert.strictEqual(pool.maxWorkers, count);
       assert.strictEqual(pool.workers.length, count);
-      assert.strictEqual(pool.tasks.length, tasksCount - count);
+      assert.strictEqual(pool.taskQueue.size(), tasksCount - count);
 
       return Promise.all(tasks).then(function () {
         return pool.terminate();
+      });
+    });
+
+    describe('queueStrategy', function () {
+      it('should use FIFO queue strategy by default', function () {
+        var pool = createPool();
+
+        // Verify the queue type by checking behavior
+        assert.strictEqual(pool.taskQueue.constructor.name, 'FIFOQueue');
+
+        return pool.terminate();
+      });
+
+      it('should use FIFO queue strategy when explicitly specified', function () {
+        var pool = createPool({queueStrategy: 'fifo'});
+
+        assert.strictEqual(pool.taskQueue.constructor.name, 'FIFOQueue');
+
+        return pool.terminate();
+      });
+
+      it('should use LIFO queue strategy when specified', function () {
+        var pool = createPool({queueStrategy: 'lifo'});
+
+        assert.strictEqual(pool.taskQueue.constructor.name, 'LIFOQueue');
+
+        return pool.terminate();
+      });
+
+      it('should process tasks in FIFO order with fifo strategy', function () {
+        var pool = createPool({maxWorkers: 1, queueStrategy: 'fifo'});
+        var results = [];
+
+        function delayedAdd(a, b) {
+          return new Promise(function(resolve) {
+            setTimeout(function() {
+              resolve(a + b);
+            }, 10);
+          });
+        }
+
+        // Fill the queue with tasks
+        var task1 = pool.exec(delayedAdd, [1, 1]).then(function(result) { results.push(result); });
+        var task2 = pool.exec(delayedAdd, [2, 2]).then(function(result) { results.push(result); });
+        var task3 = pool.exec(delayedAdd, [3, 3]).then(function(result) { results.push(result); });
+        var task4 = pool.exec(delayedAdd, [4, 4]).then(function(result) { results.push(result); });
+
+        return Promise.all([task1, task2, task3, task4]).then(function() {
+          // FIFO should process tasks in order: 2, 4, 6, 8
+          assert.deepStrictEqual(results, [2, 4, 6, 8]);
+          return pool.terminate();
+        });
+      });
+
+      it('should process tasks in LIFO order with lifo strategy', function () {
+        var pool = createPool({maxWorkers: 1, queueStrategy: 'lifo'});
+        var results = [];
+
+        function delayedAdd(a, b) {
+          return new Promise(function(resolve) {
+            setTimeout(function() {
+              resolve(a + b);
+            }, 10);
+          });
+        }
+
+        // Fill the queue with tasks
+        var task1 = pool.exec(delayedAdd, [1, 1]).then(function(result) { results.push(result); });
+        var task2 = pool.exec(delayedAdd, [2, 2]).then(function(result) { results.push(result); });
+        var task3 = pool.exec(delayedAdd, [3, 3]).then(function(result) { results.push(result); });
+        var task4 = pool.exec(delayedAdd, [4, 4]).then(function(result) { results.push(result); });
+
+        return Promise.all([task1, task2, task3, task4]).then(function() {
+          // LIFO should process tasks in reverse order: 2, 8, 6, 4
+          assert.deepStrictEqual(results, [2, 8, 6, 4]);
+          return pool.terminate();
+        });
+      });
+
+      it('should accept custom queue strategy', function () {
+        // Create a priority queue that processes tasks with higher priority first
+        function PriorityQueue() {
+          this.tasks = [];
+        }
+
+        PriorityQueue.prototype.push = function(task) {
+          this.tasks.push(task);
+          this._sort();
+        };
+
+        PriorityQueue.prototype.pop = function() {
+          return this.tasks.shift();
+        };
+
+        PriorityQueue.prototype.size = function() {
+          return this.tasks.length;
+        };
+
+        PriorityQueue.prototype.contains = function(task) {
+          return this.tasks.includes(task);
+        };
+
+        PriorityQueue.prototype.clear = function() {
+          this.tasks.length = 0;
+        };
+
+        PriorityQueue.prototype._sort = function() {
+          var self = this;
+          this.tasks.sort(function(a, b) {
+            var priorityA = self._getPriority(a);
+            var priorityB = self._getPriority(b);
+            return priorityA - priorityB; // Lower number = higher priority
+          });
+        };
+
+        PriorityQueue.prototype._getPriority = function(task) {
+          if (task.options && task.options.metadata && typeof task.options.metadata.priority === 'number') {
+            return task.options.metadata.priority;
+          }
+          return 0; // Default priority
+        };
+
+        var customQueue = new PriorityQueue();
+        var pool = createPool({queueStrategy: customQueue});
+
+        assert.strictEqual(pool.taskQueue, customQueue);
+
+        return pool.terminate();
+      });
+
+      it('should process tasks according to priority queue behavior', function () {
+        // Create a priority queue that processes tasks based on metadata priority
+        function PriorityQueue() {
+          this.tasks = [];
+        }
+
+        PriorityQueue.prototype.push = function(task) {
+          this.tasks.push(task);
+          this._sort();
+        };
+
+        PriorityQueue.prototype.pop = function() {
+          return this.tasks.shift();
+        };
+
+        PriorityQueue.prototype.size = function() {
+          return this.tasks.length;
+        };
+
+        PriorityQueue.prototype.contains = function(task) {
+          return this.tasks.includes(task);
+        };
+
+        PriorityQueue.prototype.clear = function() {
+          this.tasks.length = 0;
+        };
+
+        PriorityQueue.prototype._sort = function() {
+          var self = this;
+          this.tasks.sort(function(a, b) {
+            var priorityA = self._getPriority(a);
+            var priorityB = self._getPriority(b);
+            return priorityA - priorityB; // Lower number = higher priority
+          });
+        };
+
+        PriorityQueue.prototype._getPriority = function(task) {
+          if (task.options && task.options.metadata && typeof task.options.metadata.priority === 'number') {
+            return task.options.metadata.priority;
+          }
+          return 5; // Default medium priority
+        };
+
+        var customQueue = new PriorityQueue();
+        var pool = createPool({maxWorkers: 1, queueStrategy: customQueue});
+        var results = [];
+
+        function delayedAdd(a, b) {
+          return new Promise(function(resolve) {
+            setTimeout(function() {
+              resolve(a + b);
+            }, 10);
+          });
+        }
+
+        // Add tasks with different priorities - the first task will start immediately, others will be queued
+        var task1 = pool.exec(delayedAdd, [1, 1], { metadata: { priority: 5 } }).then(function(result) { results.push(result); });
+        var task2 = pool.exec(delayedAdd, [2, 2], { metadata: { priority: 3 } }).then(function(result) { results.push(result); });
+        var task3 = pool.exec(delayedAdd, [3, 3], { metadata: { priority: 1 } }).then(function(result) { results.push(result); });
+        var task4 = pool.exec(delayedAdd, [4, 4], { metadata: { priority: 2 } }).then(function(result) { results.push(result); });
+
+        return Promise.all([task1, task2, task3, task4]).then(function() {
+          // With priority queue, execution order should be:
+          // task1 (2) - executed first as it started immediately (priority 5)
+          // task3 (6) - highest priority 1
+          // task4 (8) - priority 2
+          // task2 (4) - lowest priority 3
+          assert.deepStrictEqual(results, [2, 6, 8, 4]);
+          return pool.terminate();
+        });
       });
     });
   });
@@ -1114,12 +1314,12 @@ describe('Pool', function () {
     var promise2 = pool.exec(test2);
 
     assert.strictEqual(pool.workers.length, 1);
-    assert.strictEqual(pool.tasks.length, 1);
+    assert.strictEqual(pool.taskQueue.size(), 1);
 
     return pool.terminate(false)
       .then(function() {
         assert.strictEqual(pool.workers.length, 0);
-        assert.strictEqual(pool.tasks.length, 0);
+        assert.strictEqual(pool.taskQueue.size(), 0);
 
         return Promise.all([
           promise1.then(function (result) {
@@ -1199,20 +1399,20 @@ describe('Pool', function () {
       return a + b;
     }
 
-    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.taskQueue.size(), 0);
     assert.strictEqual(pool.workers.length, 0);
 
     var task1 = pool.exec(add, [3, 4]);
     var task2 = pool.exec(add, [2, 3]);
 
-    assert.strictEqual(pool.tasks.length, 0);
+    assert.strictEqual(pool.taskQueue.size(), 0);
     assert.strictEqual(pool.workers.length, 2);
 
     var task3 = pool.exec(add, [5, 7]);
     var task4 = pool.exec(add, [1, 1]);
     var task5 = pool.exec(add, [6, 3]);
 
-    assert.strictEqual(pool.tasks.length, 3);
+    assert.strictEqual(pool.taskQueue.size(), 3);
     assert.strictEqual(pool.workers.length, 2);
 
     assert.throws(function () {pool.exec(add, [9, 4])}, Error);
@@ -1225,7 +1425,7 @@ describe('Pool', function () {
         task5
         ])
         .then(function () {
-          assert.strictEqual(pool.tasks.length, 0);
+          assert.strictEqual(pool.taskQueue.size(), 0);
           assert.strictEqual(pool.workers.length, 2);
 
           return pool.terminate();
@@ -1513,7 +1713,7 @@ describe('Pool', function () {
         .catch(function(err) {
           assert(err instanceof Promise.TimeoutError);
           var stats = pool.stats();
-          assert.strictEqual(stats.busyWorkers, 1);
+          assert(stats.busyWorkers === 1);
           assert.strictEqual(stats.totalWorkers, 1);
         }).always(function () {
           return pool.exec(add, [1, 2]).then(function () {
