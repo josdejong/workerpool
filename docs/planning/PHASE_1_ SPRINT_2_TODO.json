@@ -1,0 +1,73 @@
+{
+  "sprint": 2,
+  "title": "Core Module Conversion",
+  "week": "Week 2",
+  "effort": "25-30 hours",
+  "status": "pending",
+  "tasks": [
+    {
+      "id": 9,
+      "category": "IPC Protocol",
+      "description": "Define IPC message protocol types - Create strongly-typed message interfaces using discriminated unions: TaskRequest, TaskResponse, TaskEvent, CleanupRequest, CleanupResponse, TerminateRequest, ReadySignal. Define SerializedError interface for cross-boundary error transmission.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "files": ["src/types/messages.ts"]
+    },
+    {
+      "id": 10,
+      "category": "Worker Handler",
+      "description": "Convert WorkerHandler.ts - Migrate WorkerHandler class to TypeScript with proper typing for worker setup (browser/thread/process), message handling with type narrowing, task processing queue management, termination lifecycle, and TerminateError class.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "files": ["src/core/WorkerHandler.ts"]
+    },
+    {
+      "id": 11,
+      "category": "Worker Script",
+      "description": "Convert worker.ts - Migrate worker-side message handler to TypeScript with typed message reception, method registry, cleanup/abort listener support, terminate handler, and emit functionality for worker-to-main events.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "files": ["src/workers/worker.ts"]
+    },
+    {
+      "id": 12,
+      "category": "Pool Core",
+      "description": "Convert Pool.ts - Migrate Pool class to TypeScript with generic worker method typing, exec<T>() with return type inference, proxy() with mapped types, task queue orchestration, worker lifecycle management, and stats() reporting.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "files": ["src/core/Pool.ts"]
+    },
+    {
+      "id": 13,
+      "category": "Debug Utilities",
+      "description": "Convert debug-port-allocator.ts - Migrate DebugPortAllocator class to TypeScript for managing debug ports across multiple worker processes without conflicts.",
+      "status": "pending",
+      "estimatedHours": 1,
+      "files": ["src/core/debug-port-allocator.ts"]
+    },
+    {
+      "id": 14,
+      "category": "Entry Point",
+      "description": "Create unified index.ts entry point - Export all public APIs: pool factory, worker registration, Promise class, Transfer wrapper, platform detection, error classes. Setup proper module exports for CJS/ESM compatibility.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "files": ["src/index.ts"]
+    },
+    {
+      "id": 15,
+      "category": "Build Configuration",
+      "description": "Update Rollup config for TypeScript - Configure @rollup/plugin-typescript, update input/output paths, ensure source maps work correctly, configure declaration file generation, update embedded worker generation.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "files": ["rollup.config.mjs", "package.json"]
+    },
+    {
+      "id": 16,
+      "category": "Testing",
+      "description": "Sprint 2 integration tests - Full end-to-end testing of Pool and WorkerHandler. Test task execution across all worker types (web, thread, process, auto), cancellation/timeout flows, worker crash recovery, and proxy functionality.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "files": ["test/Pool.test.ts", "test/WorkerHandler.test.ts"]
+    }
+  ]
+}

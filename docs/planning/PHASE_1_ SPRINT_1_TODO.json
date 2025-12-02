@@ -1,0 +1,73 @@
+{
+  "sprint": 1,
+  "title": "TypeScript Foundation",
+  "week": "Week 1",
+  "effort": "20-25 hours",
+  "status": "pending",
+  "tasks": [
+    {
+      "id": 1,
+      "category": "Build Infrastructure",
+      "description": "Setup TypeScript build infrastructure - Configure tsconfig.json with strict mode, path aliases, ES2020 target, declaration generation. Create tsconfig.build.json for production builds. Update rollup.config.mjs for TypeScript compilation with dual CJS/ESM output.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "files": ["tsconfig.json", "tsconfig.build.json", "rollup.config.mjs", "package.json"]
+    },
+    {
+      "id": 2,
+      "category": "Type Definitions",
+      "description": "Define core type definitions - Create comprehensive public API types (PoolOptions, WorkerType, QueueStrategy, ExecOptions, PoolStats), internal types (Task, Resolver, WorkerState enum), and IPC message protocol types using discriminated unions (TaskRequest, TaskResponse, TaskEvent, etc.).",
+      "status": "pending",
+      "estimatedHours": 4,
+      "files": ["src/types/index.ts", "src/types/internal.ts", "src/types/messages.ts"]
+    },
+    {
+      "id": 3,
+      "category": "Platform Module",
+      "description": "Convert environment.ts - Migrate platform detection logic to TypeScript with proper type guards for Node.js vs browser detection, isMainThread detection for worker_threads and child_process, and CPU count detection.",
+      "status": "pending",
+      "estimatedHours": 1.5,
+      "files": ["src/platform/environment.ts"]
+    },
+    {
+      "id": 4,
+      "category": "Promise Implementation",
+      "description": "Convert Promise.ts with generics - Implement WorkerpoolPromise<T, E> class with full generic support for then() chaining, cancel() propagation through parent chain, timeout() with proper cleanup, static defer<T>() and all() methods. Include CancellationError and TimeoutError classes.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "files": ["src/core/Promise.ts"]
+    },
+    {
+      "id": 5,
+      "category": "Queue Implementation",
+      "description": "Convert queues.ts with generics - Implement TaskQueue<T> interface, high-performance FIFOQueue using circular buffer with O(1) operations and power-of-2 sizing, LIFOQueue stack implementation, PriorityQueue using binary heap, and createQueue factory function.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "files": ["src/core/TaskQueue.ts"]
+    },
+    {
+      "id": 6,
+      "category": "Transfer Utilities",
+      "description": "Convert transfer.ts - Migrate Transfer class wrapper for Transferable objects to TypeScript with proper typing for ArrayBuffer, MessagePort, and other transferable types.",
+      "status": "pending",
+      "estimatedHours": 1,
+      "files": ["src/platform/transfer.ts"]
+    },
+    {
+      "id": 7,
+      "category": "Validation",
+      "description": "Convert validateOptions.ts - Migrate option validation logic to TypeScript with type guards and runtime validation for forkOpts, workerThreadOpts, and workerOpts option names.",
+      "status": "pending",
+      "estimatedHours": 1.5,
+      "files": ["src/core/validateOptions.ts"]
+    },
+    {
+      "id": 8,
+      "category": "Testing",
+      "description": "Sprint 1 integration tests - Verify all converted modules work together. Test Promise chaining with generics, queue operations performance, platform detection accuracy, and type inference in consuming code.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "files": ["test/Promise.test.ts", "test/Queues.test.ts", "test/environment.test.ts"]
+    }
+  ]
+}
