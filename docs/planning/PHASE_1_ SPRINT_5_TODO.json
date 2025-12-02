@@ -1,0 +1,73 @@
+{
+  "sprint": 5,
+  "title": "Worker Pre-Warming & Adaptive Scaling",
+  "week": "Week 5",
+  "effort": "28-32 hours",
+  "status": "pending",
+  "tasks": [
+    {
+      "id": 33,
+      "category": "Worker Cache",
+      "description": "Implement WorkerCache for pre-warming - Create worker cache maintaining pre-warmed workers, implement acquire() returning worker in <1ms, release() returning worker to warm pool, manage cold/warm/busy worker pools, handle initial warm-up on pool creation.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "files": ["src/workers/worker-cache.ts"]
+    },
+    {
+      "id": 34,
+      "category": "State Machine",
+      "description": "Create worker lifecycle state machine - Define WorkerState enum (COLD, WARMING, READY, BUSY, CLEANING, TERMINATING, TERMINATED), implement state transitions, add state change hooks, create state diagram documentation.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "files": ["src/workers/worker-state.ts", "docs/planning/WORKER_STATE_DIAGRAM.md"]
+    },
+    {
+      "id": 35,
+      "category": "Adaptive Scaling",
+      "description": "Implement adaptive min/max scaling - Create scaling algorithm based on queue depth and task latency, implement scale-up triggers (queue growth, latency increase), scale-down triggers (idle time, low utilization), add hysteresis to prevent thrashing.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "files": ["src/workers/adaptive-scaler.ts"]
+    },
+    {
+      "id": 36,
+      "category": "Health Monitoring",
+      "description": "Add worker health monitoring - Implement heartbeat mechanism for worker liveness, detect stuck/hung workers via timeout, track error rates per worker, implement automatic unhealthy worker replacement.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "files": ["src/workers/health-monitor.ts"]
+    },
+    {
+      "id": 37,
+      "category": "Idle Recycling",
+      "description": "Implement idle worker recycling - Track worker idle time and task count, implement recycling thresholds (max idle time, max tasks), graceful termination and replacement, maintain minimum worker count during recycling.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "files": ["src/workers/recycler.ts"]
+    },
+    {
+      "id": 38,
+      "category": "Worker Affinity",
+      "description": "Create worker affinity system - Implement task-to-worker affinity for cache locality, support affinity hints in exec options, track affinity mappings, implement affinity-aware task dispatch.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "files": ["src/workers/affinity.ts", "src/types/index.ts"]
+    },
+    {
+      "id": 39,
+      "category": "Metrics Collection",
+      "description": "Add metrics collection - Implement MetricsCollector class tracking task latency histograms, worker utilization, queue depths, error rates. Support metrics export via callback, add pool.metrics() API.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "files": ["src/core/metrics.ts"]
+    },
+    {
+      "id": 40,
+      "category": "Integration Testing",
+      "description": "Sprint 5 integration tests - Test pre-warming effectiveness (measure cold vs warm latency), adaptive scaling behavior under load, health monitoring accuracy, recycling correctness, affinity impact on performance.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "files": ["test/workers/worker-cache.test.ts", "test/workers/scaling.test.ts"]
+    }
+  ]
+}

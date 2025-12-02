@@ -1,0 +1,73 @@
+{
+  "sprint": 6,
+  "title": "Zero-Copy & SharedArrayBuffer",
+  "week": "Week 6",
+  "effort": "32-38 hours",
+  "status": "pending",
+  "tasks": [
+    {
+      "id": 41,
+      "category": "Protocol Design",
+      "description": "Design shared memory protocol - Define SharedArrayBuffer layout with header (indices, flags) and message slots, specify atomic operation sequences for lock-free send/receive, document memory ordering requirements, create protocol specification.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "files": ["docs/planning/SHARED_MEMORY_PROTOCOL.md"]
+    },
+    {
+      "id": 42,
+      "category": "SharedMemoryChannel",
+      "description": "Implement SharedMemoryChannel - Create bi-directional lock-free channel using SharedArrayBuffer, implement send() non-blocking with Atomics, receive() non-blocking, receiveBlocking() with Atomics.wait(), handle message serialization to slots.",
+      "status": "pending",
+      "estimatedHours": 8,
+      "files": ["src/platform/shared-memory.ts"]
+    },
+    {
+      "id": 43,
+      "category": "Clone Optimization",
+      "description": "Create structured clone optimization - Detect transferable objects automatically, optimize ArrayBuffer/TypedArray transfers, implement zero-copy path for supported types, fallback to JSON for complex objects.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "files": ["src/platform/structured-clone.ts"]
+    },
+    {
+      "id": 44,
+      "category": "Message Batching",
+      "description": "Implement message batching - Batch multiple small messages into single transfer, implement flush timer and size threshold triggers, optimize for latency vs throughput tradeoff, add batching configuration options.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "files": ["src/platform/message-batcher.ts"]
+    },
+    {
+      "id": 45,
+      "category": "Transferable Detection",
+      "description": "Add Transferable detection/optimization - Implement isTransferable() type guard, auto-detect ArrayBuffer, MessagePort, ImageBitmap, etc., create transfer list automatically, warn on accidental non-transfer of large buffers.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "files": ["src/platform/transfer-detection.ts"]
+    },
+    {
+      "id": 46,
+      "category": "Result Streaming",
+      "description": "Implement result streaming - Support streaming large results back via SharedArrayBuffer, implement chunked transfer for results exceeding slot size, add progress events for large transfers, handle backpressure.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "files": ["src/platform/result-stream.ts"]
+    },
+    {
+      "id": 47,
+      "category": "Fallback Logic",
+      "description": "Fallback to IPC when SAB unavailable - Implement feature detection for SharedArrayBuffer (requires COOP/COEP headers in browser), create transparent fallback to postMessage/IPC, maintain API compatibility, log degraded mode warning.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "files": ["src/platform/channel-factory.ts"]
+    },
+    {
+      "id": 48,
+      "category": "Integration Testing",
+      "description": "Sprint 6 integration tests - Benchmark shared memory vs IPC transfer speeds, test large message handling (1MB+), verify atomic operations under contention, test fallback behavior, cross-browser compatibility testing.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "files": ["test/platform/shared-memory.test.ts", "test/platform/transfer.test.ts"]
+    }
+  ]
+}
