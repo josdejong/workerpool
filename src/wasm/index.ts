@@ -24,3 +24,25 @@ export type {
   WasmLoadResult,
   WasmLoadOptions,
 } from './WasmLoader';
+
+export {
+  WASMTaskQueue,
+  WasmTaskQueue,
+  createWASMQueue,
+} from './WasmTaskQueue';
+
+export type { WASMTaskQueueOptions } from './WasmTaskQueue';
+
+export {
+  detectWASMFeatures,
+  getRecommendedQueueType,
+  warnIfWASMUnavailable,
+  hasWebAssembly,
+  hasSharedArrayBuffer,
+  hasAtomics,
+  hasWASMThreads,
+  isSecureContext,
+  getFeatureReport,
+} from './feature-detection';
+
+export type { WASMFeatureStatus } from './feature-detection';

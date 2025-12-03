@@ -51,13 +51,27 @@ For historical changes prior to v11.0.0, see [HISTORY.md](./HISTORY.md).
 - **WASM JavaScript Bridge** (`src/wasm/`)
   - `WasmLoader.ts` - WASM module loading with streaming compilation, SharedArrayBuffer support
   - `WasmBridge.ts` - High-level TypeScript API for queue operations, slot management
+  - `WasmTaskQueue.ts` - TaskQueue implementation backed by WASM ring buffer
+  - `feature-detection.ts` - WASM feature detection and fallback recommendations
   - `index.ts` - Public WASM API exports
+
+- **Queue Factory** (`src/core/QueueFactory.ts`)
+  - Unified queue creation with 'fifo', 'lifo', 'priority', 'wasm', 'auto' strategies
+  - Automatic fallback from WASM to JS when features unavailable
+  - Sync and async creation methods
 
 ### Changed
 - Updated `package.json` with TypeScript build dependencies and scripts
 - Updated `rollup.config.mjs` with TypeScript plugin configuration
 
 ### Infrastructure
+- **Phase 1, Sprint 4: High-Performance Task Queue - IN PROGRESS**
+  - Task 25: Lock-free queue protocol specification (LOCK_FREE_QUEUE_PROTOCOL.md)
+  - Task 26: WASMTaskQueue class implementing TaskQueue interface
+  - Task 29: Queue strategy factory with 'fifo', 'lifo', 'priority', 'wasm', 'auto' strategies
+  - Task 31: Feature detection and graceful fallback to JS queues
+  - Remaining: WASM priority queue, work-stealing, benchmarks, integration tests
+
 - **Phase 1, Sprint 3: AssemblyScript Infrastructure - COMPLETED**
   - Task 17: Setup AssemblyScript toolchain (`asconfig.json`, npm scripts)
   - Task 18: Create WASM memory management utilities (`assembly/memory.ts`)
