@@ -154,6 +154,17 @@ export interface PoolOptions {
    * Callback invoked when a worker is being terminated.
    */
   onTerminateWorker?: (arg: WorkerArg) => void;
+
+  /**
+   * Starting port for debug port allocation.
+   * @default 43210
+   */
+  debugPortStart?: number;
+
+  /**
+   * @deprecated Use workerType instead
+   */
+  nodeWorker?: string;
 }
 
 /**
@@ -244,7 +255,7 @@ export interface Task<T = unknown> {
  * @template T - Resolved value type
  * @template E - Error type
  */
-export interface WorkerpoolPromise<T, E = Error> extends Promise<T> {
+export interface WorkerpoolPromise<T, E = unknown> extends Promise<T> {
   /** Whether the promise has been resolved */
   readonly resolved: boolean;
   /** Whether the promise has been rejected */
@@ -268,7 +279,7 @@ export interface WorkerpoolPromise<T, E = Error> extends Promise<T> {
    * Execute callback when promise resolves or rejects
    * @deprecated Use finally() instead
    */
-  always<TResult>(fn: () => TResult | PromiseLike<TResult>): WorkerpoolPromise<TResult, E>;
+  always<TResult>(fn: () => TResult | PromiseLike<TResult>): WorkerpoolPromise<TResult, unknown>;
 }
 
 /**

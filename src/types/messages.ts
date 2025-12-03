@@ -1,9 +1,23 @@
 /**
  * workerpool IPC Message Protocol Types
- * Discriminated unions for type-safe message handling
+ *
+ * Types for the message protocol used between main thread and workers.
+ * These match the legacy format used by the existing JS implementation.
  */
 
-import type { SerializedError } from './internal';
+/**
+ * Serialized error for cross-boundary transmission
+ */
+export interface SerializedError {
+  /** Error name/type */
+  name: string;
+  /** Error message */
+  message: string;
+  /** Stack trace if available */
+  stack?: string;
+  /** Additional error properties */
+  [key: string]: unknown;
+}
 
 /**
  * Special method IDs for internal protocol messages
@@ -11,23 +25,16 @@ import type { SerializedError } from './internal';
 export const TERMINATE_METHOD_ID = '__workerpool-terminate__';
 export const CLEANUP_METHOD_ID = '__workerpool-cleanup__';
 
-/**
- * Base message interface with common fields
- */
-interface BaseMessage {
-  /** Unique message ID for request/response correlation */
-  id: number;
-}
-
 // ============================================================================
 // Request Messages (Main Thread -> Worker)
 // ============================================================================
 
 /**
- * Request to execute a method in the worker
+ * Task request message
  */
-export interface TaskRequest extends BaseMessage {
-  type: 'task';
+export interface TaskRequest {
+  /** Unique message ID for request/response correlation */
+  id: number;
   /** Method name to execute */
   method: string;
   /** Parameters to pass to the method */
@@ -35,237 +42,142 @@ export interface TaskRequest extends BaseMessage {
 }
 
 /**
- * Request to execute a dynamic function (stringified)
+ * Cleanup request message
  */
-export interface DynamicTaskRequest extends BaseMessage {
-  type: 'dynamic';
-  /** Stringified function code */
-  code: string;
-  /** Parameters to pass to the function */
-  params?: unknown[];
+export interface CleanupRequest {
+  id: number;
+  method: typeof CLEANUP_METHOD_ID;
 }
-
-/**
- * Request worker to run cleanup handlers before potential termination
- */
-export interface CleanupRequest extends BaseMessage {
-  type: 'cleanup';
-}
-
-/**
- * Request worker to terminate
- */
-export interface TerminateRequest extends BaseMessage {
-  type: 'terminate';
-  /** Exit code */
-  code?: number;
-}
-
-/**
- * Union of all request message types
- */
-export type WorkerRequest =
-  | TaskRequest
-  | DynamicTaskRequest
-  | CleanupRequest
-  | TerminateRequest;
 
 // ============================================================================
 // Response Messages (Worker -> Main Thread)
 // ============================================================================
 
 /**
- * Successful task completion response
+ * Successful task response
  */
-export interface TaskSuccessResponse extends BaseMessage {
-  type: 'success';
-  /** Task result */
+export interface TaskSuccessResponse {
+  id: number;
   result: unknown;
-  /** Transferable objects for zero-copy transfer */
-  transfer?: Transferable[];
+  error: null;
 }
 
 /**
- * Task error response
+ * Error task response
  */
-export interface TaskErrorResponse extends BaseMessage {
-  type: 'error';
-  /** Serialized error object */
+export interface TaskErrorResponse {
+  id: number;
+  result: null;
   error: SerializedError;
 }
 
 /**
- * Cleanup completed response
+ * Cleanup response message
  */
-export interface CleanupResponse extends BaseMessage {
-  type: 'cleanup-complete';
+export interface CleanupResponse {
+  id: number;
+  method: typeof CLEANUP_METHOD_ID;
+  error: SerializedError | null;
 }
 
 /**
- * Union of all response message types
- */
-export type WorkerResponse =
-  | TaskSuccessResponse
-  | TaskErrorResponse
-  | CleanupResponse;
-
-// ============================================================================
-// Event Messages (Worker -> Main Thread, unsolicited)
-// ============================================================================
-
-/**
- * Worker is ready to receive tasks
- */
-export interface ReadyEvent {
-  type: 'ready';
-}
-
-/**
- * Custom event emitted by worker during task execution
+ * Worker event (during task execution)
  */
 export interface WorkerEvent {
-  type: 'event';
-  /** Task ID this event is associated with */
-  taskId: number;
-  /** Event payload */
+  id: number;
+  isEvent: true;
   payload: unknown;
 }
 
-/**
- * Worker stdout data (when emitStdStreams is enabled)
- */
-export interface StdoutEvent {
-  type: 'stdout';
-  /** Output data */
-  data: string;
-}
-
-/**
- * Worker stderr data (when emitStdStreams is enabled)
- */
-export interface StderrEvent {
-  type: 'stderr';
-  /** Output data */
-  data: string;
-}
-
-/**
- * Union of all event message types
- */
-export type WorkerEventMessage =
-  | ReadyEvent
-  | WorkerEvent
-  | StdoutEvent
-  | StderrEvent;
-
 // ============================================================================
-// Combined Message Types
+// Union Types
 // ============================================================================
 
 /**
- * All messages that can be sent to a worker
+ * All request message types
  */
-export type MessageToWorker = WorkerRequest;
+export type WorkerRequest = TaskRequest | CleanupRequest | typeof TERMINATE_METHOD_ID;
 
 /**
- * All messages that can be received from a worker
+ * All response message types
  */
-export type MessageFromWorker = WorkerResponse | WorkerEventMessage;
+export type WorkerResponse = TaskSuccessResponse | TaskErrorResponse | CleanupResponse | WorkerEvent;
+
+// ============================================================================
+// Type Guards
+// ============================================================================
 
 /**
  * Type guard for TaskRequest
  */
-export function isTaskRequest(msg: WorkerRequest): msg is TaskRequest {
-  return msg.type === 'task';
-}
-
-/**
- * Type guard for DynamicTaskRequest
- */
-export function isDynamicTaskRequest(msg: WorkerRequest): msg is DynamicTaskRequest {
-  return msg.type === 'dynamic';
+export function isTaskRequest(msg: unknown): msg is TaskRequest {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'id' in msg &&
+    'method' in msg &&
+    typeof (msg as TaskRequest).method === 'string'
+  );
 }
 
 /**
  * Type guard for CleanupRequest
  */
-export function isCleanupRequest(msg: WorkerRequest): msg is CleanupRequest {
-  return msg.type === 'cleanup';
-}
-
-/**
- * Type guard for TerminateRequest
- */
-export function isTerminateRequest(msg: WorkerRequest): msg is TerminateRequest {
-  return msg.type === 'terminate';
+export function isCleanupRequest(msg: unknown): msg is CleanupRequest {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'method' in msg &&
+    (msg as CleanupRequest).method === CLEANUP_METHOD_ID
+  );
 }
 
 /**
  * Type guard for TaskSuccessResponse
  */
-export function isTaskSuccessResponse(msg: WorkerResponse): msg is TaskSuccessResponse {
-  return msg.type === 'success';
+export function isTaskSuccessResponse(msg: unknown): msg is TaskSuccessResponse {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'id' in msg &&
+    'result' in msg &&
+    !('isEvent' in msg)
+  );
 }
 
 /**
  * Type guard for TaskErrorResponse
  */
-export function isTaskErrorResponse(msg: WorkerResponse): msg is TaskErrorResponse {
-  return msg.type === 'error';
-}
-
-/**
- * Type guard for ReadyEvent
- */
-export function isReadyEvent(msg: WorkerEventMessage): msg is ReadyEvent {
-  return msg.type === 'ready';
+export function isTaskErrorResponse(msg: unknown): msg is TaskErrorResponse {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'id' in msg &&
+    'error' in msg &&
+    (msg as TaskErrorResponse).error !== null
+  );
 }
 
 /**
  * Type guard for WorkerEvent
  */
-export function isWorkerEvent(msg: WorkerEventMessage): msg is WorkerEvent {
-  return msg.type === 'event';
-}
-
-// ============================================================================
-// Legacy Message Format (for backward compatibility)
-// ============================================================================
-
-/**
- * Legacy message format used by existing JS implementation
- * @deprecated Use typed messages for new code
- */
-export interface LegacyMessage {
-  id?: number;
-  method?: string;
-  params?: unknown[];
-  result?: unknown;
-  error?: SerializedError | string;
+export function isWorkerEvent(msg: unknown): msg is WorkerEvent {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'isEvent' in msg &&
+    (msg as WorkerEvent).isEvent === true
+  );
 }
 
 /**
- * Convert legacy message to typed message
+ * Type guard for CleanupResponse
  */
-export function parseLegacyMessage(msg: LegacyMessage): MessageFromWorker | null {
-  if (msg.result !== undefined && msg.id !== undefined) {
-    return {
-      type: 'success',
-      id: msg.id,
-      result: msg.result,
-    };
-  }
-
-  if (msg.error !== undefined && msg.id !== undefined) {
-    const error: SerializedError = typeof msg.error === 'string'
-      ? { name: 'Error', message: msg.error }
-      : msg.error;
-    return {
-      type: 'error',
-      id: msg.id,
-      error,
-    };
-  }
-
-  return null;
+export function isCleanupResponse(msg: unknown): msg is CleanupResponse {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'method' in msg &&
+    (msg as CleanupResponse).method === CLEANUP_METHOD_ID
+  );
 }

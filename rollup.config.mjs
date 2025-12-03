@@ -60,9 +60,18 @@ const buildEmbeddedWorker = (bundledWorkerCode) => {
 }
 
 
+// TypeScript entry points for new codebase
+// TODO: Switch to these when ready to migrate fully
+// const WORKER_ENTRY = "./src/workers/worker.ts";
+// const MAIN_ENTRY = "./src/index.ts";
+
+// Current entry points (original JS files)
+const WORKER_ENTRY = "./src/worker.js";
+const MAIN_ENTRY = "./src/index.js";
+
 export default defineConfig([
     {
-        input: "./src/worker.js",
+        input: WORKER_ENTRY,
         output: {
             file: "./dist/worker.js",
             name: "worker",
@@ -71,7 +80,7 @@ export default defineConfig([
         plugins: commonPlugin
     },
     {
-        input: "./src/worker.js",
+        input: WORKER_ENTRY,
         output: {
             file: "./dist/worker.min.js",
             name: "worker",
@@ -92,7 +101,7 @@ export default defineConfig([
         ],
     },
     {
-        input: "./src/index.js",
+        input: MAIN_ENTRY,
         output: {
             file: "./dist/workerpool.js",
             name: "workerpool",
@@ -102,7 +111,7 @@ export default defineConfig([
         plugins: commonPlugin
     },
     {
-        input: "./src/index.js",
+        input: MAIN_ENTRY,
         output: {
             file: "./dist/workerpool.min.js",
             name: "workerpool",

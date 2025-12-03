@@ -2,6 +2,19 @@
 https://github.com/josdejong/workerpool
 
 
+## Unreleased (v11.0.0 TypeScript Refactoring)
+
+DEVELOPMENT:
+
+- Chore: Sprint 2 - Core module conversion to TypeScript (in progress)
+  - Created TypeScript versions of core modules: Pool.ts, WorkerHandler.ts,
+    worker.ts, debug-port-allocator.ts
+  - Added comprehensive type definitions: internal.ts, messages.ts
+  - Created TaskQueue.ts with FIFO/LIFO implementations
+  - All TypeScript files pass type checking
+  - Build still uses original JS files (migration in progress)
+
+
 ## 2025-11-19, version 10.0.1
 
 - Fix: #523 make `WorkerHandler` resilient against errors without `message` 

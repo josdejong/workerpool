@@ -72,19 +72,9 @@ export interface WorkerInfo {
   busyTime: number;
 }
 
-/**
- * Serialized error for cross-boundary transmission
- */
-export interface SerializedError {
-  /** Error name/type */
-  name: string;
-  /** Error message */
-  message: string;
-  /** Stack trace if available */
-  stack?: string;
-  /** Additional error properties */
-  [key: string]: unknown;
-}
+// SerializedError is exported from messages.ts
+import type { SerializedError } from './messages';
+export type { SerializedError };
 
 /**
  * Result of function stringification for dynamic execution
