@@ -218,7 +218,7 @@ export class WorkerpoolPromise<T, E = Error> implements IWorkerpoolPromise<T, E>
   always<TResult>(
     fn: () => TResult | PromiseLike<TResult>
   ): WorkerpoolPromise<TResult, unknown> {
-    return this.then(fn, fn as unknown as (reason: E) => TResult);
+    return this.then(fn, fn as unknown as (reason: E) => TResult) as unknown as WorkerpoolPromise<TResult, unknown>;
   }
 
   /**

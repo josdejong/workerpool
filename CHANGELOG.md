@@ -42,11 +42,34 @@ For historical changes prior to v11.0.0, see [HISTORY.md](./HISTORY.md).
 - Sprint planning documentation in `docs/planning/`
 - Claude Code configuration (`CLAUDE.md`, `.claude/settings.local.json`)
 
+- **AssemblyScript WASM Module** (`assembly/`)
+  - `memory.ts` - Memory layout with header, ring buffer, task slots; atomic load/store operations
+  - `ring-buffer.ts` - Lock-free SPMC queue using CAS for thread-safe push/pop
+  - `task-slots.ts` - Task slot allocator with atomic free list, reference counting
+  - `index.ts` - Module entry point exporting all WASM APIs
+
+- **WASM JavaScript Bridge** (`src/wasm/`)
+  - `WasmLoader.ts` - WASM module loading with streaming compilation, SharedArrayBuffer support
+  - `WasmBridge.ts` - High-level TypeScript API for queue operations, slot management
+  - `index.ts` - Public WASM API exports
+
 ### Changed
 - Updated `package.json` with TypeScript build dependencies and scripts
 - Updated `rollup.config.mjs` with TypeScript plugin configuration
 
 ### Infrastructure
+- **Phase 1, Sprint 3: AssemblyScript Infrastructure - COMPLETED**
+  - Task 17: Setup AssemblyScript toolchain (`asconfig.json`, npm scripts)
+  - Task 18: Create WASM memory management utilities (`assembly/memory.ts`)
+  - Task 19: Implement ring buffer in AssemblyScript (`assembly/ring-buffer.ts`)
+  - Task 20: Create WASM module loader abstraction (`src/wasm/WasmLoader.ts`)
+  - Task 21: Implement task slot allocator in WASM (`assembly/task-slots.ts`)
+  - Task 22: Create JS/WASM bridge utilities (`src/wasm/WasmBridge.ts`)
+  - Task 23: WASM module unit tests (`test/wasm.test.js`)
+  - WASM module compiles (5.7KB optimized, uses SharedArrayBuffer + Atomics)
+  - Lock-free ring buffer with O(1) push/pop operations
+  - Task slot allocator with free list for O(1) allocation/deallocation
+
 - **Phase 1, Sprint 2: Core Module Conversion - COMPLETED**
   - Task 9: Define IPC message protocol types (messages.ts)
   - Task 10: Convert WorkerHandler.ts with browser/thread/process backends

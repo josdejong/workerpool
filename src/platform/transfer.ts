@@ -109,11 +109,11 @@ export class Transfer<T = unknown> implements TransferDescriptor<T> {
       return Array.from(found);
     }
 
-    // Use explicit type guard to avoid narrowing issues
-    const arr = value as unknown;
-    if (Array.isArray(arr)) {
-      for (let i = 0; i < arr.length; i++) {
-        Transfer.findTransferables(arr[i], found);
+    // Check for array - use explicit type casting to avoid narrowing issues
+    const maybeArray = value as unknown[];
+    if (Array.isArray(value)) {
+      for (let i = 0; i < maybeArray.length; i++) {
+        Transfer.findTransferables(maybeArray[i], found);
       }
       return Array.from(found);
     }

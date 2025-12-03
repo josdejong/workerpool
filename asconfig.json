@@ -1,0 +1,28 @@
+{
+  "targets": {
+    "debug": {
+      "outFile": "dist/workerpool.debug.wasm",
+      "textFile": "dist/workerpool.debug.wat",
+      "sourceMap": true,
+      "debug": true
+    },
+    "release": {
+      "outFile": "dist/workerpool.wasm",
+      "textFile": "dist/workerpool.wat",
+      "sourceMap": false,
+      "optimizeLevel": 3,
+      "shrinkLevel": 1,
+      "converge": false,
+      "noAssert": true
+    }
+  },
+  "options": {
+    "bindings": "esm",
+    "exportRuntime": true,
+    "importMemory": true,
+    "sharedMemory": true,
+    "enableThreads": true,
+    "initialMemory": 16,
+    "maximumMemory": 256
+  }
+}

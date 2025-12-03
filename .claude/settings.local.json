@@ -99,7 +99,8 @@
       "Bash(git -C \"C:/users/danie/dropbox/github/workerpool\" log --oneline -5)",
       "Bash(git -C \"C:/users/danie/dropbox/github/workerpool\" add -A)",
       "Bash(git -C \"C:/users/danie/dropbox/github/workerpool\" commit -m \"$(cat <<''EOF''\ndocs: add Claude Code config and reorganize sprint planning files\n\n- Add CLAUDE.md with build commands, architecture overview, and dev workflow\n- Add .claude/settings.local.json with MCP server permissions\n- Rename planning files to remove spaces from filenames\n- Merge detailed task descriptions with metadata (complexity, dependencies)\n- Update sprint TODO files with successCriteria, filesCreated/Modified\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git -C \"C:/users/danie/dropbox/github/workerpool\" push)"
+      "Bash(git -C \"C:/users/danie/dropbox/github/workerpool\" push)",
+      "Bash(npx asc:*)"
     ],
     "deny": [],
     "ask": []
