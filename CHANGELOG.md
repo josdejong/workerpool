@@ -46,6 +46,7 @@ For historical changes prior to v11.0.0, see [HISTORY.md](./HISTORY.md).
   - `memory.ts` - Memory layout with header, ring buffer, task slots; atomic load/store operations
   - `ring-buffer.ts` - Lock-free SPMC queue using CAS for thread-safe push/pop
   - `task-slots.ts` - Task slot allocator with atomic free list, reference counting
+  - `priority-queue.ts` - Binary heap priority queue with atomic operations
   - `index.ts` - Module entry point exporting all WASM APIs
 
 - **WASM JavaScript Bridge** (`src/wasm/`)
@@ -64,13 +65,22 @@ For historical changes prior to v11.0.0, see [HISTORY.md](./HISTORY.md).
 - Updated `package.json` with TypeScript build dependencies and scripts
 - Updated `rollup.config.mjs` with TypeScript plugin configuration
 
+- **Benchmarks** (`benchmark/`)
+  - `queues.js` - Queue implementation benchmarks comparing FIFO, LIFO, Priority vs Array.shift() baseline
+
+- **Tests** (`test/queues/`)
+  - `queue-factory.test.js` - Integration tests for all queue implementations (34 test cases)
+
 ### Infrastructure
-- **Phase 1, Sprint 4: High-Performance Task Queue - IN PROGRESS**
+- **Phase 1, Sprint 4: High-Performance Task Queue - COMPLETED**
   - Task 25: Lock-free queue protocol specification (LOCK_FREE_QUEUE_PROTOCOL.md)
   - Task 26: WASMTaskQueue class implementing TaskQueue interface
+  - Task 27: WASM priority queue (binary heap with atomic operations)
   - Task 29: Queue strategy factory with 'fifo', 'lifo', 'priority', 'wasm', 'auto' strategies
+  - Task 30: Queue benchmarks (benchmark/queues.js)
   - Task 31: Feature detection and graceful fallback to JS queues
-  - Remaining: WASM priority queue, work-stealing, benchmarks, integration tests
+  - Task 32: Integration tests (test/queues/queue-factory.test.js)
+  - Note: Task 28 (work-stealing) deferred to future sprint due to complexity
 
 - **Phase 1, Sprint 3: AssemblyScript Infrastructure - COMPLETED**
   - Task 17: Setup AssemblyScript toolchain (`asconfig.json`, npm scripts)
