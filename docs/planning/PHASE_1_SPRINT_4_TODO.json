@@ -1,7 +1,7 @@
 {
   "sprint": 4,
   "title": "High-Performance Task Queue",
-  "week": "Week 4",
+  "week": "Week 7-8",
   "effort": "30-35 hours",
   "status": "pending",
   "tasks": [
@@ -11,6 +11,8 @@
       "description": "Design lock-free queue protocol - Define memory layout for concurrent access, specify atomic operation sequences for push/pop, design ABA problem prevention, document memory ordering requirements, create protocol specification document.",
       "status": "pending",
       "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": ["Sprint 3"],
       "files": ["docs/planning/LOCK_FREE_QUEUE_PROTOCOL.md"]
     },
     {
@@ -19,6 +21,8 @@
       "description": "Implement WASMTaskQueue class - Create TypeScript class implementing TaskQueue interface backed by WASM ring buffer, handle task object serialization to slot IDs, manage memory allocation, implement automatic buffer growth.",
       "status": "pending",
       "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [25],
       "files": ["src/wasm/task-queue.ts"]
     },
     {
@@ -27,6 +31,8 @@
       "description": "Implement priority queue in WASM - Create binary heap in AssemblyScript for priority ordering, implement sift-up/sift-down operations with atomics, support dynamic priority updates, optimize for common case of similar priorities.",
       "status": "pending",
       "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [25, 26],
       "files": ["assembly/priority-queue.ts", "src/wasm/priority-queue.ts"]
     },
     {
@@ -35,6 +41,8 @@
       "description": "Add work-stealing support - Implement work-stealing deque for each worker, create steal() operation for idle workers to take tasks from busy workers, implement randomized victim selection, add backoff strategy for contention.",
       "status": "pending",
       "estimatedHours": 8,
+      "complexity": "Very High",
+      "dependencies": [26, 27],
       "files": ["assembly/work-stealing.ts", "src/wasm/work-stealing.ts", "src/core/WorkStealingScheduler.ts"]
     },
     {
@@ -43,6 +51,8 @@
       "description": "Create queue strategy factory - Implement createQueue() factory supporting 'fifo', 'lifo', 'priority', 'wasm-ring', 'work-stealing' strategies, auto-detect WASM availability, provide configuration options for each strategy.",
       "status": "pending",
       "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [26, 27],
       "files": ["src/core/QueueFactory.ts"]
     },
     {
@@ -51,6 +61,8 @@
       "description": "Benchmark queue implementations - Create comprehensive benchmark suite comparing JS vs WASM implementations, measure push/pop latency, throughput under contention, memory usage, and scaling behavior across core counts.",
       "status": "pending",
       "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [26, 27, 28, 29],
       "files": ["benchmark/queues.ts"]
     },
     {
@@ -59,6 +71,8 @@
       "description": "Fallback to JS queues when WASM unavailable - Implement feature detection for WASM and SharedArrayBuffer, create transparent fallback mechanism, ensure API compatibility between implementations, add warning logs for degraded mode.",
       "status": "pending",
       "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [26, 29],
       "files": ["src/wasm/feature-detection.ts", "src/core/TaskQueue.ts"]
     },
     {
@@ -67,7 +81,35 @@
       "description": "Sprint 4 integration tests - Test all queue strategies with Pool, verify work-stealing correctness, test priority ordering, benchmark against baseline, test fallback behavior, stress test under high concurrency.",
       "status": "pending",
       "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [25, 26, 27, 28, 29, 30, 31],
       "files": ["test/queues/wasm-queue.test.ts", "test/queues/work-stealing.test.ts"]
     }
-  ]
+  ],
+  "successCriteria": [
+    "WASM queue maintains O(1) push/pop",
+    "Priority queue correctly orders by priority",
+    "Work-stealing balances load across workers",
+    "All queue strategies implement TaskQueue interface",
+    "Benchmark shows >3x improvement over Array.shift()",
+    "Graceful fallback to JS when WASM unavailable"
+  ],
+  "filesCreated": [
+    "docs/planning/LOCK_FREE_QUEUE_PROTOCOL.md",
+    "assembly/priority-queue.ts",
+    "assembly/work-stealing.ts",
+    "src/wasm/task-queue.ts",
+    "src/wasm/priority-queue.ts",
+    "src/wasm/work-stealing.ts",
+    "src/wasm/feature-detection.ts",
+    "src/core/WorkStealingScheduler.ts",
+    "src/core/QueueFactory.ts",
+    "benchmark/queues.ts"
+  ],
+  "filesModified": [
+    "src/core/Pool.ts",
+    "src/core/TaskQueue.ts"
+  ],
+  "totalEstimatedHours": 35,
+  "notes": "This sprint replaces the O(n) Array.shift() queue with O(1) WASM ring buffers. Work-stealing is an advanced feature that may be moved to a later sprint if time is constrained."
 }

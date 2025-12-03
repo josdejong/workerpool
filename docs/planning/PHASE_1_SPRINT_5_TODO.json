@@ -1,7 +1,7 @@
 {
   "sprint": 5,
   "title": "Worker Pre-Warming & Adaptive Scaling",
-  "week": "Week 5",
+  "week": "Week 9-10",
   "effort": "28-32 hours",
   "status": "pending",
   "tasks": [
@@ -11,6 +11,8 @@
       "description": "Implement WorkerCache for pre-warming - Create worker cache maintaining pre-warmed workers, implement acquire() returning worker in <1ms, release() returning worker to warm pool, manage cold/warm/busy worker pools, handle initial warm-up on pool creation.",
       "status": "pending",
       "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": ["Sprint 4"],
       "files": ["src/workers/worker-cache.ts"]
     },
     {
@@ -19,6 +21,8 @@
       "description": "Create worker lifecycle state machine - Define WorkerState enum (COLD, WARMING, READY, BUSY, CLEANING, TERMINATING, TERMINATED), implement state transitions, add state change hooks, create state diagram documentation.",
       "status": "pending",
       "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [33],
       "files": ["src/workers/worker-state.ts", "docs/planning/WORKER_STATE_DIAGRAM.md"]
     },
     {
@@ -27,6 +31,8 @@
       "description": "Implement adaptive min/max scaling - Create scaling algorithm based on queue depth and task latency, implement scale-up triggers (queue growth, latency increase), scale-down triggers (idle time, low utilization), add hysteresis to prevent thrashing.",
       "status": "pending",
       "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [33, 34],
       "files": ["src/workers/adaptive-scaler.ts"]
     },
     {
@@ -35,6 +41,8 @@
       "description": "Add worker health monitoring - Implement heartbeat mechanism for worker liveness, detect stuck/hung workers via timeout, track error rates per worker, implement automatic unhealthy worker replacement.",
       "status": "pending",
       "estimatedHours": 4,
+      "complexity": "Medium",
+      "dependencies": [33, 34],
       "files": ["src/workers/health-monitor.ts"]
     },
     {
@@ -43,6 +51,8 @@
       "description": "Implement idle worker recycling - Track worker idle time and task count, implement recycling thresholds (max idle time, max tasks), graceful termination and replacement, maintain minimum worker count during recycling.",
       "status": "pending",
       "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [33, 34, 36],
       "files": ["src/workers/recycler.ts"]
     },
     {
@@ -51,6 +61,8 @@
       "description": "Create worker affinity system - Implement task-to-worker affinity for cache locality, support affinity hints in exec options, track affinity mappings, implement affinity-aware task dispatch.",
       "status": "pending",
       "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [33],
       "files": ["src/workers/affinity.ts", "src/types/index.ts"]
     },
     {
@@ -59,6 +71,8 @@
       "description": "Add metrics collection - Implement MetricsCollector class tracking task latency histograms, worker utilization, queue depths, error rates. Support metrics export via callback, add pool.metrics() API.",
       "status": "pending",
       "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [33, 35, 36],
       "files": ["src/core/metrics.ts"]
     },
     {
@@ -67,7 +81,33 @@
       "description": "Sprint 5 integration tests - Test pre-warming effectiveness (measure cold vs warm latency), adaptive scaling behavior under load, health monitoring accuracy, recycling correctness, affinity impact on performance.",
       "status": "pending",
       "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [33, 34, 35, 36, 37, 38, 39],
       "files": ["test/workers/worker-cache.test.ts", "test/workers/scaling.test.ts"]
     }
-  ]
+  ],
+  "successCriteria": [
+    "Pre-warmed workers acquired in <1ms",
+    "Adaptive scaling responds to load changes within 100ms",
+    "Health monitoring detects stuck workers within heartbeat interval",
+    "Worker recycling maintains pool stability",
+    "Affinity improves cache hit rates for repeated tasks",
+    "Metrics API provides accurate real-time statistics"
+  ],
+  "filesCreated": [
+    "src/workers/worker-cache.ts",
+    "src/workers/worker-state.ts",
+    "src/workers/adaptive-scaler.ts",
+    "src/workers/health-monitor.ts",
+    "src/workers/recycler.ts",
+    "src/workers/affinity.ts",
+    "src/core/metrics.ts",
+    "docs/planning/WORKER_STATE_DIAGRAM.md"
+  ],
+  "filesModified": [
+    "src/core/Pool.ts",
+    "src/types/index.ts"
+  ],
+  "totalEstimatedHours": 33,
+  "notes": "This sprint focuses on worker lifecycle optimization. Pre-warming is critical for low-latency task dispatch. Adaptive scaling requires careful tuning to avoid thrashing."
 }

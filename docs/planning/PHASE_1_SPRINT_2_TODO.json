@@ -1,7 +1,7 @@
 {
   "sprint": 2,
   "title": "Core Module Conversion",
-  "week": "Week 2",
+  "week": "Week 3-4",
   "effort": "25-30 hours",
   "status": "pending",
   "tasks": [
@@ -11,6 +11,8 @@
       "description": "Define IPC message protocol types - Create strongly-typed message interfaces using discriminated unions: TaskRequest, TaskResponse, TaskEvent, CleanupRequest, CleanupResponse, TerminateRequest, ReadySignal. Define SerializedError interface for cross-boundary error transmission.",
       "status": "pending",
       "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": ["Sprint 1"],
       "files": ["src/types/messages.ts"]
     },
     {
@@ -19,6 +21,8 @@
       "description": "Convert WorkerHandler.ts - Migrate WorkerHandler class to TypeScript with proper typing for worker setup (browser/thread/process), message handling with type narrowing, task processing queue management, termination lifecycle, and TerminateError class.",
       "status": "pending",
       "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [9],
       "files": ["src/core/WorkerHandler.ts"]
     },
     {
@@ -27,6 +31,8 @@
       "description": "Convert worker.ts - Migrate worker-side message handler to TypeScript with typed message reception, method registry, cleanup/abort listener support, terminate handler, and emit functionality for worker-to-main events.",
       "status": "pending",
       "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [9, 10],
       "files": ["src/workers/worker.ts"]
     },
     {
@@ -35,6 +41,8 @@
       "description": "Convert Pool.ts - Migrate Pool class to TypeScript with generic worker method typing, exec<T>() with return type inference, proxy() with mapped types, task queue orchestration, worker lifecycle management, and stats() reporting.",
       "status": "pending",
       "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [9, 10],
       "files": ["src/core/Pool.ts"]
     },
     {
@@ -43,6 +51,8 @@
       "description": "Convert debug-port-allocator.ts - Migrate DebugPortAllocator class to TypeScript for managing debug ports across multiple worker processes without conflicts.",
       "status": "pending",
       "estimatedHours": 1,
+      "complexity": "Low",
+      "dependencies": ["Sprint 1"],
       "files": ["src/core/debug-port-allocator.ts"]
     },
     {
@@ -51,6 +61,8 @@
       "description": "Create unified index.ts entry point - Export all public APIs: pool factory, worker registration, Promise class, Transfer wrapper, platform detection, error classes. Setup proper module exports for CJS/ESM compatibility.",
       "status": "pending",
       "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [10, 11, 12, 13],
       "files": ["src/index.ts"]
     },
     {
@@ -59,6 +71,8 @@
       "description": "Update Rollup config for TypeScript - Configure @rollup/plugin-typescript, update input/output paths, ensure source maps work correctly, configure declaration file generation, update embedded worker generation.",
       "status": "pending",
       "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [14],
       "files": ["rollup.config.mjs", "package.json"]
     },
     {
@@ -67,7 +81,38 @@
       "description": "Sprint 2 integration tests - Full end-to-end testing of Pool and WorkerHandler. Test task execution across all worker types (web, thread, process, auto), cancellation/timeout flows, worker crash recovery, and proxy functionality.",
       "status": "pending",
       "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [9, 10, 11, 12, 13, 14, 15],
       "files": ["test/Pool.test.ts", "test/WorkerHandler.test.ts"]
     }
-  ]
+  ],
+  "successCriteria": [
+    "Full TypeScript pool working end-to-end",
+    "All existing mocha tests pass",
+    "Rollup produces valid CJS and ESM bundles",
+    "IPC messages use discriminated unions for type narrowing",
+    "Worker methods properly typed with generics",
+    "Declaration files correctly generated"
+  ],
+  "filesCreated": [
+    "src/core/WorkerHandler.ts",
+    "src/core/Pool.ts",
+    "src/core/debug-port-allocator.ts",
+    "src/workers/worker.ts",
+    "src/index.ts"
+  ],
+  "filesModified": [
+    "src/types/messages.ts",
+    "rollup.config.mjs",
+    "package.json"
+  ],
+  "filesToDelete": [
+    "src/index.js",
+    "src/Pool.js",
+    "src/WorkerHandler.js",
+    "src/worker.js",
+    "src/debug-port-allocator.js"
+  ],
+  "totalEstimatedHours": 30,
+  "notes": "This sprint converts the core modules. After completion, the library should be fully TypeScript while maintaining 100% backward compatibility with existing JavaScript consumers."
 }

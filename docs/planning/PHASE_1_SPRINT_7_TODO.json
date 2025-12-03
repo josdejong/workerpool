@@ -1,7 +1,7 @@
 {
   "sprint": 7,
   "title": "Batch Operations & SIMD",
-  "week": "Week 7",
+  "week": "Week 13-14",
   "effort": "28-32 hours",
   "status": "pending",
   "tasks": [
@@ -11,6 +11,8 @@
       "description": "Design batch API (Pool.execBatch) - Define BatchOptions interface (concurrency, failFast, onProgress), BatchResult interface (results, successes, failures, duration), design execBatch<T>() signature with proper generics, document usage patterns.",
       "status": "pending",
       "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": ["Sprint 6"],
       "files": ["src/types/index.ts", "docs/planning/BATCH_API_DESIGN.md"]
     },
     {
@@ -19,6 +21,8 @@
       "description": "Implement batch task serialization - Create efficient batch message format, pack multiple task requests into single transfer, implement batch response unpacking, optimize memory allocation for batch operations.",
       "status": "pending",
       "estimatedHours": 4,
+      "complexity": "Medium",
+      "dependencies": [49],
       "files": ["src/core/batch-serializer.ts"]
     },
     {
@@ -27,6 +31,8 @@
       "description": "Create SIMD batch processor in WASM - Implement AssemblyScript batch processor using SIMD intrinsics (v128), optimize for common operations (map, filter, reduce), create specialized paths for numeric arrays, benchmark against scalar implementation.",
       "status": "pending",
       "estimatedHours": 8,
+      "complexity": "Very High",
+      "dependencies": [49, 50],
       "files": ["assembly/simd-batch.ts", "src/wasm/simd-processor.ts"]
     },
     {
@@ -35,6 +41,8 @@
       "description": "Implement parallel map operation - Create Pool.map<T,R>() method distributing array processing across workers, handle function serialization, implement chunking strategy for optimal distribution, support async mapper functions.",
       "status": "pending",
       "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [49, 50],
       "files": ["src/core/Pool.ts"]
     },
     {
@@ -43,6 +51,8 @@
       "description": "Add batch cancellation support - Implement batch-level cancel() that cancels all pending tasks, handle in-flight task completion, provide partial results on cancellation, emit cancellation events.",
       "status": "pending",
       "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [50, 52],
       "files": ["src/core/batch-executor.ts"]
     },
     {
@@ -51,6 +61,8 @@
       "description": "Implement batch progress events - Call onProgress callback after each task completion, provide completed count, total count, and partial results, support progress throttling to reduce callback overhead.",
       "status": "pending",
       "estimatedHours": 2,
+      "complexity": "Low",
+      "dependencies": [50, 52],
       "files": ["src/core/batch-executor.ts"]
     },
     {
@@ -59,7 +71,30 @@
       "description": "Sprint 7 integration tests - Test batch execution correctness and ordering, benchmark batch vs individual task submission, test cancellation mid-batch, verify progress events accuracy, test SIMD acceleration effectiveness.",
       "status": "pending",
       "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [49, 50, 51, 52, 53, 54],
       "files": ["test/batch/execBatch.test.ts", "test/batch/map.test.ts", "test/wasm/simd.test.ts"]
     }
-  ]
+  ],
+  "successCriteria": [
+    "execBatch() processes 10K tasks with <100ms overhead vs sequential",
+    "Pool.map() distributes work evenly across all workers",
+    "SIMD batch processor shows >2x speedup for numeric operations",
+    "Batch cancellation works correctly with partial results",
+    "Progress events fire at configurable intervals",
+    "Memory usage scales linearly with batch size"
+  ],
+  "filesCreated": [
+    "docs/planning/BATCH_API_DESIGN.md",
+    "assembly/simd-batch.ts",
+    "src/wasm/simd-processor.ts",
+    "src/core/batch-serializer.ts",
+    "src/core/batch-executor.ts"
+  ],
+  "filesModified": [
+    "src/core/Pool.ts",
+    "src/types/index.ts"
+  ],
+  "totalEstimatedHours": 29,
+  "notes": "This sprint adds batch operations for high-throughput scenarios. SIMD acceleration is optional but provides significant speedup for numeric workloads. Consider deferring SIMD to a later sprint if time is constrained."
 }
