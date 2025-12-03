@@ -1,19 +1,36 @@
 {
   "compilerOptions": {
-    "lib": [
-      "ES2020", "WebWorker"
-    ],
     "target": "ES2020",
-    "allowJs": true,
-    "declaration": true,
+    "module": "CommonJS",
+    "lib": ["ES2020", "DOM", "WebWorker"],
     "strict": true,
-    "emitDeclarationOnly": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "outDir": "./types"
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true
   },
-  "files": [
-    "src/index.js"
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "src/generated"
   ]
 }

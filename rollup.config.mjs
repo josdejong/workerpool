@@ -2,6 +2,7 @@ import fse from "fs-extra";
 import resolve from "@rollup/plugin-node-resolve";
 import babel from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
+import typescript from "@rollup/plugin-typescript";
 import format from 'date-format'
 import terser from '@rollup/plugin-terser';
 import { defineConfig } from 'rollup'
@@ -22,6 +23,14 @@ const commonPlugin = [
         moduleDirectories: [],
         preferBuiltins: false,
         browser: true
+    }),
+    typescript({
+        tsconfig: './tsconfig.json',
+        compilerOptions: {
+            declaration: false,
+            declarationMap: false,
+            noEmit: false
+        }
     }),
     commonjs({
         strictRequires: 'auto',
