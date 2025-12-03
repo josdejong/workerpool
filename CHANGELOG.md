@@ -29,6 +29,15 @@ For historical changes prior to v11.0.0, see [HISTORY.md](./HISTORY.md).
   - `Promise.ts` - WorkerpoolPromise<T, E> with full generic support, cancel/timeout propagation, CancellationError/TimeoutError classes
   - `TaskQueue.ts` - FIFOQueue (circular buffer O(1)), LIFOQueue (stack), PriorityQueue (binary heap), createQueue factory
   - `validateOptions.ts` - Option validation with type guards for pool, worker, fork, and exec options
+  - `Pool.ts` - Worker pool manager with generic exec<T>(), proxy<T>(), task queue orchestration
+  - `WorkerHandler.ts` - Worker lifecycle management for browser/thread/process backends
+  - `debug-port-allocator.ts` - Debug port allocation for worker processes
+
+- **Worker Module** (`src/workers/`)
+  - `worker.ts` - Worker-side message handler with typed method registry
+
+- **Entry Point**
+  - `src/index.ts` - Unified entry point exporting all public APIs (ready but not yet activated in build)
 
 - Sprint planning documentation in `docs/planning/`
 - Claude Code configuration (`CLAUDE.md`, `.claude/settings.local.json`)
@@ -38,6 +47,17 @@ For historical changes prior to v11.0.0, see [HISTORY.md](./HISTORY.md).
 - Updated `rollup.config.mjs` with TypeScript plugin configuration
 
 ### Infrastructure
+- **Phase 1, Sprint 2: Core Module Conversion - COMPLETED**
+  - Task 9: Define IPC message protocol types (messages.ts)
+  - Task 10: Convert WorkerHandler.ts with browser/thread/process backends
+  - Task 11: Convert worker.ts with typed message handling
+  - Task 12: Convert Pool.ts with generic exec<T>() and proxy<T>()
+  - Task 13: Convert debug-port-allocator.ts
+  - Task 14: Create unified index.ts entry point
+  - Task 15: Update Rollup config with TypeScript entry points (commented for future switch)
+  - All type checks pass (`tsc --noEmit`)
+  - Build uses original JS files until abort handler test flakiness is resolved
+
 - **Phase 1, Sprint 1: TypeScript Foundation - COMPLETED**
   - Task 1: Setup TypeScript build infrastructure
   - Task 2: Define core type definitions
