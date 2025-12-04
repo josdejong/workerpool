@@ -1,0 +1,122 @@
+{
+  "sprint": 4,
+  "phase": 2,
+  "title": "Task Stealing",
+  "week": "Week 7-8",
+  "effort": "35-40 hours",
+  "status": "pending",
+  "prerequisite": "Phase 2 Sprint 3 complete",
+  "tasks": [
+    {
+      "id": 25,
+      "category": "Local Queue Design",
+      "description": "Design per-worker local queue structure - Define deque (double-ended queue) interface for work-stealing pattern: push/pop from owner end (LIFO for locality), steal from opposite end (FIFO for fairness). Plan SharedArrayBuffer layout for cross-thread stealing.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": ["Sprint 3"],
+      "files": ["docs/planning/WORK_STEALING_DESIGN.md", "src/stealing/types.ts"]
+    },
+    {
+      "id": 26,
+      "category": "WASM Local Queue",
+      "description": "Implement local queue in WASM - Create AssemblyScript work-stealing deque with lock-free push/pop for owner thread, atomic steal from thief thread. Use Chase-Lev algorithm or simplified variant for single-owner/multiple-thieves pattern.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [25],
+      "files": ["assembly/stealing/local-deque.ts"]
+    },
+    {
+      "id": 27,
+      "category": "Stealing Protocol",
+      "description": "Design stealing protocol (victim selection) - Implement victim selection strategies: random, round-robin, most-loaded. Define steal request/response protocol, handle concurrent steal attempts, prevent starvation of small queues.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [25, 26],
+      "files": ["src/stealing/VictimSelector.ts", "src/stealing/StealProtocol.ts"]
+    },
+    {
+      "id": 28,
+      "category": "Half-Steal Implementation",
+      "description": "Implement steal operation (half-steal) - Create WorkStealingScheduler class with trySteal() method. Implement configurable steal sizes: 'one' (single task), 'half' (half of victim queue), 'all'. Use atomic operations for thread-safe stealing.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "Very High",
+      "dependencies": [26, 27],
+      "files": ["src/stealing/WorkStealingScheduler.ts"]
+    },
+    {
+      "id": 29,
+      "category": "Stealing Metrics",
+      "description": "Add stealing metrics and statistics - Track steal attempts, successes, tasks stolen, victim distribution, steal latency. Expose via pool.stats() extended interface, useful for tuning steal parameters.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [28],
+      "files": ["src/stealing/StealMetrics.ts", "src/stealing/types.ts"]
+    },
+    {
+      "id": 30,
+      "category": "Steal Throttling",
+      "description": "Implement steal throttling and fairness - Add cooldown between steal attempts per thief, maximum steal rate limiting, fairness constraints to prevent aggressive thieves from starving others, adaptive throttling based on success rate.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [28],
+      "files": ["src/stealing/StealThrottler.ts", "src/stealing/WorkStealingScheduler.ts"]
+    },
+    {
+      "id": 31,
+      "category": "Configuration Options",
+      "description": "Add stealing configuration options - Create TaskStealingOptions interface with enabled, stealThreshold, maxStealSize, stealSize ('one'|'half'|'all'), stealCooldown. Integrate with Pool options, provide sensible defaults.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [28],
+      "files": ["src/stealing/types.ts", "src/types/index.ts", "src/core/Pool.ts"]
+    },
+    {
+      "id": 32,
+      "category": "Testing & Benchmarks",
+      "description": "Sprint 4 integration tests and benchmarks - Test stealing correctness under various load patterns, verify no task duplication or loss, benchmark throughput improvement with stealing enabled, test throttling effectiveness.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [25, 26, 27, 28, 29, 30, 31],
+      "files": ["test/stealing/WorkStealing.test.ts", "test/stealing/LocalDeque.test.ts", "test/stealing/Fairness.test.ts", "benchmark/stealing.bench.ts"]
+    }
+  ],
+  "successCriteria": [
+    "Lock-free local deque operations for owner thread",
+    "Thread-safe stealing from other workers",
+    "No task duplication or loss during stealing",
+    "Configurable steal sizes work correctly",
+    "Throttling prevents steal thrashing",
+    "Benchmark shows improved throughput for imbalanced workloads",
+    "Metrics accurately track stealing activity"
+  ],
+  "filesCreated": [
+    "docs/planning/WORK_STEALING_DESIGN.md",
+    "src/stealing/types.ts",
+    "src/stealing/VictimSelector.ts",
+    "src/stealing/StealProtocol.ts",
+    "src/stealing/WorkStealingScheduler.ts",
+    "src/stealing/StealMetrics.ts",
+    "src/stealing/StealThrottler.ts",
+    "src/stealing/index.ts",
+    "assembly/stealing/local-deque.ts",
+    "test/stealing/WorkStealing.test.ts",
+    "test/stealing/LocalDeque.test.ts",
+    "test/stealing/Fairness.test.ts",
+    "benchmark/stealing.bench.ts"
+  ],
+  "filesModified": [
+    "src/types/index.ts",
+    "src/core/Pool.ts",
+    "src/core/WorkerHandler.ts"
+  ],
+  "totalEstimatedHours": 36,
+  "notes": "Work stealing is a key optimization for imbalanced workloads where some workers finish quickly while others have long queues. The Chase-Lev deque algorithm provides efficient lock-free operations. Stealing should be disabled by default and enabled for high-throughput scenarios."
+}

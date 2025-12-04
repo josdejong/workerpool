@@ -1,0 +1,119 @@
+{
+  "sprint": 5,
+  "phase": 2,
+  "title": "Dynamic Scaling",
+  "week": "Week 9-10",
+  "effort": "30-35 hours",
+  "status": "pending",
+  "prerequisite": "Phase 2 Sprints 1-2 complete",
+  "tasks": [
+    {
+      "id": 33,
+      "category": "DynamicPool Design",
+      "description": "Design DynamicPool class extending Pool - Create DynamicPool that extends base Pool with auto-scaling capabilities. Define ScalingOptions interface with enabled, scaleUpThreshold, scaleDownIdleTimeout, scaleUpStep, scaleDownStep, cooldownPeriod, minWorkers, maxWorkers.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": ["Sprint 1", "Sprint 2"],
+      "files": ["src/pool/DynamicPool.ts", "src/pool/types.ts"]
+    },
+    {
+      "id": 34,
+      "category": "Load Metrics",
+      "description": "Implement load metric calculation - Create LoadCalculator class that computes current load ratio (queuedTasks + activeTasks) / totalWorkers, exponential moving average of load, load trend (increasing/decreasing/stable), prediction for next interval.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [33],
+      "files": ["src/pool/LoadCalculator.ts"]
+    },
+    {
+      "id": 35,
+      "category": "Scale-Up Logic",
+      "description": "Implement scale-up trigger and logic - Add _evaluateScaling() method called periodically, _tryScaleUp() that creates new workers when load exceeds threshold, respect maxWorkers limit, emit 'scale-up' event with details (added, totalWorkers, reason).",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [33, 34],
+      "files": ["src/pool/DynamicPool.ts"]
+    },
+    {
+      "id": 36,
+      "category": "Scale-Down Logic",
+      "description": "Implement scale-down with idle timeout - Add _tryScaleDown() that terminates workers idle longer than scaleDownIdleTimeout, track lastTaskEndTime per worker, respect minWorkers limit, gracefully terminate (finish current task first).",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [33, 34],
+      "files": ["src/pool/DynamicPool.ts", "src/core/WorkerHandler.ts"]
+    },
+    {
+      "id": 37,
+      "category": "Scaling Cooldown",
+      "description": "Add scaling cooldown mechanism - Implement cooldown period between scaling events to prevent thrashing. Track lastScaleUp/lastScaleDown timestamps, consecutiveScaleUps/Downs counters, exponential backoff for rapid scaling attempts.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [35, 36],
+      "files": ["src/pool/DynamicPool.ts", "src/pool/ScalingState.ts"]
+    },
+    {
+      "id": 38,
+      "category": "Predictive Scaling",
+      "description": "Implement predictive scaling (optional) - Create PredictiveScaler that analyzes load trends and proactively scales before threshold breach. Use simple linear regression on recent load samples, configurable prediction window.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "Very High",
+      "dependencies": [34],
+      "files": ["src/pool/PredictiveScaler.ts"]
+    },
+    {
+      "id": 39,
+      "category": "Scaling Events",
+      "description": "Add scaling events and hooks - Implement onScaling callback option, emit typed events for scale-up/scale-down with metadata (workers added/removed, reason, current load). Allow async hooks that can delay/cancel scaling.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [35, 36],
+      "files": ["src/pool/DynamicPool.ts", "src/pool/types.ts"]
+    },
+    {
+      "id": 40,
+      "category": "Testing",
+      "description": "Sprint 5 integration tests - Test scale-up triggers at various load levels, scale-down after idle timeout, cooldown prevents thrashing, minWorkers/maxWorkers respected, predictive scaling accuracy, event emission.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [33, 34, 35, 36, 37, 38, 39],
+      "files": ["test/scaling/DynamicPool.test.ts", "test/scaling/LoadCalculator.test.ts", "test/scaling/PredictiveScaler.test.ts", "benchmark/scaling.bench.ts"]
+    }
+  ],
+  "successCriteria": [
+    "Pool automatically scales up when load exceeds threshold",
+    "Pool automatically scales down after idle timeout",
+    "Cooldown prevents rapid scaling thrashing",
+    "minWorkers/maxWorkers bounds are always respected",
+    "Scaling events properly emitted with accurate metadata",
+    "Predictive scaling reduces latency spikes for burst workloads",
+    "No task loss during scaling operations"
+  ],
+  "filesCreated": [
+    "src/pool/DynamicPool.ts",
+    "src/pool/types.ts",
+    "src/pool/LoadCalculator.ts",
+    "src/pool/ScalingState.ts",
+    "src/pool/PredictiveScaler.ts",
+    "src/pool/index.ts",
+    "test/scaling/DynamicPool.test.ts",
+    "test/scaling/LoadCalculator.test.ts",
+    "test/scaling/PredictiveScaler.test.ts",
+    "benchmark/scaling.bench.ts"
+  ],
+  "filesModified": [
+    "src/core/WorkerHandler.ts",
+    "src/types/index.ts",
+    "src/index.ts"
+  ],
+  "totalEstimatedHours": 35,
+  "notes": "Dynamic scaling is essential for production workloads with variable traffic. The default pool remains static for simplicity. DynamicPool should be opt-in for users who need auto-scaling. Predictive scaling is advanced and marked optional."
+}

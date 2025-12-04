@@ -1,0 +1,122 @@
+{
+  "sprint": 2,
+  "phase": 2,
+  "title": "Advanced Strategies & Weights",
+  "week": "Week 3-4",
+  "effort": "30-35 hours",
+  "status": "pending",
+  "prerequisite": "Phase 2 Sprint 1 complete",
+  "tasks": [
+    {
+      "id": 9,
+      "category": "ELU Monitoring",
+      "description": "Implement Event Loop Utilization monitoring - Create ELUMonitor class using Node.js performance.eventLoopUtilization() API. Track per-worker ELU percentage, handle browser environment gracefully (fallback to busy time ratio), update metrics at configurable intervals.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": ["Sprint 1"],
+      "files": ["src/strategies/ELUMonitor.ts", "src/platform/performance.ts"]
+    },
+    {
+      "id": 10,
+      "category": "Least ELU Strategy",
+      "description": "Implement Least ELU strategy - Create LeastELUStrategy class that selects worker with lowest event loop utilization percentage. Integrate with ELUMonitor, handle unavailable ELU gracefully with fallback to Least Busy, optimal for I/O-heavy workloads.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "High",
+      "dependencies": [9],
+      "files": ["src/strategies/LeastELUStrategy.ts"]
+    },
+    {
+      "id": 11,
+      "category": "Weight System",
+      "description": "Design weight calculation system - Create WeightCalculator interface with methods for initial weight, dynamic weight adjustment based on performance, and weight decay over time. Implement default calculator using task throughput and latency metrics.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "Medium",
+      "dependencies": ["Sprint 1"],
+      "files": ["src/strategies/WeightCalculator.ts", "src/strategies/types.ts"]
+    },
+    {
+      "id": 12,
+      "category": "Weighted Round Robin",
+      "description": "Implement Weighted Round Robin strategy - Create WeightedRoundRobinStrategy class that distributes tasks proportionally to worker weights. Use virtual queue approach where workers with higher weights appear more frequently in rotation.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [11],
+      "files": ["src/strategies/WeightedRoundRobinStrategy.ts"]
+    },
+    {
+      "id": 13,
+      "category": "Interleaved Weighted RR",
+      "description": "Implement Interleaved Weighted Round Robin - Create InterleavedWRRStrategy that provides smoother distribution than standard WRR by interleaving selections rather than grouping by weight. Use deficit counter algorithm for fair scheduling.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [11, 12],
+      "files": ["src/strategies/InterleavedWRRStrategy.ts"]
+    },
+    {
+      "id": 14,
+      "category": "Custom Strategy API",
+      "description": "Create custom strategy registration API - Extend StrategyFactory to accept user-defined strategy classes or functions. Add validation for required interface methods, provide TypeScript generics for type-safe custom implementations.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": ["Sprint 1"],
+      "files": ["src/strategies/StrategyFactory.ts", "src/strategies/types.ts"]
+    },
+    {
+      "id": 15,
+      "category": "Strategy Hot-Swap",
+      "description": "Add strategy hot-swap support - Implement Pool.setStrategy(strategy) method to change selection strategy at runtime without pool restart. Properly transfer metrics state between strategies where applicable, emit strategy change events.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": ["Sprint 1", 14],
+      "files": ["src/core/Pool.ts", "src/strategies/StrategyFactory.ts"]
+    },
+    {
+      "id": 16,
+      "category": "Testing",
+      "description": "Sprint 2 integration tests - Test ELU monitoring accuracy, weighted strategy distribution correctness, custom strategy registration, hot-swap functionality. Include performance benchmarks comparing all strategies under various workloads.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [9, 10, 11, 12, 13, 14, 15],
+      "files": ["test/strategies/LeastELU.test.ts", "test/strategies/WeightedRR.test.ts", "test/strategies/InterleavedWRR.test.ts", "test/strategies/CustomStrategy.test.ts", "test/strategies/HotSwap.test.ts", "benchmark/strategies.bench.ts"]
+    }
+  ],
+  "successCriteria": [
+    "ELU monitoring works on Node.js 14.10+",
+    "ELU gracefully falls back on unsupported platforms",
+    "Weighted RR distributes tasks proportionally to weights",
+    "Interleaved WRR provides smoother distribution than standard WRR",
+    "Custom strategies can be registered and used",
+    "Strategy hot-swap works without task loss",
+    "Benchmark shows strategy selection < 0.1ms average"
+  ],
+  "filesCreated": [
+    "src/strategies/ELUMonitor.ts",
+    "src/strategies/LeastELUStrategy.ts",
+    "src/strategies/WeightCalculator.ts",
+    "src/strategies/WeightedRoundRobinStrategy.ts",
+    "src/strategies/InterleavedWRRStrategy.ts",
+    "src/platform/performance.ts",
+    "test/strategies/LeastELU.test.ts",
+    "test/strategies/WeightedRR.test.ts",
+    "test/strategies/InterleavedWRR.test.ts",
+    "test/strategies/CustomStrategy.test.ts",
+    "test/strategies/HotSwap.test.ts",
+    "benchmark/strategies.bench.ts"
+  ],
+  "filesModified": [
+    "src/strategies/StrategyFactory.ts",
+    "src/strategies/types.ts",
+    "src/strategies/index.ts",
+    "src/core/Pool.ts"
+  ],
+  "totalEstimatedHours": 34,
+  "notes": "This sprint completes the worker choice strategy system with advanced algorithms. ELU monitoring is Node.js specific but strategies should work across all platforms with appropriate fallbacks."
+}

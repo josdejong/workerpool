@@ -1,0 +1,109 @@
+{
+  "sprint": 7,
+  "phase": 2,
+  "title": "Worker Affinity & Routing",
+  "week": "Week 13-14",
+  "effort": "28-32 hours",
+  "status": "pending",
+  "prerequisite": "Phase 2 Sprint 1 complete",
+  "tasks": [
+    {
+      "id": 49,
+      "category": "Affinity Design",
+      "description": "Design affinity key hashing system - Define AffinityOptions interface with enabled, virtualNodes count, hashAlgorithm selection. Create AffinityKey type (string | number), design affinity option in ExecOptions for per-task affinity specification.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "High",
+      "dependencies": ["Sprint 1"],
+      "files": ["src/affinity/types.ts", "src/types/index.ts"]
+    },
+    {
+      "id": 50,
+      "category": "Consistent Hashing",
+      "description": "Implement consistent hashing for worker selection - Create ConsistentHashRing class with addWorker(), removeWorker(), getWorker(key) methods. Use FNV-1a hash, virtual nodes for even distribution, binary search for O(log n) lookup.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [49],
+      "files": ["src/affinity/ConsistentHash.ts"]
+    },
+    {
+      "id": 51,
+      "category": "Affinity Integration",
+      "description": "Add affinity option to exec/execBatch - Extend exec() and execBatch() to accept affinity key in options. Integrate ConsistentHashRing with worker selection, bypass normal strategy when affinity specified, fallback to strategy if target worker unavailable.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "Medium",
+      "dependencies": [49, 50],
+      "files": ["src/core/Pool.ts", "src/affinity/AffinityManager.ts"]
+    },
+    {
+      "id": 52,
+      "category": "Sticky Sessions",
+      "description": "Implement sticky sessions with TTL - Create StickySessionManager that caches affinity key -> worker mappings with configurable TTL. Refresh TTL on each use, evict stale mappings, handle worker removal by remapping affected sessions.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [50],
+      "files": ["src/affinity/StickySessionManager.ts"]
+    },
+    {
+      "id": 53,
+      "category": "Affinity Metrics",
+      "description": "Add affinity metrics (cache hit rate) - Track affinity lookups, cache hits/misses, remappings due to worker changes, distribution of keys across workers. Expose via pool.stats() and affinityStats() method.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [51, 52],
+      "files": ["src/affinity/AffinityMetrics.ts"]
+    },
+    {
+      "id": 54,
+      "category": "Failure Handling",
+      "description": "Handle worker failure with affinity rebalancing - Implement graceful handling when affinity target worker fails or is removed. Use getWorkerPreferenceList() for fallback ordering, minimize key remapping, emit 'affinity-remapped' events.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [50, 52],
+      "files": ["src/affinity/ConsistentHash.ts", "src/affinity/AffinityManager.ts"]
+    },
+    {
+      "id": 55,
+      "category": "Testing",
+      "description": "Sprint 7 integration tests - Test consistent hash distribution uniformity, affinity routing correctness, sticky session TTL behavior, worker failure handling, minimal remapping on worker changes, metrics accuracy.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [49, 50, 51, 52, 53, 54],
+      "files": ["test/affinity/ConsistentHash.test.ts", "test/affinity/AffinityRouting.test.ts", "test/affinity/StickySessions.test.ts", "test/affinity/FailureHandling.test.ts", "benchmark/affinity.bench.ts"]
+    }
+  ],
+  "successCriteria": [
+    "Same affinity key always routes to same worker (when available)",
+    "Virtual nodes provide uniform distribution across workers",
+    "Adding/removing workers causes minimal key remapping",
+    "Sticky sessions cache and refresh correctly",
+    "Worker failure triggers graceful remapping",
+    "Preference list provides deterministic fallback ordering",
+    "Affinity lookup is O(log n) with consistent hashing"
+  ],
+  "filesCreated": [
+    "src/affinity/types.ts",
+    "src/affinity/ConsistentHash.ts",
+    "src/affinity/AffinityManager.ts",
+    "src/affinity/StickySessionManager.ts",
+    "src/affinity/AffinityMetrics.ts",
+    "src/affinity/index.ts",
+    "test/affinity/ConsistentHash.test.ts",
+    "test/affinity/AffinityRouting.test.ts",
+    "test/affinity/StickySessions.test.ts",
+    "test/affinity/FailureHandling.test.ts",
+    "benchmark/affinity.bench.ts"
+  ],
+  "filesModified": [
+    "src/core/Pool.ts",
+    "src/types/index.ts"
+  ],
+  "totalEstimatedHours": 28,
+  "notes": "Worker affinity improves cache efficiency by routing related tasks to the same worker. Consistent hashing ensures minimal disruption when workers are added/removed. This is particularly useful for stateful workloads or when workers cache data related to specific entities."
+}

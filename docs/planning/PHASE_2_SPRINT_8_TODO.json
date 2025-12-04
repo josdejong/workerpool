@@ -1,0 +1,114 @@
+{
+  "sprint": 8,
+  "phase": 2,
+  "title": "Enhanced Metrics & Observability",
+  "week": "Week 15-16",
+  "effort": "28-32 hours",
+  "status": "pending",
+  "prerequisite": "All previous Phase 2 sprints complete",
+  "tasks": [
+    {
+      "id": 56,
+      "category": "Metrics Interface",
+      "description": "Design PoolMetrics interface - Define comprehensive metrics structure including throughput (tasksPerSecond, avgLatencyMs), per-worker stats, queue metrics, scaling events, latency histogram, stealing stats, affinity stats. Create MetricsOptions for configuration.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": ["All previous"],
+      "files": ["src/metrics/types.ts"]
+    },
+    {
+      "id": 57,
+      "category": "Per-Worker Metrics",
+      "description": "Implement per-worker metrics collection - Create WorkerMetricsCollector that tracks per-worker: taskCount, activeTasks, avgTaskTimeMs, eluPercent, state, lastTaskTime. Update on task start/complete events, handle worker removal gracefully.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [56],
+      "files": ["src/metrics/WorkerMetricsCollector.ts"]
+    },
+    {
+      "id": 58,
+      "category": "Latency Histogram",
+      "description": "Implement histogram for task latencies - Create Histogram class with configurable buckets (default: 1, 5, 10, 25, 50, 100, 250, 500, 1000ms). Track count per bucket, compute percentiles (p50, p90, p95, p99, p999), support reset for time windows.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [56],
+      "files": ["src/metrics/Histogram.ts"]
+    },
+    {
+      "id": 59,
+      "category": "Prometheus Export",
+      "description": "Add Prometheus-compatible metrics export - Create PrometheusExporter class with metricsPrometheus() method returning text/plain format. Include standard metric types: counter (tasks_total), gauge (workers_active), histogram (task_duration_seconds).",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "Medium",
+      "dependencies": [56, 57, 58],
+      "files": ["src/metrics/PrometheusExporter.ts"]
+    },
+    {
+      "id": 60,
+      "category": "OpenTelemetry Integration",
+      "description": "Add OpenTelemetry trace integration - Create optional OpenTelemetry instrumentation that creates spans for task execution. Include task method, worker id, duration as span attributes. Support W3C trace context propagation.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [56],
+      "files": ["src/metrics/OpenTelemetryInstrumentation.ts", "src/metrics/tracing.ts"]
+    },
+    {
+      "id": 61,
+      "category": "Dashboard Example",
+      "description": "Create metrics dashboard example - Build example Grafana dashboard JSON for visualizing workerpool metrics. Include panels for throughput, latency percentiles, worker utilization, queue depth, scaling events. Document setup instructions.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [59],
+      "files": ["examples/metrics/grafana-dashboard.json", "examples/metrics/README.md", "examples/metrics/prometheus-setup.ts"]
+    },
+    {
+      "id": 62,
+      "category": "Testing",
+      "description": "Sprint 8 integration tests - Test metrics accuracy under load, histogram percentile calculations, Prometheus format correctness, OpenTelemetry span creation, metrics reset functionality, per-worker aggregation.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [56, 57, 58, 59, 60, 61],
+      "files": ["test/metrics/PoolMetrics.test.ts", "test/metrics/Histogram.test.ts", "test/metrics/PrometheusExporter.test.ts", "test/metrics/OpenTelemetry.test.ts"]
+    }
+  ],
+  "successCriteria": [
+    "pool.metrics() returns comprehensive metrics snapshot",
+    "Per-worker metrics accurately reflect individual worker state",
+    "Histogram correctly computes percentiles",
+    "Prometheus format passes official validator",
+    "OpenTelemetry spans correctly propagate context",
+    "Dashboard example works with standard Prometheus/Grafana setup",
+    "Metrics collection has minimal performance overhead (<1%)"
+  ],
+  "filesCreated": [
+    "src/metrics/types.ts",
+    "src/metrics/PoolMetrics.ts",
+    "src/metrics/WorkerMetricsCollector.ts",
+    "src/metrics/Histogram.ts",
+    "src/metrics/PrometheusExporter.ts",
+    "src/metrics/OpenTelemetryInstrumentation.ts",
+    "src/metrics/tracing.ts",
+    "src/metrics/index.ts",
+    "examples/metrics/grafana-dashboard.json",
+    "examples/metrics/README.md",
+    "examples/metrics/prometheus-setup.ts",
+    "test/metrics/PoolMetrics.test.ts",
+    "test/metrics/Histogram.test.ts",
+    "test/metrics/PrometheusExporter.test.ts",
+    "test/metrics/OpenTelemetry.test.ts"
+  ],
+  "filesModified": [
+    "src/core/Pool.ts",
+    "src/types/index.ts",
+    "package.json"
+  ],
+  "totalEstimatedHours": 28,
+  "notes": "This sprint completes Phase 2 with production-ready observability. Prometheus is the de-facto standard for metrics in cloud-native environments. OpenTelemetry provides distributed tracing for debugging. Both integrations are optional and tree-shakeable to avoid bloating the bundle for users who don't need them."
+}
