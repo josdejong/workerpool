@@ -1,0 +1,123 @@
+{
+  "sprint": 1,
+  "phase": 2,
+  "title": "Worker Choice Strategies Foundation",
+  "week": "Week 1-2",
+  "effort": "25-30 hours",
+  "status": "pending",
+  "prerequisite": "Phase 1 TypeScript migration complete",
+  "tasks": [
+    {
+      "id": 1,
+      "category": "Strategy Architecture",
+      "description": "Design WorkerChoiceStrategy interface - Create pluggable interface for worker selection algorithms including WorkerInfo (readonly snapshot of worker state), TaskInfo (task metadata during selection), SelectionResult with worker and reason. Define WorkerState enum (COLD, WARMING, READY, BUSY, TERMINATING, TERMINATED).",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [],
+      "files": ["src/strategies/types.ts", "src/strategies/WorkerChoiceStrategy.ts"]
+    },
+    {
+      "id": 2,
+      "category": "Metrics Collection",
+      "description": "Implement WorkerInfo metrics collection - Add taskCount, activeTasks, queuedTasks, averageTaskTime (rolling average), lastTaskTime, idleTime, and weight fields to worker tracking. Create metrics update hooks in WorkerHandler for task start/complete events.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [1],
+      "files": ["src/strategies/WorkerMetrics.ts", "src/core/WorkerHandler.ts"]
+    },
+    {
+      "id": 3,
+      "category": "Round Robin Strategy",
+      "description": "Implement Round Robin strategy - Create RoundRobinStrategy class that distributes tasks evenly across workers in rotation. O(1) average selection time with index tracking, skip terminated workers, handle all-workers-busy fallback.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "complexity": "Low",
+      "dependencies": [1, 2],
+      "files": ["src/strategies/RoundRobinStrategy.ts"]
+    },
+    {
+      "id": 4,
+      "category": "Least Used Strategy",
+      "description": "Implement Least Used strategy - Create LeastUsedStrategy class that selects worker with fewest total completed tasks (taskCount). O(n) selection, good for long-running pools to ensure even distribution over time.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [1, 2],
+      "files": ["src/strategies/LeastUsedStrategy.ts"]
+    },
+    {
+      "id": 5,
+      "category": "Least Busy Strategy",
+      "description": "Implement Least Busy strategy - Create LeastBusyStrategy class that selects worker with fewest active tasks (activeTasks + queuedTasks). O(n) with early exit optimization for idle workers. Optimal for varying task durations.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [1, 2],
+      "files": ["src/strategies/LeastBusyStrategy.ts"]
+    },
+    {
+      "id": 6,
+      "category": "Fair Share Strategy",
+      "description": "Implement Fair Share strategy - Create FairShareStrategy class that balances based on actual CPU time consumed per worker. Use exponential moving average to prevent unbounded growth. Workers with less CPU share get priority. Handle cold start with round-robin fallback.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [1, 2],
+      "files": ["src/strategies/FairShareStrategy.ts"]
+    },
+    {
+      "id": 7,
+      "category": "Strategy Factory",
+      "description": "Create strategy factory and registration - Implement StrategyFactory with createStrategy(name) method, built-in strategy registration, custom strategy registration API, and strategy name type union. Integrate with Pool options.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [3, 4, 5, 6],
+      "files": ["src/strategies/StrategyFactory.ts", "src/strategies/index.ts"]
+    },
+    {
+      "id": 8,
+      "category": "Testing",
+      "description": "Sprint 1 integration tests - Test all strategy implementations with various worker counts and workloads. Verify correct worker selection, metrics accuracy, strategy switching, and performance benchmarks for selection time.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [1, 2, 3, 4, 5, 6, 7],
+      "files": ["test/strategies/RoundRobin.test.ts", "test/strategies/LeastUsed.test.ts", "test/strategies/LeastBusy.test.ts", "test/strategies/FairShare.test.ts", "test/strategies/StrategyFactory.test.ts"]
+    }
+  ],
+  "successCriteria": [
+    "All strategy interfaces properly typed with generics",
+    "WorkerInfo metrics accurately track worker state",
+    "Round Robin achieves O(1) average selection time",
+    "Least Busy correctly identifies worker with fewest active tasks",
+    "Fair Share properly uses exponential moving average",
+    "Strategy factory allows runtime strategy switching",
+    "All strategies handle edge cases (no workers, all busy, all terminated)"
+  ],
+  "filesCreated": [
+    "src/strategies/types.ts",
+    "src/strategies/WorkerChoiceStrategy.ts",
+    "src/strategies/WorkerMetrics.ts",
+    "src/strategies/RoundRobinStrategy.ts",
+    "src/strategies/LeastUsedStrategy.ts",
+    "src/strategies/LeastBusyStrategy.ts",
+    "src/strategies/FairShareStrategy.ts",
+    "src/strategies/StrategyFactory.ts",
+    "src/strategies/index.ts",
+    "test/strategies/RoundRobin.test.ts",
+    "test/strategies/LeastUsed.test.ts",
+    "test/strategies/LeastBusy.test.ts",
+    "test/strategies/FairShare.test.ts",
+    "test/strategies/StrategyFactory.test.ts"
+  ],
+  "filesModified": [
+    "src/core/WorkerHandler.ts",
+    "src/core/Pool.ts",
+    "src/types/index.ts"
+  ],
+  "totalEstimatedHours": 26,
+  "notes": "This sprint establishes the foundation for intelligent worker selection. The strategy pattern allows for easy extension with custom strategies. All strategies should maintain backward compatibility - first-available remains the default behavior."
+}

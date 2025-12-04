@@ -1,0 +1,124 @@
+{
+  "sprint": 6,
+  "phase": 2,
+  "title": "Back-Pressure Management",
+  "week": "Week 11-12",
+  "effort": "25-30 hours",
+  "status": "pending",
+  "prerequisite": "Phase 2 Sprint 3 complete",
+  "tasks": [
+    {
+      "id": 41,
+      "category": "Policy Interface",
+      "description": "Design back-pressure policy interface - Create BackPressurePolicy interface with shouldAccept(queueSize, maxSize), onReject(task), onAccept(task) methods. Define BackPressureOptions with policy selection, maxQueueSize, blockTimeout for blocking policy.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": ["Sprint 3"],
+      "files": ["src/backpressure/types.ts", "src/backpressure/BackPressurePolicy.ts"]
+    },
+    {
+      "id": 42,
+      "category": "Reject Policy",
+      "description": "Implement 'reject' policy (throw on full) - Create RejectPolicy class that throws QueueFullError when queue reaches maxQueueSize. Include queue size and max size in error for debugging. This is the default policy.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "complexity": "Low",
+      "dependencies": [41],
+      "files": ["src/backpressure/policies/RejectPolicy.ts", "src/backpressure/errors.ts"]
+    },
+    {
+      "id": 43,
+      "category": "Drop-Oldest Policy",
+      "description": "Implement 'drop-oldest' policy - Create DropOldestPolicy class that removes oldest task from queue to make room for new task. Emit 'task-dropped' event with dropped task info, useful for real-time systems where latest data is most important.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [41],
+      "files": ["src/backpressure/policies/DropOldestPolicy.ts"]
+    },
+    {
+      "id": 44,
+      "category": "Drop-Newest Policy",
+      "description": "Implement 'drop-newest' policy - Create DropNewestPolicy class that discards incoming task when queue is full. Emit 'task-dropped' event, useful when existing queued work is more important than new requests.",
+      "status": "pending",
+      "estimatedHours": 2,
+      "complexity": "Medium",
+      "dependencies": [41],
+      "files": ["src/backpressure/policies/DropNewestPolicy.ts"]
+    },
+    {
+      "id": 45,
+      "category": "Block Policy",
+      "description": "Implement 'block' policy with timeout - Create BlockPolicy class that blocks the caller until queue has space or timeout expires. Use async/await with AbortController for cancellation, throw TimeoutError on timeout.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [41],
+      "files": ["src/backpressure/policies/BlockPolicy.ts"]
+    },
+    {
+      "id": 46,
+      "category": "Caller-Runs Policy",
+      "description": "Implement 'caller-runs' policy - Create CallerRunsPolicy class that executes the task on the calling thread when queue is full. Useful for graceful degradation, requires task function to be executable in main thread context.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [41],
+      "files": ["src/backpressure/policies/CallerRunsPolicy.ts"]
+    },
+    {
+      "id": 47,
+      "category": "Metrics & Events",
+      "description": "Add back-pressure metrics and events - Track rejected/dropped/blocked task counts, average block time, emit 'backpressure' event when threshold reached, 'backpressure-relief' when queue drains. Expose via pool.stats().",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [42, 43, 44, 45, 46],
+      "files": ["src/backpressure/BackPressureMetrics.ts", "src/backpressure/types.ts"]
+    },
+    {
+      "id": 48,
+      "category": "Testing",
+      "description": "Sprint 6 integration tests - Test each policy under queue-full conditions, verify correct task handling (reject/drop/block/caller-run), test metrics accuracy, event emission, timeout behavior for blocking policy.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "High",
+      "dependencies": [41, 42, 43, 44, 45, 46, 47],
+      "files": ["test/backpressure/RejectPolicy.test.ts", "test/backpressure/DropOldest.test.ts", "test/backpressure/DropNewest.test.ts", "test/backpressure/BlockPolicy.test.ts", "test/backpressure/CallerRuns.test.ts", "test/backpressure/Metrics.test.ts"]
+    }
+  ],
+  "successCriteria": [
+    "Reject policy throws QueueFullError with correct info",
+    "Drop-oldest removes oldest and accepts new task",
+    "Drop-newest discards incoming task",
+    "Block policy blocks caller up to timeout",
+    "Caller-runs executes task in main thread",
+    "All policies emit appropriate events",
+    "Metrics accurately track back-pressure activity"
+  ],
+  "filesCreated": [
+    "src/backpressure/types.ts",
+    "src/backpressure/BackPressurePolicy.ts",
+    "src/backpressure/errors.ts",
+    "src/backpressure/policies/RejectPolicy.ts",
+    "src/backpressure/policies/DropOldestPolicy.ts",
+    "src/backpressure/policies/DropNewestPolicy.ts",
+    "src/backpressure/policies/BlockPolicy.ts",
+    "src/backpressure/policies/CallerRunsPolicy.ts",
+    "src/backpressure/BackPressureMetrics.ts",
+    "src/backpressure/index.ts",
+    "test/backpressure/RejectPolicy.test.ts",
+    "test/backpressure/DropOldest.test.ts",
+    "test/backpressure/DropNewest.test.ts",
+    "test/backpressure/BlockPolicy.test.ts",
+    "test/backpressure/CallerRuns.test.ts",
+    "test/backpressure/Metrics.test.ts"
+  ],
+  "filesModified": [
+    "src/core/Pool.ts",
+    "src/types/index.ts"
+  ],
+  "totalEstimatedHours": 26,
+  "notes": "Back-pressure management prevents queue overflow in high-throughput scenarios. The 'reject' policy maintains current behavior and is the default. Other policies provide flexibility for different use cases. Caller-runs policy has limitations for functions that require worker context."
+}

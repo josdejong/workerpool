@@ -1,0 +1,121 @@
+{
+  "sprint": 3,
+  "phase": 2,
+  "title": "WASM MPMC Queue",
+  "week": "Week 5-6",
+  "effort": "35-40 hours",
+  "status": "pending",
+  "prerequisite": "Phase 2 Sprint 2 complete",
+  "tasks": [
+    {
+      "id": 17,
+      "category": "Memory Layout Design",
+      "description": "Design MPMC ring buffer memory layout - Define SharedArrayBuffer structure with header (version, capacity, head, tail, size, flags), worker stats section (64 bytes per worker), MPMC ring buffer slots (sequence, taskRef, priority, flags), alignment requirements for Atomics.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [],
+      "files": ["docs/planning/MPMC_MEMORY_LAYOUT.md", "assembly/mpmc/types.ts"]
+    },
+    {
+      "id": 18,
+      "category": "Atomic Sequence Operations",
+      "description": "Implement atomic sequence number operations - Create AssemblyScript module with lock-free sequence management using Atomics. Implement initSlots(), sequence state machine (empty/writing/ready/reading), handle ABA problem with 64-bit sequences.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "Very High",
+      "dependencies": [17],
+      "files": ["assembly/mpmc/atomic-seq.ts"]
+    },
+    {
+      "id": 19,
+      "category": "Lock-Free Enqueue",
+      "description": "Implement enqueue with CAS (Compare-And-Swap) - Create tryAcquireForEnqueue() using atomic compare-exchange on tail, completeEnqueue() with memory barrier and sequence update. Handle full queue detection, ABA prevention.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "Very High",
+      "dependencies": [18],
+      "files": ["assembly/mpmc/mpmc-queue.ts"]
+    },
+    {
+      "id": 20,
+      "category": "Lock-Free Dequeue",
+      "description": "Implement dequeue with CAS - Create tryAcquireForDequeue() using atomic compare-exchange on head, completeDequeue() with sequence cycling for next enqueue. Handle empty queue detection, proper memory ordering.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "Very High",
+      "dependencies": [18],
+      "files": ["assembly/mpmc/mpmc-queue.ts"]
+    },
+    {
+      "id": 21,
+      "category": "Back-Pressure Detection",
+      "description": "Add back-pressure detection and signaling - Implement approximateSize() for non-blocking size check, isFull()/isEmpty() predicates, backPressureThreshold configuration, signal mechanism using Atomics.notify() for blocking consumers.",
+      "status": "pending",
+      "estimatedHours": 4,
+      "complexity": "High",
+      "dependencies": [19, 20],
+      "files": ["assembly/mpmc/mpmc-queue.ts", "assembly/mpmc/backpressure.ts"]
+    },
+    {
+      "id": 22,
+      "category": "TypeScript Bridge",
+      "description": "Create TypeScript MPMCQueue wrapper class - Implement MPMCQueueBridge that loads WASM module, manages SharedArrayBuffer allocation, provides type-safe push/pop/size methods, handles task object storage in JS Map with slot references.",
+      "status": "pending",
+      "estimatedHours": 5,
+      "complexity": "Medium",
+      "dependencies": [19, 20],
+      "files": ["src/wasm/MPMCQueueBridge.ts", "src/wasm/WasmLoader.ts"]
+    },
+    {
+      "id": 23,
+      "category": "JS Fallback",
+      "description": "Implement graceful fallback to JS queue - Create isWasmSupported() detection, automatic fallback when SharedArrayBuffer or WASM unavailable, ensure identical API between WASM and JS implementations, no performance regression for JS path.",
+      "status": "pending",
+      "estimatedHours": 3,
+      "complexity": "Medium",
+      "dependencies": [22],
+      "files": ["src/wasm/MPMCQueueBridge.ts", "src/core/TaskQueue.ts"]
+    },
+    {
+      "id": 24,
+      "category": "Testing & Benchmarks",
+      "description": "Sprint 3 integration tests and benchmarks - Test concurrent enqueue/dequeue correctness with multiple threads, verify no data loss under contention, benchmark throughput vs JS queue (target: >2x improvement), test fallback behavior.",
+      "status": "pending",
+      "estimatedHours": 6,
+      "complexity": "High",
+      "dependencies": [17, 18, 19, 20, 21, 22, 23],
+      "files": ["test/mpmc/MPMCQueue.test.ts", "test/mpmc/Concurrency.test.ts", "benchmark/queue.bench.ts"]
+    }
+  ],
+  "successCriteria": [
+    "Lock-free enqueue/dequeue operations using Atomics",
+    "Zero data loss under high contention",
+    "Correct sequence number cycling without ABA issues",
+    "SharedArrayBuffer works across worker threads",
+    "Benchmark shows >2x improvement over JS queue",
+    "Graceful fallback when WASM unavailable",
+    "WASM module size < 50KB"
+  ],
+  "filesCreated": [
+    "docs/planning/MPMC_MEMORY_LAYOUT.md",
+    "assembly/mpmc/types.ts",
+    "assembly/mpmc/atomic-seq.ts",
+    "assembly/mpmc/mpmc-queue.ts",
+    "assembly/mpmc/backpressure.ts",
+    "assembly/tsconfig.json",
+    "src/wasm/MPMCQueueBridge.ts",
+    "src/wasm/WasmLoader.ts",
+    "test/mpmc/MPMCQueue.test.ts",
+    "test/mpmc/Concurrency.test.ts",
+    "benchmark/queue.bench.ts"
+  ],
+  "filesModified": [
+    "src/core/TaskQueue.ts",
+    "src/core/Pool.ts",
+    "package.json",
+    "rollup.config.mjs"
+  ],
+  "totalEstimatedHours": 40,
+  "notes": "This sprint implements the core WASM acceleration layer. The MPMC queue is designed for high-throughput scenarios with multiple producers (task submitters) and consumers (workers). AssemblyScript is used for WASM generation with TypeScript-like syntax. Requires Node.js 16+ for SharedArrayBuffer support."
+}
