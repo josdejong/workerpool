@@ -3,7 +3,12 @@
  *
  * Detects availability of WASM features required for high-performance queues.
  * Provides fallback recommendations when features are unavailable.
+ *
+ * All detection functions are synchronous and can be called before any async initialization.
  */
+
+// Cached feature detection results (computed once on first access)
+let _featureCache: WASMFeatureStatus | null = null;
 
 /**
  * Feature availability status
@@ -20,6 +25,89 @@ export interface WASMFeatureStatus {
   /** Reason why features are unavailable (if any) */
   unavailableReason?: string;
 }
+
+// ============================================================================
+// Synchronous Feature Detection API
+// These functions can be safely called before any async initialization
+// ============================================================================
+
+/**
+ * Check if WASM can be used in this environment (synchronous)
+ *
+ * This is the primary check to call before attempting WASM operations.
+ * It verifies WebAssembly is available and can be instantiated.
+ *
+ * @example
+ * ```typescript
+ * if (canUseWasm()) {
+ *   const bridge = await WasmBridge.create();
+ * } else {
+ *   console.log('WASM not available, using JS fallback');
+ * }
+ * ```
+ */
+export function canUseWasm(): boolean {
+  return hasWebAssembly();
+}
+
+/**
+ * Check if shared memory can be used in this environment (synchronous)
+ *
+ * Shared memory is required for:
+ * - Multi-threaded WASM operations
+ * - Sharing buffers between workers
+ * - Lock-free data structures
+ *
+ * @example
+ * ```typescript
+ * if (canUseSharedMemory()) {
+ *   // Can use SharedArrayBuffer for zero-copy data sharing
+ *   const buffer = new SharedArrayBuffer(1024);
+ * } else {
+ *   // Must use postMessage with structured clone
+ *   const buffer = new ArrayBuffer(1024);
+ * }
+ * ```
+ */
+export function canUseSharedMemory(): boolean {
+  return hasSharedArrayBuffer() && hasAtomics();
+}
+
+/**
+ * Check if WASM with threading support is available (synchronous)
+ *
+ * This combines canUseWasm() and canUseSharedMemory() checks.
+ * Required for the full lock-free WASM queue implementation.
+ */
+export function canUseWasmThreads(): boolean {
+  return canUseWasm() && canUseSharedMemory() && hasWASMThreads();
+}
+
+/**
+ * Get cached feature status (synchronous, computes on first call)
+ *
+ * Results are cached for performance - call clearFeatureCache()
+ * if the environment may have changed (e.g., in tests).
+ */
+export function getFeatureStatus(): WASMFeatureStatus {
+  if (_featureCache === null) {
+    _featureCache = detectWASMFeatures();
+  }
+  return _featureCache;
+}
+
+/**
+ * Clear cached feature detection results
+ *
+ * Useful for testing or when environment capabilities may change.
+ */
+export function clearFeatureCache(): void {
+  _featureCache = null;
+}
+
+// ============================================================================
+// Low-Level Feature Detection Functions
+// ============================================================================
 
 /**
  * Check if WebAssembly is available

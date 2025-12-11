@@ -9,6 +9,7 @@ import type { WorkerOptions as NodeWorkerOptions } from 'worker_threads';
 // Re-export internal and message types for consumers who need them
 export * from './internal';
 export * from './messages';
+export * from './worker-methods';
 
 /**
  * Worker type determines which backend is used for worker execution

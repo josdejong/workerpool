@@ -33,7 +33,15 @@ export {
 
 export type { WASMTaskQueueOptions } from './WasmTaskQueue';
 
+// Feature detection (all synchronous - safe to call before async init)
 export {
+  // Primary synchronous checks
+  canUseWasm,
+  canUseSharedMemory,
+  canUseWasmThreads,
+  getFeatureStatus,
+  clearFeatureCache,
+  // Low-level detection
   detectWASMFeatures,
   getRecommendedQueueType,
   warnIfWASMUnavailable,
@@ -56,3 +64,22 @@ export {
   loadEmbeddedWasmSync,
   WasmFeatures,
 } from './EmbeddedWasmLoader';
+
+// WASM Worker Template utilities
+export {
+  initWasmWorker,
+  initWasmWorkerSync,
+  getWasmBridge,
+  getWasmExports,
+  getSharedBuffer,
+  isWasmInitialized,
+  isUsingSharedMemory,
+  wasmMethod,
+  wasmMethodWithInit,
+  createWasmWorker,
+} from './WasmWorkerTemplate';
+
+export type {
+  WasmWorkerInitOptions,
+  WasmWorkerConfig,
+} from './WasmWorkerTemplate';

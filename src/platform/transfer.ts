@@ -134,3 +134,235 @@ export class Transfer<T = unknown> implements TransferDescriptor<T> {
  * Default export for backward compatibility
  */
 export default Transfer;
+
+// ============================================================================
+// Typed Array Transfer Helpers
+// These provide convenient zero-copy transfer for TypedArrays
+// ============================================================================
+
+/**
+ * TypedArray constructor types
+ */
+export type TypedArrayConstructor =
+  | Int8ArrayConstructor
+  | Uint8ArrayConstructor
+  | Uint8ClampedArrayConstructor
+  | Int16ArrayConstructor
+  | Uint16ArrayConstructor
+  | Int32ArrayConstructor
+  | Uint32ArrayConstructor
+  | Float32ArrayConstructor
+  | Float64ArrayConstructor
+  | BigInt64ArrayConstructor
+  | BigUint64ArrayConstructor;
+
+/**
+ * TypedArray instance types
+ */
+export type TypedArray =
+  | Int8Array
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array
+  | Float32Array
+  | Float64Array
+  | BigInt64Array
+  | BigUint64Array;
+
+/**
+ * Create a Transfer for a Float64Array (common for numeric data)
+ *
+ * @example
+ * ```typescript
+ * const data = new Float64Array([1.5, 2.5, 3.5]);
+ * const result = await pool.exec(processData, [transferFloat64(data)]);
+ * // Note: 'data' is now detached and cannot be used
+ * ```
+ *
+ * @param array - Float64Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferFloat64(array: Float64Array): Transfer<Float64Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for a Float32Array
+ *
+ * @param array - Float32Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferFloat32(array: Float32Array): Transfer<Float32Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for an Int32Array
+ *
+ * @param array - Int32Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferInt32(array: Int32Array): Transfer<Int32Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for a Uint32Array
+ *
+ * @param array - Uint32Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferUint32(array: Uint32Array): Transfer<Uint32Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for an Int16Array
+ *
+ * @param array - Int16Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferInt16(array: Int16Array): Transfer<Int16Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for a Uint16Array
+ *
+ * @param array - Uint16Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferUint16(array: Uint16Array): Transfer<Uint16Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for an Int8Array
+ *
+ * @param array - Int8Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferInt8(array: Int8Array): Transfer<Int8Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for a Uint8Array
+ *
+ * @param array - Uint8Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferUint8(array: Uint8Array): Transfer<Uint8Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for a Uint8ClampedArray (used for image data)
+ *
+ * @param array - Uint8ClampedArray to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferUint8Clamped(array: Uint8ClampedArray): Transfer<Uint8ClampedArray> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for a BigInt64Array
+ *
+ * @param array - BigInt64Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferBigInt64(array: BigInt64Array): Transfer<BigInt64Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for a BigUint64Array
+ *
+ * @param array - BigUint64Array to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferBigUint64(array: BigUint64Array): Transfer<BigUint64Array> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for any TypedArray
+ *
+ * Generic version that works with any TypedArray type.
+ *
+ * @example
+ * ```typescript
+ * const int16Data = new Int16Array(1000);
+ * const transfer = transferTypedArray(int16Data);
+ * ```
+ *
+ * @param array - Any TypedArray to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferTypedArray<T extends TypedArray>(array: T): Transfer<T> {
+  return new Transfer(array, [array.buffer]);
+}
+
+/**
+ * Create a Transfer for an ArrayBuffer
+ *
+ * @param buffer - ArrayBuffer to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferArrayBuffer(buffer: ArrayBuffer): Transfer<ArrayBuffer> {
+  return new Transfer(buffer, [buffer]);
+}
+
+/**
+ * Create a Transfer for multiple ArrayBuffers
+ *
+ * @example
+ * ```typescript
+ * const buf1 = new ArrayBuffer(1024);
+ * const buf2 = new ArrayBuffer(2048);
+ * const transfer = transferArrayBuffers([buf1, buf2]);
+ * ```
+ *
+ * @param buffers - Array of ArrayBuffers to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferArrayBuffers(buffers: ArrayBuffer[]): Transfer<ArrayBuffer[]> {
+  return new Transfer(buffers, buffers);
+}
+
+/**
+ * Create a Transfer for an object containing TypedArrays
+ *
+ * Automatically finds all ArrayBuffers in the object and marks them for transfer.
+ *
+ * @example
+ * ```typescript
+ * const data = {
+ *   positions: new Float32Array([0, 0, 0, 1, 1, 1]),
+ *   indices: new Uint16Array([0, 1, 2]),
+ *   metadata: { name: 'mesh' }
+ * };
+ * const transfer = transferObject(data);
+ * ```
+ *
+ * @param obj - Object containing transferable data
+ * @returns Transfer object with auto-detected transferables
+ */
+export function transferObject<T>(obj: T): Transfer<T> {
+  const transferables = Transfer.findTransferables(obj);
+  return new Transfer(obj, transferables);
+}
+
+/**
+ * Create a Transfer for an ImageData object (canvas pixel data)
+ *
+ * @param imageData - ImageData to transfer
+ * @returns Transfer object ready for worker communication
+ */
+export function transferImageData(imageData: ImageData): Transfer<ImageData> {
+  return new Transfer(imageData, [imageData.data.buffer]);
+}
