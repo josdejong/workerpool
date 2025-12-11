@@ -15,7 +15,8 @@ import { add, emit } from './workers/worker';
 import type { PoolOptions, ExecOptions, PoolStats, WorkerProxy } from './types/index';
 
 // Backwards compatibility alias
-type Proxy<T extends Record<string, (...args: unknown[]) => unknown>> = WorkerProxy<T>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Proxy<T extends Record<string, (...args: any[]) => any>> = WorkerProxy<T>;
 import type { WorkerRegisterOptions } from './workers/worker';
 import type { WorkerType } from './core/WorkerHandler';
 

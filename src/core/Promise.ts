@@ -82,6 +82,12 @@ function createThenHandler<TIn, TOut>(
  * WorkerpoolPromise - Custom Promise with cancel and timeout support
  */
 export class WorkerpoolPromise<T, E = Error> implements IWorkerpoolPromise<T, E> {
+  /** Static reference to CancellationError for backward compatibility */
+  static CancellationError: typeof CancellationError = CancellationError;
+
+  /** Static reference to TimeoutError for backward compatibility */
+  static TimeoutError: typeof TimeoutError = TimeoutError;
+
   private _onSuccess: Array<ResolveHandler<T>> = [];
   private _onFail: Array<RejectHandler<E>> = [];
   private _resolved = false;
@@ -277,8 +283,8 @@ export class WorkerpoolPromise<T, E = Error> implements IWorkerpoolPromise<T, E>
   /**
    * Create a promise that resolves when all provided promises resolve
    */
-  static all<T>(promises: Array<WorkerpoolPromise<T, unknown>>): WorkerpoolPromise<T[], unknown> {
-    return new WorkerpoolPromise<T[], unknown>((resolve, reject) => {
+  static all<T>(promises: Array<WorkerpoolPromise<T, unknown>>): WorkerpoolPromise<T[], Error> {
+    return new WorkerpoolPromise<T[], Error>((resolve, reject) => {
       if (promises.length === 0) {
         resolve([]);
         return;
@@ -302,7 +308,7 @@ export class WorkerpoolPromise<T, E = Error> implements IWorkerpoolPromise<T, E>
             if (rejected) return;
             rejected = true;
             remaining = 0;
-            reject(error);
+            reject(error as Error);
           }
         );
       });
@@ -342,10 +348,6 @@ export class WorkerpoolPromise<T, E = Error> implements IWorkerpoolPromise<T, E>
     });
   }
 }
-
-// Attach error classes to Promise for backward compatibility
-(WorkerpoolPromise as unknown as { CancellationError: typeof CancellationError }).CancellationError = CancellationError;
-(WorkerpoolPromise as unknown as { TimeoutError: typeof TimeoutError }).TimeoutError = TimeoutError;
 
 /**
  * Default export for backward compatibility

@@ -179,9 +179,10 @@ export class Pool<TMetadata = unknown> {
    * @param options - Execution options
    * @returns Promise resolving to the result
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   exec<T = unknown>(
-    method: string | ((...args: unknown[]) => T),
-    params?: unknown[],
+    method: string | ((...args: any[]) => T),
+    params?: unknown[] | null,
     options?: ExecOptions<TMetadata>
   ): WorkerpoolPromise<T, Error> {
     if (params && !Array.isArray(params)) {
@@ -234,7 +235,8 @@ export class Pool<TMetadata = unknown> {
    *
    * @returns Promise resolving to proxy object
    */
-  proxy<T extends Record<string, (...args: unknown[]) => unknown>>(): WorkerpoolPromise<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  proxy<T extends Record<string, (...args: any[]) => any>>(): WorkerpoolPromise<
     WorkerProxy<T>,
     unknown
   > {
