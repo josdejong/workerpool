@@ -1,4 +1,5 @@
 import fse from "fs-extra";
+import path from "path";
 import resolve from "@rollup/plugin-node-resolve";
 import babel from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
@@ -7,6 +8,56 @@ import format from 'date-format'
 import terser from '@rollup/plugin-terser';
 import { defineConfig } from 'rollup'
 const packages = fse.readJSONSync("./package.json");
+
+// WASM files to preserve during build
+const WASM_FILES = [
+    'workerpool.wasm',
+    'workerpool.wat',
+    'workerpool.debug.wasm',
+    'workerpool.debug.wat',
+    'workerpool.esm.wasm',
+    'workerpool.esm.wat',
+    'workerpool.raw.wasm',
+];
+
+/**
+ * Preserve WASM files during dist cleanup
+ */
+function preserveWasmFiles() {
+    const distDir = './dist';
+    const tempDir = './dist-wasm-temp';
+
+    // Check if dist exists
+    if (!fse.existsSync(distDir)) {
+        return { restore: () => {} };
+    }
+
+    // Create temp directory
+    fse.ensureDirSync(tempDir);
+
+    // Copy WASM files to temp
+    for (const file of WASM_FILES) {
+        const srcPath = path.join(distDir, file);
+        if (fse.existsSync(srcPath)) {
+            fse.copyFileSync(srcPath, path.join(tempDir, file));
+        }
+    }
+
+    return {
+        restore: () => {
+            // Copy WASM files back
+            for (const file of WASM_FILES) {
+                const tempPath = path.join(tempDir, file);
+                if (fse.existsSync(tempPath)) {
+                    fse.copyFileSync(tempPath, path.join(distDir, file));
+                }
+            }
+            // Clean up temp
+            fse.removeSync(tempDir);
+        }
+    };
+}
+
 function createBanner() {
     const today = format.asString('yyyy-MM-dd', new Date()); // today, formatted as yyyy-MM-dd
     const version = packages.version;  // module version
@@ -15,7 +66,11 @@ function createBanner() {
         .replace('@@date', today)
         .replace('@@version', version);
 }
+
+// Preserve WASM files before emptying dist
+const wasmBackup = preserveWasmFiles();
 fse.emptyDirSync("./dist/");
+wasmBackup.restore();
 fse.copyFileSync('./src/header.js', './dist/workerpool.min.js.LICENSE.txt')
 const commonPlugin = [
     resolve({

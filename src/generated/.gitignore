@@ -1,1 +1,4 @@
+# Auto-generated files - do not commit
 *.js
+embeddedWasm.ts
+wasmTypes.ts

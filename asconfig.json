@@ -1,10 +1,13 @@
 {
+  "entries": ["assembly/index.ts"],
   "targets": {
     "debug": {
       "outFile": "dist/workerpool.debug.wasm",
       "textFile": "dist/workerpool.debug.wat",
       "sourceMap": true,
-      "debug": true
+      "debug": true,
+      "optimizeLevel": 0,
+      "shrinkLevel": 0
     },
     "release": {
       "outFile": "dist/workerpool.wasm",
@@ -12,8 +15,27 @@
       "sourceMap": false,
       "optimizeLevel": 3,
       "shrinkLevel": 1,
-      "converge": false,
+      "converge": true,
       "noAssert": true
+    },
+    "release-esm": {
+      "outFile": "dist/workerpool.esm.wasm",
+      "textFile": "dist/workerpool.esm.wat",
+      "sourceMap": false,
+      "optimizeLevel": 3,
+      "shrinkLevel": 2,
+      "converge": true,
+      "noAssert": true,
+      "bindings": "esm"
+    },
+    "release-raw": {
+      "outFile": "dist/workerpool.raw.wasm",
+      "sourceMap": false,
+      "optimizeLevel": 3,
+      "shrinkLevel": 2,
+      "converge": true,
+      "noAssert": true,
+      "bindings": "raw"
     }
   },
   "options": {
@@ -21,8 +43,12 @@
     "exportRuntime": true,
     "importMemory": true,
     "sharedMemory": true,
-    "enableThreads": true,
     "initialMemory": 16,
-    "maximumMemory": 256
+    "maximumMemory": 256,
+    "enable": ["threads", "bulk-memory", "simd"],
+    "runtime": "stub",
+    "exportStart": "_initialize",
+    "stackSize": 32768,
+    "lowMemoryLimit": 0
   }
 }
