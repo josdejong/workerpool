@@ -6,7 +6,7 @@
  */
 
 import { WorkerpoolPromise, CancellationError, TimeoutError } from './Promise';
-import type { Resolver, ExecOptions } from '../types';
+import type { Resolver, ExecOptions } from '../types/index';
 import type {
   TaskRequest,
   TaskSuccessResponse,

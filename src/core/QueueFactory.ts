@@ -6,7 +6,7 @@
  * with automatic fallback when WASM is unavailable.
  */
 
-import type { TaskQueue, QueueStrategy, Task } from '../types';
+import type { TaskQueue, QueueStrategy, Task } from '../types/index';
 import { FIFOQueue, LIFOQueue, PriorityQueue } from './TaskQueue';
 import {
   detectWASMFeatures,

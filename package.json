@@ -19,6 +19,39 @@
   "main": "src/index.js",
   "browser": "dist/workerpool.js",
   "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./src/index.js",
+      "browser": "./dist/workerpool.js"
+    },
+    "./minimal": {
+      "types": "./types/minimal.d.ts",
+      "import": "./src/minimal.ts",
+      "require": "./src/minimal.ts"
+    },
+    "./full": {
+      "types": "./types/full.d.ts",
+      "import": "./src/full.ts",
+      "require": "./src/full.ts"
+    },
+    "./wasm": {
+      "types": "./types/wasm.d.ts",
+      "import": "./src/wasm/index.ts",
+      "require": "./src/wasm/index.ts"
+    },
+    "./errors": {
+      "types": "./types/errors.d.ts",
+      "import": "./src/errors.ts",
+      "require": "./src/errors.ts"
+    },
+    "./debug": {
+      "types": "./types/debug.d.ts",
+      "import": "./src/debug.ts",
+      "require": "./src/debug.ts"
+    }
+  },
   "files": [
     "dist",
     "src",
