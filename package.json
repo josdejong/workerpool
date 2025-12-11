@@ -30,16 +30,26 @@
   "scripts": {
     "build": "rollup -c rollup.config.mjs && npm run build:types",
     "build:types": "tsc -p tsconfig.build.json",
-    "build:wasm": "asc assembly/index.ts --config asconfig.json --target release --enable threads",
-    "build:wasm:debug": "asc assembly/index.ts --config asconfig.json --target debug --enable threads",
-    "build:all": "npm run build:wasm && npm run build",
+    "build:wasm": "asc assembly/index.ts --config asconfig.json --target release",
+    "build:wasm:debug": "asc assembly/index.ts --config asconfig.json --target debug",
+    "build:wasm:esm": "asc assembly/index.ts --config asconfig.json --target release-esm",
+    "build:wasm:raw": "asc assembly/index.ts --config asconfig.json --target release-raw",
+    "build:wasm:all": "npm run build:wasm && npm run build:wasm:debug && npm run build:wasm:esm",
+    "build:wasm:embed": "npm run build:wasm && node scripts/generate-wasm-bindings.mjs",
+    "build:all": "npm run build:wasm:embed && npm run build",
     "typecheck": "tsc --noEmit",
+    "typecheck:wasm": "tsc -p assembly/tsconfig.json --noEmit",
     "watch": "rollup -c rollup.config.mjs -w",
+    "watch:wasm": "nodemon --watch assembly --ext ts --exec \"npm run build:wasm:debug\"",
     "test": "npm run build && mocha test && npm run test:types",
     "test:types": "tsc -p test/types",
+    "test:wasm": "npm run build:wasm && mocha test/wasm.test.js",
     "test:debug": "npm run build && mocha debug test",
     "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo Coverage report is available at ./coverage/index.html",
-    "prepublishOnly": "npm run test && npm run build"
+    "clean": "rm -rf dist/*.wasm dist/*.wat dist/*.wasm.map",
+    "clean:all": "rm -rf dist node_modules/.cache",
+    "validate:wasm": "node scripts/validate-wasm.mjs",
+    "prepublishOnly": "npm run test && npm run build:all"
   },
   "devDependencies": {
     "@babel/core": "7.28.5",
@@ -59,6 +69,7 @@
     "fs-extra": "11.3.2",
     "mocha": "11.7.5",
     "rollup": "4.53.3",
+    "tslib": "^2.8.1",
     "typescript": "5.9.3"
   }
 }

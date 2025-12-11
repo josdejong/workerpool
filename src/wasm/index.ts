@@ -46,3 +46,13 @@ export {
 } from './feature-detection';
 
 export type { WASMFeatureStatus } from './feature-detection';
+
+// Embedded WASM utilities
+export {
+  setEmbeddedWasm,
+  hasEmbeddedWasm,
+  getEmbeddedWasmBytes,
+  loadEmbeddedWasm,
+  loadEmbeddedWasmSync,
+  WasmFeatures,
+} from './EmbeddedWasmLoader';
