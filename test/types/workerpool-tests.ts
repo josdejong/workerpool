@@ -78,7 +78,7 @@ function hello(): string {
 }
 
 pool.exec(add, [1, 2]).then((c: number) => c);
-pool.exec<typeof add>("add", [1, 2], { on: payload => console.log(payload) }).then((c: number) => c);
+pool.exec<number>("add", [1, 2], { on: payload => console.log(payload) }).then((c: number) => c);
 pool.exec(hello, []).then((s: string) => s);
 
 const workers = { add, hello };
@@ -118,7 +118,7 @@ wp.worker(undefined, undefined);
 
 new wp.Transfer("foo", []);
 
-const p: Promise<string> = pool.exec<() => string>('hello').then((a) => a);
+const p: Promise<string> = pool.exec<string>('hello').then((a) => a);
 
 // Test queue types
 import { FIFOQueue, LIFOQueue } from "../../types/queues";

@@ -287,7 +287,8 @@ export interface WorkerpoolPromise<T, E = unknown> extends Promise<T> {
  * Proxy type that wraps worker methods with promise-returning versions
  * @template T - Object with worker methods
  */
-export type WorkerProxy<T extends Record<string, (...args: unknown[]) => unknown>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type WorkerProxy<T extends Record<string, (...args: any[]) => any>> = {
   [K in keyof T]: (...args: Parameters<T[K]>) => WorkerpoolPromise<ReturnType<T[K]>>;
 };
 
