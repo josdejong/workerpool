@@ -5,7 +5,7 @@
  * Provides O(1) push/pop operations with lock-free concurrency support.
  */
 
-import type { Task, TaskQueue } from '../types';
+import type { Task, TaskQueue } from '../types/index';
 import {
   WasmBridge,
   isSharedMemorySupported,

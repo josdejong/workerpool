@@ -5,7 +5,7 @@
  * with a factory function for creating queues based on strategy.
  */
 
-import type { Task, TaskQueue, QueueStrategy } from '../types';
+import type { Task, TaskQueue, QueueStrategy } from '../types/index';
 
 /**
  * FIFO Queue using circular buffer for O(1) push/pop operations

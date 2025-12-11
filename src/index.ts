@@ -12,7 +12,10 @@ import { WorkerpoolPromise, CancellationError, TimeoutError } from './core/Promi
 import Transfer from './platform/transfer';
 import { add, emit } from './workers/worker';
 
-import type { PoolOptions, ExecOptions, PoolStats, WorkerProxy } from './types';
+import type { PoolOptions, ExecOptions, PoolStats, WorkerProxy } from './types/index';
+
+// Backwards compatibility alias
+type Proxy<T extends Record<string, (...args: unknown[]) => unknown>> = WorkerProxy<T>;
 import type { WorkerRegisterOptions } from './workers/worker';
 import type { WorkerType } from './core/WorkerHandler';
 
@@ -102,6 +105,7 @@ export type {
   WorkerProxy,
   WorkerType,
   WorkerRegisterOptions,
+  Proxy,
 };
 
 // Default export for CommonJS compatibility

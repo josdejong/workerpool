@@ -7,7 +7,7 @@
  * @template E - The type of the rejection error (defaults to Error)
  */
 
-import type { Resolver, WorkerpoolPromise as IWorkerpoolPromise } from '../types';
+import type { Resolver, WorkerpoolPromise as IWorkerpoolPromise } from '../types/index';
 
 /**
  * Cancellation error thrown when a promise is cancelled

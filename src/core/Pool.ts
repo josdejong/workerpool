@@ -21,7 +21,7 @@ import type {
   QueueStrategy,
   WorkerProxy,
   WorkerArg,
-} from '../types';
+} from '../types/index';
 
 /** Global debug port allocator */
 const DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();

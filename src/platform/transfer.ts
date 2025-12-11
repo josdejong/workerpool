@@ -11,7 +11,7 @@
  * @template T - Type of the message being transferred
  */
 
-import type { TransferDescriptor } from '../types';
+import type { TransferDescriptor } from '../types/index';
 
 /**
  * Transferable object types supported by structured clone with transfer
