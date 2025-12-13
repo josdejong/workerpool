@@ -371,3 +371,183 @@ export interface PoolMetricsSnapshot {
     avgWaitTime: number;
   };
 }
+
+// =============================================================================
+// Sprint 7: Batch Operations & SIMD Types
+// =============================================================================
+
+/**
+ * Options for batch task execution
+ */
+export interface BatchOptions {
+  /**
+   * Maximum number of concurrent tasks to execute.
+   * @default Number of workers
+   */
+  concurrency?: number;
+
+  /**
+   * Stop execution on first failure.
+   * If false, continues with remaining tasks and collects all failures.
+   * @default false
+   */
+  failFast?: boolean;
+
+  /**
+   * Progress callback invoked after each task completion.
+   */
+  onProgress?: (progress: BatchProgress) => void;
+
+  /**
+   * Minimum interval between progress callbacks (ms).
+   * Useful to reduce overhead when processing many tasks.
+   * @default 0 (every completion)
+   */
+  progressThrottle?: number;
+
+  /**
+   * Timeout for each individual task (ms).
+   * @default undefined (no timeout)
+   */
+  taskTimeout?: number;
+
+  /**
+   * Timeout for entire batch operation (ms).
+   * @default undefined (no timeout)
+   */
+  batchTimeout?: number;
+
+  /**
+   * Transferable objects for batch execution.
+   */
+  transfer?: Transferable[];
+}
+
+/**
+ * Progress information for batch execution
+ */
+export interface BatchProgress {
+  /** Number of tasks completed (success + failure) */
+  completed: number;
+  /** Total number of tasks in batch */
+  total: number;
+  /** Number of successful tasks */
+  successes: number;
+  /** Number of failed tasks */
+  failures: number;
+  /** Progress percentage (0-100) */
+  percentage: number;
+  /** Estimated time remaining (ms) */
+  estimatedRemaining?: number;
+  /** Current throughput (tasks/second) */
+  throughput?: number;
+}
+
+/**
+ * Result of individual task in a batch
+ * @template T - Result value type
+ */
+export interface BatchTaskResult<T> {
+  /** Task index in the batch */
+  index: number;
+  /** Whether the task succeeded */
+  success: boolean;
+  /** Result value (if success) */
+  result?: T;
+  /** Error (if failed) */
+  error?: Error;
+  /** Execution duration (ms) */
+  duration: number;
+}
+
+/**
+ * Result of batch execution
+ * @template T - Result value type
+ */
+export interface BatchResult<T> {
+  /** Results for each task (in order) */
+  results: BatchTaskResult<T>[];
+  /** Array of successful results only */
+  successes: T[];
+  /** Array of errors only */
+  failures: Error[];
+  /** Total batch execution duration (ms) */
+  duration: number;
+  /** Number of successful tasks */
+  successCount: number;
+  /** Number of failed tasks */
+  failureCount: number;
+  /** Whether all tasks succeeded */
+  allSucceeded: boolean;
+  /** Whether batch was cancelled */
+  cancelled: boolean;
+}
+
+/**
+ * Batch task descriptor
+ * @template P - Parameters type
+ */
+export interface BatchTask<P extends unknown[] = unknown[]> {
+  /** Method name or function to execute */
+  method: string | ((...args: P) => unknown);
+  /** Parameters for the task */
+  params: P;
+  /** Per-task execution options */
+  options?: ExecOptions;
+}
+
+/**
+ * Options for parallel map operation
+ * @template T - Input element type
+ * @template R - Result element type
+ */
+export interface MapOptions<T, R> extends Omit<BatchOptions, 'onProgress'> {
+  /**
+   * Chunk size for distributing work.
+   * Larger chunks reduce overhead but may cause uneven distribution.
+   * @default Math.ceil(items.length / workers)
+   */
+  chunkSize?: number;
+
+  /**
+   * Progress callback for map operation.
+   */
+  onProgress?: (progress: MapProgress<R>) => void;
+}
+
+/**
+ * Progress information for map operation
+ * @template R - Result element type
+ */
+export interface MapProgress<R> extends BatchProgress {
+  /** Partial results collected so far */
+  partialResults: (R | undefined)[];
+}
+
+/**
+ * Cancellable batch promise
+ * @template T - Result type
+ */
+export interface BatchPromise<T> extends WorkerpoolPromise<BatchResult<T>> {
+  /**
+   * Cancel all pending tasks in the batch.
+   * Already completed tasks are preserved in the result.
+   */
+  cancel(): this;
+
+  /**
+   * Pause batch execution.
+   * Queued tasks are held, in-progress tasks continue.
+   */
+  pause(): this;
+
+  /**
+   * Resume paused batch execution.
+   */
+  resume(): this;
+
+  /**
+   * Check if batch is paused.
+   */
+  isPaused(): boolean;
+}

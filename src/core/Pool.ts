@@ -21,7 +21,14 @@ import type {
   QueueStrategy,
   WorkerProxy,
   WorkerArg,
+  BatchTask,
+  BatchOptions,
+  BatchResult,
+  BatchPromise,
+  BatchProgress,
+  MapOptions,
 } from '../types/index';
+import { createBatchExecutor, createMapExecutor, type TaskExecutor } from './batch-executor';
 
 /** Global debug port allocator */
 const DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
@@ -258,6 +265,64 @@ export class Pool<TMetadata = unknown> {
 
       return proxyObj as WorkerProxy<T>;
     }) as WorkerpoolPromise<WorkerProxy<T>, unknown>;
+  }
+
+  /**
+   * Execute multiple tasks as a batch
+   *
+   * @param tasks - Array of tasks to execute
+   * @param options - Batch execution options
+   * @returns Promise resolving to batch result
+   *
+   * @example
+   * const result = await pool.execBatch([
+   *   { method: 'process', params: [1] },
+   *   { method: 'process', params: [2] },
+   *   { method: 'process', params: [3] },
+   * ], { concurrency: 4, onProgress: (p) => console.log(p.percentage) });
+   */
+  execBatch<T = unknown>(
+    tasks: BatchTask[],
+    options?: BatchOptions
+  ): BatchPromise<T> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<T> = (method: string | ((...args: any[]) => any), params, execOptions) => {
+      return this.exec<T>(method, params, execOptions as ExecOptions<TMetadata>);
+    };
+
+    return createBatchExecutor<T>(tasks, executor, {
+      ...options,
+      // Default concurrency to number of workers
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  /**
+   * Parallel map operation - apply function to each item across workers
+   *
+   * @param items - Items to process
+   * @param mapFn - Function to apply to each item (executed in worker)
+   * @param options - Map options
+   * @returns Promise resolving to batch result with mapped values
+   *
+   * @example
+   * const result = await pool.map([1, 2, 3, 4], (n) => n * n);
+   * console.log(result.successes); // [1, 4, 9, 16]
+   */
+  map<T, R>(
+    items: T[],
+    mapFn: ((item: T, index: number) => R) | string,
+    options?: Omit<MapOptions<T, R>, 'onProgress'> & { onProgress?: (progress: BatchProgress) => void }
+  ): BatchPromise<R> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<R> = (method: string | ((...args: any[]) => any), params, execOptions) => {
+      return this.exec<R>(method, params, execOptions as ExecOptions<TMetadata>);
+    };
+
+    return createMapExecutor<T, R>(items, mapFn, executor, {
+      ...options,
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    } as BatchOptions & { chunkSize?: number });
   }
 
   /**

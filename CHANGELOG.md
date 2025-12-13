@@ -33,6 +33,16 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - Result streaming: Chunked transfer, backpressure handling, SharedMemory streams
   - Channel factory: Automatic fallback from SAB to postMessage when unavailable
   - Shared memory protocol documentation (docs/planning/SHARED_MEMORY_PROTOCOL.md)
+- **Sprint 7: Batch Operations & SIMD**
+  - Pool.execBatch(): Execute multiple tasks as a batch with concurrency control
+  - Pool.map(): Parallel map operation across workers with chunking support
+  - BatchPromise: Extended promise with cancel(), pause(), resume(), isPaused()
+  - Batch serializer: Efficient batch message format with chunking
+  - BatchExecutor: Concurrency control, failFast, progress events, batch timeout
+  - Progress throttling: Configurable callback frequency to reduce overhead
+  - SIMD batch processor (AssemblyScript): simdMapF32, simdReduceF32, simdDotProduct
+  - Scalar fallback: Full functionality when WASM SIMD unavailable
+  - Batch API design documentation (docs/planning/BATCH_API_DESIGN.md)
 
 ### Changed
 - Updated package.json and rollup.config.mjs for TypeScript
@@ -41,6 +51,7 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 - Phase 1 Sprints 1-4 COMPLETED
 - Phase 1 Sprint 5 COMPLETED
 - Phase 1 Sprint 6 COMPLETED
+- Phase 1 Sprint 7 COMPLETED
 
 ## [10.0.1] - 2025-12-13
 
