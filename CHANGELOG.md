@@ -24,6 +24,15 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - IdleRecycler: Idle timeout and max tasks recycling
   - WorkerAffinity: Task-to-worker affinity for cache locality
   - Extended pool types (PoolOptionsExtended, AffinityHint, PoolMetricsSnapshot)
+- **Sprint 6: Zero-Copy & SharedArrayBuffer**
+  - SharedMemoryChannel: Lock-free bi-directional channel using SharedArrayBuffer/Atomics
+  - Structured clone optimization: Auto-detection of transferables, zero-copy paths
+  - MessageBatcher: Batch small messages with flush timeout/size thresholds
+  - AdaptiveBatcher: Auto-tuning batch parameters based on message patterns
+  - Transfer detection: isTransferable(), detectTransferables(), validation utilities
+  - Result streaming: Chunked transfer, backpressure handling, SharedMemory streams
+  - Channel factory: Automatic fallback from SAB to postMessage when unavailable
+  - Shared memory protocol documentation (docs/planning/SHARED_MEMORY_PROTOCOL.md)
 
 ### Changed
 - Updated package.json and rollup.config.mjs for TypeScript
@@ -31,6 +40,7 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ### Infrastructure
 - Phase 1 Sprints 1-4 COMPLETED
 - Phase 1 Sprint 5 COMPLETED
+- Phase 1 Sprint 6 COMPLETED
 
 ## [10.0.1] - 2025-12-13
 
