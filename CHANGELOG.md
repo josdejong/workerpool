@@ -17,12 +17,20 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 - AssemblyScript WASM Module in assembly/
 - WASM JavaScript Bridge in src/wasm/
 - Queue Factory with fifo, lifo, priority, wasm, auto strategies
+- **Sprint 5: Worker Pre-Warming & Adaptive Scaling**
+  - MetricsCollector: Task latency histograms, worker utilization, queue depths, error rates
+  - AdaptiveScaler: Dynamic min/max scaling with hysteresis
+  - HealthMonitor: Heartbeat-based worker liveness detection
+  - IdleRecycler: Idle timeout and max tasks recycling
+  - WorkerAffinity: Task-to-worker affinity for cache locality
+  - Extended pool types (PoolOptionsExtended, AffinityHint, PoolMetricsSnapshot)
 
 ### Changed
 - Updated package.json and rollup.config.mjs for TypeScript
 
 ### Infrastructure
 - Phase 1 Sprints 1-4 COMPLETED
+- Phase 1 Sprint 5 COMPLETED
 
 ## [10.0.1] - 2025-12-13
 

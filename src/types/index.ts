@@ -299,3 +299,75 @@ export interface TransferDescriptor<T = unknown> {
   message: T;
   transfer: Transferable[];
 }
+
+/**
+ * Affinity hint for task execution (Sprint 5)
+ */
+export interface AffinityHint {
+  /** Affinity key (e.g., 'user:123', 'file:/path/to/file') */
+  key: string;
+  /** Affinity strategy: 'none' | 'preferred' | 'strict' | 'spread' */
+  strategy?: 'none' | 'preferred' | 'strict' | 'spread';
+  /** Maximum wait time for preferred/strict affinity (ms) */
+  maxWaitTime?: number;
+}
+
+/**
+ * Extended execution options with affinity support
+ */
+export interface ExecOptionsWithAffinity<T = unknown> extends ExecOptions<T> {
+  /** Affinity hint for worker selection */
+  affinity?: AffinityHint;
+}
+
+/**
+ * Extended pool options with Sprint 5 features
+ */
+export interface PoolOptionsExtended extends PoolOptions {
+  /** Enable worker pre-warming */
+  preWarm?: boolean;
+  /** Idle timeout before worker recycling (ms) */
+  idleTimeout?: number;
+  /** Maximum tasks per worker before recycling */
+  maxTasksPerWorker?: number;
+  /** Enable adaptive scaling */
+  adaptiveScaling?: boolean;
+  /** Health check interval (ms) */
+  healthCheckInterval?: number;
+  /** Maximum consecutive failures before worker replacement */
+  maxConsecutiveFailures?: number;
+  /** Enable metrics collection */
+  enableMetrics?: boolean;
+  /** Metrics export callback */
+  onMetrics?: (metrics: PoolMetricsSnapshot) => void;
+  /** Metrics export interval (ms) */
+  metricsInterval?: number;
+}
+
+/**
+ * Pool metrics snapshot (from MetricsCollector)
+ */
+export interface PoolMetricsSnapshot {
+  /** Timestamp of metrics collection */
+  timestamp: number;
+  /** Summary statistics */
+  summary: {
+    totalWorkers: number;
+    busyWorkers: number;
+    idleWorkers: number;
+    tasksPerSecond: number;
+    avgLatency: number;
+    p50Latency: number;
+    p95Latency: number;
+    p99Latency: number;
+    errorRate: number;
+  };
+  /** Queue metrics */
+  queue: {
+    depth: number;
+    peakDepth: number;
+    totalEnqueued: number;
+    totalDequeued: number;
+    avgWaitTime: number;
+  };
+}
