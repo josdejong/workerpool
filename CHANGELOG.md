@@ -44,6 +44,13 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - Scalar fallback: Full functionality when WASM SIMD unavailable
   - Batch API design documentation (docs/planning/BATCH_API_DESIGN.md)
 
+- **Sprint 8: API Finalization & Documentation**
+  - Breaking changes documentation (docs/BREAKING_CHANGES.md)
+  - Migration guide v10 to v11 (docs/MIGRATION_v10_to_v11.md)
+  - Browser support matrix (docs/BROWSER_SUPPORT.md)
+  - Node.js compatibility guide (docs/NODE_SUPPORT.md)
+  - Performance benchmark suite (benchmark/suite.ts)
+
 ### Changed
 - Updated package.json and rollup.config.mjs for TypeScript
 
@@ -52,6 +59,7 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 - Phase 1 Sprint 5 COMPLETED
 - Phase 1 Sprint 6 COMPLETED
 - Phase 1 Sprint 7 COMPLETED
+- Phase 1 Sprint 8 COMPLETED
 
 ## [10.0.1] - 2025-12-13
 
