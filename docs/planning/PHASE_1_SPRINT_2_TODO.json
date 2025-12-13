@@ -3,7 +3,7 @@
   "title": "Core Module Conversion",
   "week": "Week 3-4",
   "effort": "25-30 hours",
-  "status": "in_progress",
+  "status": "completed",
   "tasks": [
     {
       "id": 9,
@@ -69,7 +69,7 @@
       "id": 15,
       "category": "Build Configuration",
       "description": "Update Rollup config for TypeScript - Configure @rollup/plugin-typescript, update input/output paths, ensure source maps work correctly, configure declaration file generation, update embedded worker generation.",
-      "status": "in_progress",
+      "status": "completed",
       "estimatedHours": 2,
       "complexity": "Medium",
       "dependencies": [14],
@@ -80,7 +80,7 @@
       "id": 16,
       "category": "Testing",
       "description": "Sprint 2 integration tests - Full end-to-end testing of Pool and WorkerHandler. Test task execution across all worker types (web, thread, process, auto), cancellation/timeout flows, worker crash recovery, and proxy functionality.",
-      "status": "pending",
+      "status": "completed",
       "estimatedHours": 6,
       "complexity": "High",
       "dependencies": [9, 10, 11, 12, 13, 14, 15],
