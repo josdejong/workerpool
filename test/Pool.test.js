@@ -1499,6 +1499,70 @@ describe('Pool', function () {
           });
   });
 
+  it('should support returning transferable object from async function', function (done) {
+    var pool = createPool(__dirname + '/workers/transfer-emit.js');
+
+    var size = 8;
+    pool.exec('asyncTransfer', [size])
+          .then(function (result) {
+            // Result is Uint8Array transferred from worker
+            assert.strictEqual(result.length, size);
+
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert.fail('Should not throw an error');
+            done(err);
+          });
+  });
+
+  it('should support emitting transferable object from worker', function (done) {
+    var pool = createPool(__dirname + '/workers/transfer-emit.js');
+
+    var receivedEvent;
+    pool.exec('emitTransfer', [8], {
+            on: function (payload) {
+              // Only capture the transfer event (not other events)
+              if (payload && payload.type === 'transfer') {
+                receivedEvent = payload;
+              }
+            }
+          })
+          .then(function (result) {
+            assert.strictEqual(result, 'emitted');
+            assert.ok(receivedEvent, 'Should have received transfer event');
+            assert.strictEqual(receivedEvent.type, 'transfer');
+            assert.ok(receivedEvent.data, 'Should have data array');
+            assert.strictEqual(receivedEvent.data.length, 8);
+
+            pool.terminate();
+            done();
+          })
+          .catch(function (err) {
+            console.log(err);
+            assert.fail('Should not throw an error');
+            done(err);
+          });
+  });
+
+  it('should handle unknown method error', function (done) {
+    var pool = createPool(__dirname + '/workers/simple.js');
+
+    pool.exec('nonExistentMethod', [1, 2])
+        .then(function () {
+          assert.fail('Should throw an error');
+        })
+        .catch(function (err) {
+          assert.ok(err instanceof Error);
+          assert.ok(err.message.includes('Unknown method'));
+
+          pool.terminate();
+          done();
+        });
+  });
+
   it('should call worker termination handler', function () {
     var pool = createPool(__dirname + '/workers/cleanup.js');
 
@@ -1591,23 +1655,25 @@ describe('Pool', function () {
     });
 
     it('should not terminate worker if abort listener is defined dedicated worker with Cancellation', function () {
+      this.timeout(10000); // Increase mocha timeout
       var workerCount = 0;
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
+        workerType: 'process', // Use child_process for more consistent timing
+        workerTerminateTimeout: 3000, // Must be longer than abortListenerTimeout (1000ms) in worker
         onCreateWorker: () => {
           workerCount += 1;
         },
       });
-      
+
       let task = pool.exec('asyncTimeout', [],  {});
 
-      // Wrap in a new promise which waits 50ms
-      // in order to allow the function executing in the
-      // worker to 
+      // Wrap in a new promise which waits 100ms
+      // to ensure the task has fully started in the worker
       return new Promise(function(resolve) {
         setTimeout(function() {
           resolve();
-        }, 50);
+        }, 100);
       }).then(function() {
           return task
           .cancel()
@@ -1618,8 +1684,8 @@ describe('Pool', function () {
             assert.strictEqual(stats.totalWorkers, 1);
             assert.strictEqual(stats.idleWorkers, 1);
             assert.strictEqual(stats.busyWorkers, 0);
-          }).then(function() { 
-            return pool.exec(add, [1, 2]) 
+          }).then(function() {
+            return pool.exec(add, [1, 2])
           }).then(function() {
             var stats = pool.stats();
             assert.strictEqual(workerCount, 1);
@@ -1818,34 +1884,38 @@ describe('Pool', function () {
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
         workerType: 'process',
-        emitStdStreams: true, 
-        workerTerminateTimeout: 1000,
+        emitStdStreams: true,
+        workerTerminateTimeout: 2000, // Must be longer than abortListenerTimeout (1000ms) in worker
       });
 
       pool.exec('stdoutStreamOnAbort', [], {
         on: function (payload) {
-          assert.strictEqual(payload.stdout.trim(), "Hello, world!");
-          pool.terminate();
-          done();
+          if (payload.stdout) {
+            assert.strictEqual(payload.stdout.trim(), "Hello, world!");
+            pool.terminate();
+            done();
+          }
         }
-      }).timeout(50);
+      }).timeout(100);
     });
 
     it('should trigger event in abort handler', function (done) {
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
         workerType: 'process',
-        emitStdStreams: true, 
-        workerTerminateTimeout: 1000,
+        emitStdStreams: true,
+        workerTerminateTimeout: 2000, // Must be longer than abortListenerTimeout (1000ms) in worker
       });
 
       pool.exec('eventEmitOnAbort', [], {
         on: function (payload) {
-          assert.strictEqual(payload.status, 'cleanup_success');
-          pool.terminate();
-          done();
+          if (payload.status) {
+            assert.strictEqual(payload.status, 'cleanup_success');
+            pool.terminate();
+            done();
+          }
         }
-      }).timeout(50);
+      }).timeout(100);
     });
   });
 

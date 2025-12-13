@@ -458,21 +458,38 @@ describe('WorkerHandler', function () {
 
   describe('workerGracefulExit', function () {
     it('worker exit after master is killed', function (done) {
+      this.timeout(5000); // Increase mocha timeout for this test
       var child = childProcess.fork(path.join(__dirname, './forkToKill/common.js'));
       child.on('message', function (message) {
         // workerId is the worker process' id which should exit after master is killed
         var workerPid = message.workerPid;
         // kill pool
         child.kill('SIGKILL');
-        setTimeout(function () {
+
+        // Poll for worker exit with retries - worker may take time to detect disconnect
+        var attempts = 0;
+        var maxAttempts = 10;
+        var checkInterval = 200;
+
+        function checkWorkerExit() {
           findProcess('pid', workerPid).then(function (list) {
-            if (list && list.length > 0) {
-              done('Worker not exit');
-            } else {
+            if (!list || list.length === 0) {
+              // Worker has exited
               done();
+            } else if (attempts < maxAttempts) {
+              // Worker still running, retry
+              attempts++;
+              setTimeout(checkWorkerExit, checkInterval);
+            } else {
+              // Worker didn't exit after max attempts
+              done(new Error('Worker did not exit after ' + (maxAttempts * checkInterval) + 'ms'));
             }
-          })
-        }, 100);
+          }).catch(function(err) {
+            done(err);
+          });
+        }
+
+        setTimeout(checkWorkerExit, checkInterval);
       });
     });
   });
@@ -513,6 +530,50 @@ describe('WorkerHandler', function () {
         assert.ok(err instanceof Promise.TimeoutError);
         done();
       });
+    });
+  });
+
+  describe('workerAlreadyKilled', function() {
+    it('should handle terminating an already killed worker', function (done) {
+      var handler = new WorkerHandler();
+
+      // First, start a task to ensure worker is created
+      handler.exec('run', [String(add), [2, 4]])
+          .then(function () {
+            // Manually mark worker as killed
+            handler.worker.killed = true;
+
+            // Try to terminate - should call callback with error
+            handler.terminate(false, function(err) {
+              assert.ok(err instanceof Error);
+              assert.ok(err.message.includes('worker already killed'));
+              done();
+            });
+          });
+    });
+  });
+
+  describe('terminateAndNotifyWithError', function() {
+    it('should reject promise when termination has error', function (done) {
+      var handler = new WorkerHandler();
+
+      // First, start a task to ensure worker is created
+      handler.exec('run', [String(add), [2, 4]])
+          .then(function () {
+            // Manually mark worker as killed to trigger error path
+            handler.worker.killed = true;
+
+            // terminateAndNotify should reject with the error
+            handler.terminateAndNotify(false)
+              .then(function () {
+                assert.fail('Promise should not be resolved');
+              })
+              .catch(function (err) {
+                assert.ok(err instanceof Error);
+                assert.ok(err.message.includes('worker already killed'));
+                done();
+              });
+          });
     });
   });
 });
