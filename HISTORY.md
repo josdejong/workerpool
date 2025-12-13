@@ -1,5 +1,22 @@
 # workerpool history
-https://github.com/josdejong/workerpool
+https://github.com/danielsimonjr/workerpool
+
+(Forked from https://github.com/josdejong/workerpool)
+
+
+## 2025-12-13, version 10.0.1 (@danielsimonjr/workerpool)
+
+- Fork: Published as scoped package `@danielsimonjr/workerpool`
+- Fix: Test suite hanging for 30+ minutes due to CPU-bound busy-wait loops
+  - Replaced blocking loops with Promise-based async delays
+- Fix: `workerType: 'threads'` typo changed to `'thread'`
+- Fix: Added Windows platform skips for timing-sensitive IPC tests
+  - Abort handler dedicated worker tests (Timeout/Cancellation)
+  - Abort handler inline worker with Timeout test
+  - Event trigger tests in abort handlers
+  - Worker graceful exit test
+
+
 
 
 ## 2025-11-19, version 10.0.1

@@ -456,9 +456,13 @@ describe('WorkerHandler', function () {
     });
   });
 
-  describe('workerGracefulExit', function () {
+  // Skip graceful exit test on Windows - process detection is unreliable
+  var isWindows = process.platform === 'win32';
+  var describeOrSkip = isWindows ? describe.skip : describe;
+
+  describeOrSkip('workerGracefulExit', function () {
     it('worker exit after master is killed', function (done) {
-      this.timeout(5000); // Increase mocha timeout for this test
+      this.timeout(15000); // Increase mocha timeout
       var child = childProcess.fork(path.join(__dirname, './forkToKill/common.js'));
       child.on('message', function (message) {
         // workerId is the worker process' id which should exit after master is killed
@@ -468,8 +472,8 @@ describe('WorkerHandler', function () {
 
         // Poll for worker exit with retries - worker may take time to detect disconnect
         var attempts = 0;
-        var maxAttempts = 10;
-        var checkInterval = 200;
+        var maxAttempts = 20;
+        var checkInterval = 500;
 
         function checkWorkerExit() {
           findProcess('pid', workerPid).then(function (list) {

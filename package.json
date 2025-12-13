@@ -1,13 +1,16 @@
 {
-  "name": "workerpool",
+  "name": "@danielsimonjr/workerpool",
   "license": "Apache-2.0",
   "version": "10.0.1",
   "description": "Offload tasks to a pool of workers on node.js and in the browser",
-  "homepage": "https://github.com/josdejong/workerpool",
+  "homepage": "https://github.com/danielsimonjr/workerpool",
   "author": "Jos de Jong <wjosdejong@gmail.com> (https://github.com/josdejong)",
+  "contributors": [
+    "Daniel Simon Jr (https://github.com/danielsimonjr)"
+  ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/josdejong/workerpool.git"
+    "url": "git://github.com/danielsimonjr/workerpool.git"
   },
   "keywords": [
     "worker",
