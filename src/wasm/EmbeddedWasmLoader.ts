@@ -197,7 +197,11 @@ export function calculateMemoryPages(capacity: number): number {
 
   // Memory page is 64KB (65536 bytes)
   const pageSize = 65536;
-  return Math.ceil(totalBytes / pageSize);
+  const calculatedPages = Math.ceil(totalBytes / pageSize);
+
+  // WASM module requires minimum 16 pages (as per asconfig.json initialMemory)
+  const MIN_PAGES = 16;
+  return Math.max(calculatedPages, MIN_PAGES);
 }
 
 /**

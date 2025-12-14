@@ -79,7 +79,7 @@
     "watch:wasm": "nodemon --watch assembly --ext ts --exec \"npm run build:wasm:debug\"",
     "test": "npm run build && mocha test && npm run test:types",
     "test:types": "tsc -p test/types",
-    "test:wasm": "npm run build:wasm && mocha test/wasm.test.js",
+    "test:wasm": "npm run build:wasm && tsx node_modules/mocha/bin/mocha test/wasm.test.js",
     "test:debug": "npm run build && mocha debug test",
     "coverage": "npm run build && c8 mocha && c8 report --reporter=html && echo Coverage report is available at ./coverage/index.html",
     "clean": "rm -rf dist/*.wasm dist/*.wat dist/*.wasm.map",
@@ -106,6 +106,7 @@
     "mocha": "11.7.5",
     "rollup": "4.53.3",
     "tslib": "^2.8.1",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3"
   }
 }

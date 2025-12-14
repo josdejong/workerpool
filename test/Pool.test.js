@@ -1105,8 +1105,29 @@ describe('Pool', function () {
     });
   });
 
-  it.skip('should handle crashed workers (2)', function (done) {
-    // TODO: create a worker from a script, which really crashes itself
+  it('should handle crashed workers via process.exit', function () {
+    var pool = createPool(__dirname + '/workers/crash.js', {maxWorkers: 1});
+
+    var promise = pool.exec('crashWithExit', [1])
+      .then(function () {
+        throw new Error('Promise should not be resolved');
+      })
+      .catch(function (err) {
+        assert.ok(err.toString().match(/Error: Workerpool Worker terminated Unexpectedly/));
+        assert.ok(err.toString().match(/exitCode: `1`/));
+
+        assert.strictEqual(pool.workers.length, 0);
+
+        // validate whether a new worker is spawned and works correctly
+        return pool.exec('add', [2, 3]);
+      })
+      .then(function (result) {
+        assert.strictEqual(result, 5);
+        assert.strictEqual(pool.workers.length, 1);
+        return pool.terminate();
+      });
+
+    return promise;
   });
 
   it('should clear all workers upon explicit termination', function (done) {
