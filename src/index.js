@@ -43,7 +43,7 @@ exports.worker = worker;
 
 /**
  * Sends an event to the parent worker pool.
- * @param {any} payload 
+ * @param {any} payload
  */
 function workerEmit(payload) {
   var worker = require('./worker');
@@ -60,3 +60,67 @@ exports.platform = platform;
 exports.isMainThread = isMainThread;
 exports.cpus = cpus;
 exports.TerminateError = TerminateError;
+
+// ============================================================================
+// New features from WORKERPOOL_IMPROVEMENTS.md
+// These features are bundled via rollup from TypeScript source files.
+// ============================================================================
+
+// Enhanced Pool with advanced features (Issue 2.1, 2.2, 5.2, 6.1, 6.2, 7.1)
+var {
+  PoolEnhanced,
+  getSharedPool,
+  terminateSharedPool,
+  hasSharedPool
+} = require('./PoolEnhanced');
+
+exports.PoolEnhanced = PoolEnhanced;
+exports.getSharedPool = getSharedPool;
+exports.terminateSharedPool = terminateSharedPool;
+exports.hasSharedPool = hasSharedPool;
+exports.enhancedPool = function(script, options) {
+  return new PoolEnhanced(script, options);
+};
+
+// Capabilities API (Issue 8.1)
+var {
+  capabilities,
+  getCapabilities,
+  canUseOptimalTransfer,
+  canUseZeroCopy,
+  getCapabilityReport
+} = require('./capabilities');
+
+exports.capabilities = capabilities;
+exports.getCapabilities = getCapabilities;
+exports.canUseOptimalTransfer = canUseOptimalTransfer;
+exports.canUseZeroCopy = canUseZeroCopy;
+exports.getCapabilityReport = getCapabilityReport;
+
+// Worker URL utilities (Issue 4.2)
+var {
+  resolveWorkerUrl,
+  createWorkerBlobUrl,
+  revokeWorkerBlobUrl,
+  getWorkerConfig,
+  supportsWorkerModules
+} = require('./worker-url');
+
+exports.resolveWorkerUrl = resolveWorkerUrl;
+exports.createWorkerBlobUrl = createWorkerBlobUrl;
+exports.revokeWorkerBlobUrl = revokeWorkerBlobUrl;
+exports.getWorkerConfig = getWorkerConfig;
+exports.supportsWorkerModules = supportsWorkerModules;
+
+// Binary serialization (Issue 1.3)
+var {
+  serializeBinary,
+  deserializeBinary,
+  shouldUseBinarySerialization,
+  estimateBinarySize
+} = require('./binary-serializer');
+
+exports.serializeBinary = serializeBinary;
+exports.deserializeBinary = deserializeBinary;
+exports.shouldUseBinarySerialization = shouldUseBinarySerialization;
+exports.estimateBinarySize = estimateBinarySize;
