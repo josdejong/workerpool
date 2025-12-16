@@ -63,23 +63,30 @@ exports.TerminateError = TerminateError;
 
 // ============================================================================
 // New features from WORKERPOOL_IMPROVEMENTS.md
-// These features are bundled via rollup from TypeScript source files.
+// These features are now integrated directly into Pool class.
 // ============================================================================
 
-// Enhanced Pool with advanced features (Issue 2.1, 2.2, 5.2, 6.1, 6.2, 7.1)
-var {
-  PoolEnhanced,
-  getSharedPool,
-  terminateSharedPool,
-  hasSharedPool
-} = require('./PoolEnhanced');
+// The Pool class now includes all enhanced features:
+// - Event emitter (taskStart, taskComplete, taskError, etc.)
+// - pool.ready promise for eager initialization
+// - pool.warmup() method for pre-spawning workers
+// - Circuit breaker pattern for error recovery
+// - Memory-aware scheduling
+// - Health checks
+// - Shared pool singleton
 
-exports.PoolEnhanced = PoolEnhanced;
-exports.getSharedPool = getSharedPool;
-exports.terminateSharedPool = terminateSharedPool;
-exports.hasSharedPool = hasSharedPool;
+var Pool = require('./Pool');
+
+// Export Pool static methods for shared pool functionality
+exports.getSharedPool = Pool.getSharedPool;
+exports.terminateSharedPool = Pool.terminateSharedPool;
+exports.hasSharedPool = Pool.hasSharedPool;
+
+// Backward compatibility: PoolEnhanced is now an alias for Pool
+// All enhanced features are built into the base Pool class
+exports.PoolEnhanced = Pool;
 exports.enhancedPool = function(script, options) {
-  return new PoolEnhanced(script, options);
+  return new Pool(script, options);
 };
 
 // Capabilities API (Issue 8.1)

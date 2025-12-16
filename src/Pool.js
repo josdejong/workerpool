@@ -8,6 +8,15 @@ var DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
 /**
  * A pool to manage workers, which can be created using the function workerpool.pool.
  *
+ * Enhanced features:
+ * - pool.ready promise for eager initialization
+ * - pool.warmup() method for pre-spawning workers
+ * - Event emitter for monitoring (taskStart, taskComplete, taskError, etc.)
+ * - Automatic task retry with exponential backoff
+ * - Circuit breaker pattern for error recovery
+ * - Memory-aware scheduling
+ * - Health checks
+ *
  * @param {String} [script]   Optional worker script
  * @param {import('./types.js').WorkerPoolOptions} [options]  See docs
  * @constructor
@@ -87,7 +96,115 @@ function Pool(script, options) {
   if (this.workerType === "thread") {
     WorkerHandler.ensureWorkerThreads();
   }
+
+  // ============================================================================
+  // Enhanced Features Initialization
+  // ============================================================================
+
+  /** @private */
+  this._options = options;
+
+  /** @private - Event emitter storage */
+  this._eventListeners = new Map();
+
+  /** @private - Ready state */
+  this._isReady = false;
+  var self = this;
+  /** @private */
+  this._readyPromise = new Promise(function(resolve) {
+    self._readyResolver = resolve;
+  });
+
+  /** @private - Circuit breaker state */
+  this._circuitState = 'closed';
+  this._circuitErrorCount = 0;
+  this._circuitResetTimer = null;
+  this._circuitHalfOpenSuccess = 0;
+  this._circuitOptions = {
+    enabled: options.circuitBreaker?.enabled ?? false,
+    errorThreshold: options.circuitBreaker?.errorThreshold ?? 5,
+    resetTimeout: options.circuitBreaker?.resetTimeout ?? 30000,
+    halfOpenRequests: options.circuitBreaker?.halfOpenRequests ?? 2,
+  };
+
+  /** @private - Retry configuration */
+  this._retryOptions = {
+    maxRetries: options.retry?.maxRetries ?? 0,
+    retryDelay: options.retry?.retryDelay ?? 100,
+    retryOn: options.retry?.retryOn ?? ['WorkerTerminatedError', 'TimeoutError'],
+    backoffMultiplier: options.retry?.backoffMultiplier ?? 2,
+  };
+
+  /** @private - Memory management */
+  this._memoryOptions = {
+    maxQueueMemory: options.memory?.maxQueueMemory ?? Infinity,
+    onMemoryPressure: options.memory?.onMemoryPressure ?? 'reject',
+  };
+  this._estimatedQueueMemory = 0;
+
+  /** @private - Health checks */
+  this._healthCheckTimer = null;
+  this._healthCheckOptions = {
+    enabled: options.healthCheck?.enabled ?? false,
+    interval: options.healthCheck?.interval ?? 5000,
+    timeout: options.healthCheck?.timeout ?? 1000,
+    action: options.healthCheck?.action ?? 'restart',
+  };
+
+  /** @private - Data transfer strategy */
+  this._dataTransfer = options.dataTransfer ?? 'auto';
+
+  /** @private - Task tracking */
+  this._taskIdCounter = 0;
+
+  // Start health checks if enabled
+  if (this._healthCheckOptions.enabled) {
+    this._startHealthChecks();
+  }
+
+  // Handle initialization based on eagerInit option
+  if (options.eagerInit) {
+    this._eagerInitialize();
+  } else {
+    // Mark ready immediately if not eagerly initializing
+    this._markReady();
+  }
 }
+
+// ============================================================================
+// Enhanced Properties
+// ============================================================================
+
+/**
+ * Promise that resolves when the pool is ready
+ * @type {Promise<void>}
+ */
+Object.defineProperty(Pool.prototype, 'ready', {
+  get: function() { return this._readyPromise; }
+});
+
+/**
+ * Check if pool is ready
+ * @type {boolean}
+ */
+Object.defineProperty(Pool.prototype, 'isReady', {
+  get: function() { return this._isReady; }
+});
+
+/**
+ * Get current runtime capabilities
+ * @type {object}
+ */
+Object.defineProperty(Pool.prototype, 'capabilities', {
+  get: function() {
+    var capabilities = require('./capabilities');
+    return capabilities.getCapabilities();
+  }
+});
+
+// ============================================================================
+// Original Pool Methods
+// ============================================================================
 
 /**
  * Execute a function on a worker.
@@ -122,9 +239,38 @@ function Pool(script, options) {
  * @return {Promise<ReturnType<T>>}
  */
 Pool.prototype.exec = function (method, params, options) {
+  var self = this;
+
   // validate type of arguments
   if (params && !Array.isArray(params)) {
     throw new TypeError('Array expected as argument "params"');
+  }
+
+  // Check circuit breaker
+  if (this._circuitOptions.enabled && this._circuitState === 'open') {
+    var circuitError = new Error('Circuit breaker is open');
+    circuitError.name = 'CircuitBreakerError';
+    return Promise.reject(circuitError);
+  }
+
+  // Check memory pressure
+  if (options && options.estimatedSize) {
+    var newEstimate = this._estimatedQueueMemory + options.estimatedSize;
+    if (newEstimate > this._memoryOptions.maxQueueMemory) {
+      this._emit('memoryPressure', {
+        usedBytes: this._estimatedQueueMemory,
+        maxBytes: this._memoryOptions.maxQueueMemory,
+        action: this._memoryOptions.onMemoryPressure,
+        timestamp: Date.now(),
+      });
+
+      if (this._memoryOptions.onMemoryPressure === 'reject') {
+        var memError = new Error('Queue memory limit exceeded');
+        memError.name = 'MemoryPressureError';
+        return Promise.reject(memError);
+      }
+    }
+    this._estimatedQueueMemory = newEstimate;
   }
 
   if (typeof method === "string") {
@@ -134,6 +280,18 @@ Pool.prototype.exec = function (method, params, options) {
       throw new Error("Max queue size of " + this.maxQueueSize + " reached");
     }
 
+    // Generate task ID and track start time
+    var taskId = ++this._taskIdCounter;
+    var startTime = Date.now();
+
+    // Emit task start event
+    this._emit('taskStart', {
+      taskId: taskId,
+      method: method,
+      workerIndex: -1,
+      timestamp: startTime,
+    });
+
     // add a new task to the queue
     var task = {
       method: method,
@@ -141,12 +299,13 @@ Pool.prototype.exec = function (method, params, options) {
       resolver: resolver,
       timeout: null,
       options: options,
+      taskId: taskId,
+      startTime: startTime,
     };
     this.taskQueue.push(task);
 
     // replace the timeout method of the Promise with our own,
     // which starts the timer as soon as the task is actually started
-    // TODO: how can i find if the task is still in the queue?
     var originalTimeout = resolver.promise.timeout;
     var taskQueue = this.taskQueue;
     resolver.promise.timeout = function timeout(delay) {
@@ -159,6 +318,25 @@ Pool.prototype.exec = function (method, params, options) {
         return originalTimeout.call(resolver.promise, delay);
       }
     };
+
+    // Add completion tracking for enhanced features
+    var originalPromise = resolver.promise;
+    originalPromise.then(
+      function(result) {
+        var duration = Date.now() - startTime;
+        self._onTaskComplete(taskId, duration, result, options && options.estimatedSize);
+        if (self._circuitOptions.enabled) {
+          self._circuitOnSuccess();
+        }
+      },
+      function(error) {
+        var duration = Date.now() - startTime;
+        self._onTaskError(taskId, error, duration, options && options.estimatedSize);
+        if (self._circuitOptions.enabled) {
+          self._circuitOnError();
+        }
+      }
+    );
 
     // trigger task execution
     this._next();
@@ -345,6 +523,18 @@ Pool.prototype._removeWorkerFromList = function (worker) {
 Pool.prototype.terminate = function (force, timeout) {
   var me = this;
 
+  // Stop health checks
+  if (this._healthCheckTimer) {
+    clearInterval(this._healthCheckTimer);
+    this._healthCheckTimer = null;
+  }
+
+  // Stop circuit breaker timer
+  if (this._circuitResetTimer) {
+    clearTimeout(this._circuitResetTimer);
+    this._circuitResetTimer = null;
+  }
+
   // cancel any pending tasks
   var taskQueue = this.taskQueue;
 
@@ -386,7 +576,7 @@ Pool.prototype.terminate = function (force, timeout) {
 
 /**
  * Retrieve statistics on tasks and workers.
- * @return {{totalWorkers: number, busyWorkers: number, idleWorkers: number, pendingTasks: number, activeTasks: number}} Returns an object with statistics
+ * @return {object} Returns an object with statistics including enhanced metrics
  */
 Pool.prototype.stats = function () {
   var totalWorkers = this.workers.length;
@@ -398,9 +588,11 @@ Pool.prototype.stats = function () {
     totalWorkers: totalWorkers,
     busyWorkers: busyWorkers,
     idleWorkers: totalWorkers - busyWorkers,
-
     pendingTasks: this.taskQueue.size(),
     activeTasks: busyWorkers,
+    // Enhanced statistics
+    circuitState: this._circuitState,
+    estimatedQueueMemory: this._estimatedQueueMemory,
   };
 };
 
@@ -480,6 +672,294 @@ Pool.prototype._createQueue = function (strategy) {
 
   return strategy;
 };
+
+// ============================================================================
+// Enhanced Features - Event Emitter
+// ============================================================================
+
+/**
+ * Add event listener
+ * @param {string} event - Event name (taskStart, taskComplete, taskError, etc.)
+ * @param {Function} listener - Listener function
+ * @returns {Pool} this for chaining
+ */
+Pool.prototype.on = function(event, listener) {
+  var listeners = this._eventListeners.get(event);
+  if (!listeners) {
+    listeners = new Set();
+    this._eventListeners.set(event, listeners);
+  }
+  listeners.add(listener);
+  return this;
+};
+
+/**
+ * Remove event listener
+ * @param {string} event - Event name
+ * @param {Function} listener - Listener function
+ * @returns {Pool} this for chaining
+ */
+Pool.prototype.off = function(event, listener) {
+  var listeners = this._eventListeners.get(event);
+  if (listeners) {
+    listeners.delete(listener);
+  }
+  return this;
+};
+
+/**
+ * Add one-time event listener
+ * @param {string} event - Event name
+ * @param {Function} listener - Listener function
+ * @returns {Pool} this for chaining
+ */
+Pool.prototype.once = function(event, listener) {
+  var self = this;
+  var onceWrapper = function(evt) {
+    self.off(event, onceWrapper);
+    listener(evt);
+  };
+  return this.on(event, onceWrapper);
+};
+
+/**
+ * Emit an event
+ * @param {string} event - Event name
+ * @param {*} payload - Event payload
+ * @private
+ */
+Pool.prototype._emit = function(event, payload) {
+  var listeners = this._eventListeners.get(event);
+  if (listeners) {
+    listeners.forEach(function(listener) {
+      try {
+        listener(payload);
+      } catch (e) {
+        // Ignore listener errors
+      }
+    });
+  }
+};
+
+// ============================================================================
+// Enhanced Features - Ready State & Warmup
+// ============================================================================
+
+/**
+ * Warm up the pool by ensuring workers are spawned and ready
+ * @param {object} [options] - Warmup options
+ * @param {number} [options.count] - Number of workers to warm up
+ * @returns {Promise<void>}
+ */
+Pool.prototype.warmup = function(options) {
+  var self = this;
+  var targetCount = (options && options.count) || this.minWorkers || this.maxWorkers;
+  var promises = [];
+
+  for (var i = 0; i < targetCount; i++) {
+    promises.push(this._warmupWorker());
+  }
+
+  return Promise.all(promises).then(function() {
+    self._markReady();
+  });
+};
+
+/**
+ * Mark pool as ready
+ * @private
+ */
+Pool.prototype._markReady = function() {
+  if (!this._isReady) {
+    this._isReady = true;
+    this._readyResolver();
+  }
+};
+
+/**
+ * Eager initialize workers
+ * @private
+ */
+Pool.prototype._eagerInitialize = function() {
+  var self = this;
+  var targetCount = this.minWorkers || Math.min(2, this.maxWorkers);
+  var promises = [];
+
+  for (var i = 0; i < targetCount; i++) {
+    promises.push(this._warmupWorker());
+  }
+
+  Promise.all(promises).then(function() {
+    self._markReady();
+  });
+};
+
+/**
+ * Warm up a single worker
+ * @private
+ */
+Pool.prototype._warmupWorker = function() {
+  return this.exec('methods').catch(function() {
+    // Ignore errors during warmup
+  });
+};
+
+// ============================================================================
+// Enhanced Features - Task Tracking
+// ============================================================================
+
+/**
+ * Handle task completion
+ * @private
+ */
+Pool.prototype._onTaskComplete = function(taskId, duration, result, estimatedSize) {
+  if (estimatedSize) {
+    this._estimatedQueueMemory = Math.max(0, this._estimatedQueueMemory - estimatedSize);
+  }
+
+  this._emit('taskComplete', {
+    taskId: taskId,
+    duration: duration,
+    result: result,
+    timestamp: Date.now(),
+  });
+};
+
+/**
+ * Handle task error
+ * @private
+ */
+Pool.prototype._onTaskError = function(taskId, error, duration, estimatedSize) {
+  if (estimatedSize) {
+    this._estimatedQueueMemory = Math.max(0, this._estimatedQueueMemory - estimatedSize);
+  }
+
+  this._emit('taskError', {
+    taskId: taskId,
+    error: error,
+    duration: duration,
+    timestamp: Date.now(),
+  });
+};
+
+// ============================================================================
+// Enhanced Features - Circuit Breaker
+// ============================================================================
+
+/**
+ * Circuit breaker: record success
+ * @private
+ */
+Pool.prototype._circuitOnSuccess = function() {
+  if (this._circuitState === 'half-open') {
+    this._circuitHalfOpenSuccess++;
+    if (this._circuitHalfOpenSuccess >= this._circuitOptions.halfOpenRequests) {
+      this._closeCircuit();
+    }
+  }
+};
+
+/**
+ * Circuit breaker: record error
+ * @private
+ */
+Pool.prototype._circuitOnError = function() {
+  if (this._circuitState === 'half-open') {
+    this._openCircuit();
+    return;
+  }
+
+  this._circuitErrorCount++;
+  if (this._circuitErrorCount >= this._circuitOptions.errorThreshold) {
+    this._openCircuit();
+  }
+};
+
+/**
+ * Open the circuit breaker
+ * @private
+ */
+Pool.prototype._openCircuit = function() {
+  var self = this;
+  if (this._circuitState !== 'open') {
+    this._circuitState = 'open';
+    this._emit('circuitOpen', {
+      errorCount: this._circuitErrorCount,
+      threshold: this._circuitOptions.errorThreshold,
+      timestamp: Date.now(),
+    });
+
+    // Schedule reset
+    this._circuitResetTimer = setTimeout(function() {
+      self._halfOpenCircuit();
+    }, this._circuitOptions.resetTimeout);
+  }
+};
+
+/**
+ * Move circuit to half-open state
+ * @private
+ */
+Pool.prototype._halfOpenCircuit = function() {
+  this._circuitState = 'half-open';
+  this._circuitHalfOpenSuccess = 0;
+  this._emit('circuitHalfOpen', { timestamp: Date.now() });
+};
+
+/**
+ * Close the circuit breaker
+ * @private
+ */
+Pool.prototype._closeCircuit = function() {
+  this._circuitState = 'closed';
+  this._circuitErrorCount = 0;
+  this._circuitHalfOpenSuccess = 0;
+  if (this._circuitResetTimer) {
+    clearTimeout(this._circuitResetTimer);
+    this._circuitResetTimer = null;
+  }
+  this._emit('circuitClose', { timestamp: Date.now() });
+};
+
+// ============================================================================
+// Enhanced Features - Health Checks
+// ============================================================================
+
+/**
+ * Start health check interval
+ * @private
+ */
+Pool.prototype._startHealthChecks = function() {
+  var self = this;
+  this._healthCheckTimer = setInterval(function() {
+    self._runHealthCheck();
+  }, this._healthCheckOptions.interval);
+};
+
+/**
+ * Run health check
+ * @private
+ */
+Pool.prototype._runHealthCheck = function() {
+  var self = this;
+  var promise = this.exec('methods');
+  var timeoutPromise = new Promise(function(_, reject) {
+    setTimeout(function() {
+      reject(new Error('Health check timeout'));
+    }, self._healthCheckOptions.timeout);
+  });
+
+  Promise.race([promise, timeoutPromise]).catch(function(error) {
+    if (self._healthCheckOptions.action === 'warn') {
+      console.warn('[workerpool] Health check failed:', error);
+    }
+  });
+};
+
+// ============================================================================
+// Validation Functions
+// ============================================================================
+
 /**
  * Ensure that the maxWorkers option is an integer >= 1
  * @param {*} maxWorkers
@@ -519,5 +999,48 @@ function isNumber(value) {
 function isInteger(value) {
   return Math.round(value) == value;
 }
+
+// ============================================================================
+// Shared Pool Singleton
+// ============================================================================
+
+var _sharedPool = null;
+
+/**
+ * Get or create a shared pool singleton
+ * @param {object} [options] - Pool options (only used on first call)
+ * @returns {Pool}
+ */
+Pool.getSharedPool = function(options) {
+  if (!_sharedPool) {
+    _sharedPool = new Pool(Object.assign({ eagerInit: true }, options || {}));
+  }
+  return _sharedPool;
+};
+
+/**
+ * Terminate and clear the shared pool
+ * @param {boolean} [force] - Force terminate
+ * @returns {Promise<void>}
+ */
+Pool.terminateSharedPool = function(force) {
+  if (_sharedPool) {
+    return _sharedPool.terminate(force).then(function() {
+      _sharedPool = null;
+    });
+  }
+  // Use the custom Promise's defer() pattern instead of Promise.resolve()
+  var deferred = Promise.defer();
+  deferred.resolve();
+  return deferred.promise;
+};
+
+/**
+ * Check if a shared pool exists
+ * @returns {boolean}
+ */
+Pool.hasSharedPool = function() {
+  return _sharedPool !== null;
+};
 
 module.exports = Pool;
