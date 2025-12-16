@@ -273,6 +273,90 @@ export type {
 } from './types/index';
 
 // ============================================================================
+// Enhanced Pool & Capabilities (WORKERPOOL_IMPROVEMENTS.md)
+// ============================================================================
+
+export {
+  PoolEnhanced,
+  getSharedPool,
+  terminateSharedPool,
+  hasSharedPool,
+} from './core/PoolEnhanced';
+
+export type {
+  EnhancedPoolOptions,
+  EnhancedExecOptions,
+  EnhancedPoolStats,
+  PoolEvents,
+  PoolEventListener,
+  DataTransferStrategy,
+  MemoryPressureAction,
+  CircuitState,
+  CircuitBreakerOptions,
+  RetryOptions,
+  MemoryOptions,
+  HealthCheckOptions,
+} from './core/PoolEnhanced';
+
+// Capabilities API (Issue 8.1)
+export {
+  capabilities,
+  getCapabilities,
+  getCachedCapabilities,
+  clearCapabilitiesCache,
+  canUseOptimalTransfer,
+  canUseZeroCopy,
+  getCapabilityReport,
+} from './platform/capabilities';
+
+export type { Capabilities } from './platform/capabilities';
+
+// Worker URL Utilities (Issue 4.2)
+export {
+  resolveWorkerUrl,
+  createWorkerBlobUrl,
+  revokeWorkerBlobUrl,
+  getCurrentModuleUrl,
+  createWorkerDataUrl,
+  supportsWorkerModules,
+  getWorkerConfig,
+} from './platform/worker-url';
+
+export type {
+  WorkerConfig,
+  WorkerConfigOptions,
+} from './platform/worker-url';
+
+// Binary Serialization (Issue 1.3)
+export {
+  serializeBinary,
+  deserializeBinary,
+  shouldUseBinarySerialization,
+  estimateBinarySize,
+} from './core/binary-serializer';
+
+export type { BinarySerializedData } from './core/binary-serializer';
+
+// Metrics Collector
+export { MetricsCollector } from './core/metrics';
+export type {
+  PoolMetrics,
+  LatencyHistogram,
+  WorkerUtilization,
+  QueueMetrics,
+  ErrorMetrics,
+  MetricsCollectorOptions,
+} from './core/metrics';
+
+/**
+ * Create an enhanced pool with all advanced features
+ */
+export function enhancedPool(script?: string | Record<string, unknown>, options?: Record<string, unknown>): InstanceType<typeof import('./core/PoolEnhanced').PoolEnhanced> {
+  const { PoolEnhanced } = require('./core/PoolEnhanced');
+  return new PoolEnhanced(script as string | undefined, options);
+}
+
+// ============================================================================
 // Metadata
 // ============================================================================
 
