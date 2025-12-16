@@ -88,7 +88,8 @@ function getWorkerConfig(url, options) {
  */
 function supportsWorkerModules() {
   if (environment.platform === 'node') {
-    return environment.hasWorkerThreads;
+    // Ensure we return a boolean, not undefined
+    return Boolean(environment.hasWorkerThreads);
   }
 
   try {
