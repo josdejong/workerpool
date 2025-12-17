@@ -7,8 +7,24 @@
  */
 
 import { platform, isMainThread, cpus } from './platform/environment';
-import { Pool, TerminateError } from './core/Pool';
-import { PoolEnhanced, getSharedPool, terminateSharedPool, hasSharedPool } from './core/PoolEnhanced';
+import {
+  Pool,
+  PoolEnhanced,
+  TerminateError,
+  getSharedPool,
+  terminateSharedPool,
+  hasSharedPool,
+} from './core/Pool';
+import type {
+  EnhancedPoolOptions,
+  EnhancedExecOptions,
+  EnhancedPoolStats,
+  PoolEvents,
+  CircuitBreakerOptions,
+  RetryOptions,
+  MemoryOptions,
+  HealthCheckOptions,
+} from './core/Pool';
 import { WorkerpoolPromise, CancellationError, TimeoutError } from './core/Promise';
 import Transfer from './platform/transfer';
 import { add, emit } from './workers/worker';
@@ -18,7 +34,6 @@ import { serializeBinary, deserializeBinary, shouldUseBinarySerialization, estim
 
 import type { PoolOptions, ExecOptions, PoolStats, WorkerProxy } from './types/index';
 import type { Capabilities } from './platform/capabilities';
-import type { EnhancedPoolOptions, EnhancedExecOptions, EnhancedPoolStats, PoolEvents, CircuitBreakerOptions, RetryOptions, MemoryOptions, HealthCheckOptions } from './core/PoolEnhanced';
 import type { BinarySerializedData } from './core/binary-serializer';
 import type { WorkerConfig, WorkerConfigOptions } from './platform/worker-url';
 
@@ -166,8 +181,8 @@ export type {
  * pool.on('taskComplete', (e) => console.log(`Task ${e.taskId} done in ${e.duration}ms`));
  * ```
  */
-export function enhancedPool(script?: string | EnhancedPoolOptions, options?: EnhancedPoolOptions): PoolEnhanced {
-  return new PoolEnhanced(script, options);
+export function enhancedPool(script?: string | EnhancedPoolOptions, options?: EnhancedPoolOptions): Pool {
+  return new Pool(script, options);
 }
 
 // Default export for CommonJS compatibility

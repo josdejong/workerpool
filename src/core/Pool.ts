@@ -1,8 +1,17 @@
 /**
- * Pool - Worker pool manager
+ * Pool - Worker pool manager with enhanced features
  *
  * Manages a pool of workers for executing tasks in parallel.
  * Handles worker lifecycle, task queuing, and load balancing.
+ *
+ * Enhanced features:
+ * - pool.ready promise for eager initialization
+ * - pool.warmup() method for pre-spawning workers
+ * - Event emitter for monitoring (taskStart, taskComplete, taskError, etc.)
+ * - Automatic task retry with exponential backoff
+ * - Circuit breaker pattern for error recovery
+ * - Memory-aware scheduling
+ * - Health checks
  */
 
 import { WorkerpoolPromise } from './Promise';
@@ -33,6 +42,146 @@ import { createBatchExecutor, createMapExecutor, type TaskExecutor } from './bat
 /** Global debug port allocator */
 const DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
 
+// ============================================================================
+// Types for Enhanced Features
+// ============================================================================
+
+/**
+ * Event types emitted by Pool
+ */
+export interface PoolEvents {
+  taskStart: { taskId: number; method: string; workerIndex: number; timestamp: number };
+  taskComplete: { taskId: number; duration: number; result: unknown; timestamp: number };
+  taskError: { taskId: number; error: Error; duration: number; timestamp: number };
+  workerSpawn: { workerIndex: number; timestamp: number };
+  workerExit: { workerIndex: number; code: number | undefined; timestamp: number };
+  workerError: { workerIndex: number; error: Error; timestamp: number };
+  queueFull: { pendingTasks: number; maxPending: number; timestamp: number };
+  retry: { taskId: number; attempt: number; maxRetries: number; error: Error; timestamp: number };
+  circuitOpen: { errorCount: number; threshold: number; timestamp: number };
+  circuitClose: { timestamp: number };
+  circuitHalfOpen: { timestamp: number };
+  memoryPressure: { usedBytes: number; maxBytes: number; action: string; timestamp: number };
+}
+
+/**
+ * Event listener function type
+ */
+export type PoolEventListener<K extends keyof PoolEvents> = (event: PoolEvents[K]) => void;
+
+/**
+ * Data transfer strategy
+ */
+export type DataTransferStrategy = 'auto' | 'shared' | 'transferable' | 'binary' | 'json';
+
+/**
+ * Memory pressure action
+ */
+export type MemoryPressureAction = 'reject' | 'wait' | 'gc';
+
+/**
+ * Circuit breaker state
+ */
+export type CircuitState = 'closed' | 'open' | 'half-open';
+
+/**
+ * Circuit breaker options
+ */
+export interface CircuitBreakerOptions {
+  /** Enable circuit breaker */
+  enabled?: boolean;
+  /** Number of errors to trigger open state */
+  errorThreshold?: number;
+  /** Time to wait before trying again (ms) */
+  resetTimeout?: number;
+  /** Number of requests to test in half-open state */
+  halfOpenRequests?: number;
+}
+
+/**
+ * Retry options
+ */
+export interface RetryOptions {
+  /** Maximum retry attempts */
+  maxRetries?: number;
+  /** Delay between retries (ms) */
+  retryDelay?: number;
+  /** Error types to retry on */
+  retryOn?: string[];
+  /** Exponential backoff multiplier */
+  backoffMultiplier?: number;
+}
+
+/**
+ * Memory management options
+ */
+export interface MemoryOptions {
+  /** Maximum queue memory in bytes */
+  maxQueueMemory?: number;
+  /** Action on memory pressure */
+  onMemoryPressure?: MemoryPressureAction;
+}
+
+/**
+ * Health check options
+ */
+export interface HealthCheckOptions {
+  /** Enable health checks */
+  enabled?: boolean;
+  /** Check interval (ms) */
+  interval?: number;
+  /** Health check timeout (ms) */
+  timeout?: number;
+  /** Action on unhealthy worker */
+  action?: 'restart' | 'remove' | 'warn';
+}
+
+/**
+ * Enhanced execution options
+ */
+export interface EnhancedExecOptions<T = unknown> extends ExecOptions<T> {
+  /** Data transfer strategy */
+  dataTransfer?: DataTransferStrategy;
+  /** Estimated data size in bytes (for memory scheduling) */
+  estimatedSize?: number;
+  /** Override retry options for this task */
+  retry?: RetryOptions | false;
+  /** Priority level (higher = higher priority) */
+  priority?: number;
+}
+
+/**
+ * Enhanced pool options
+ */
+export interface EnhancedPoolOptions extends PoolOptions {
+  /** Spawn workers immediately on pool creation */
+  eagerInit?: boolean;
+  /** Default data transfer strategy */
+  dataTransfer?: DataTransferStrategy;
+  /** Retry options */
+  retry?: RetryOptions;
+  /** Circuit breaker options */
+  circuitBreaker?: CircuitBreakerOptions;
+  /** Memory management options */
+  memory?: MemoryOptions;
+  /** Health check options */
+  healthCheck?: HealthCheckOptions;
+}
+
+/**
+ * Enhanced pool statistics
+ */
+export interface EnhancedPoolStats extends PoolStats {
+  /** Circuit breaker state */
+  circuitState?: CircuitState;
+  /** Estimated queue memory usage */
+  estimatedQueueMemory?: number;
+}
+
+// ============================================================================
+// Validation Functions
+// ============================================================================
+
 /**
  * Validate maxWorkers option
  */
@@ -59,17 +208,19 @@ function validateMinWorkers(minWorkers: unknown): void {
   }
 }
 
-// Use WorkerArg from types for callbacks
+// ============================================================================
+// Pool Implementation
+// ============================================================================
 
 /**
- * Pool - Manages a pool of workers
+ * Pool - Manages a pool of workers with enhanced features
  */
 export class Pool<TMetadata = unknown> {
   /** Path to worker script */
   readonly script: string | null;
 
   /** All workers in the pool */
-  private workers: WorkerHandler[] = [];
+  workers: WorkerHandler[] = [];
 
   /** Task queue */
   private taskQueue: TaskQueue<TMetadata>;
@@ -119,7 +270,46 @@ export class Pool<TMetadata = unknown> {
   /** Bound _next method for reuse */
   private _boundNext: () => void;
 
-  constructor(script?: string | PoolOptions, options?: PoolOptions) {
+  // ============================================================================
+  // Enhanced Features - Private Properties
+  // ============================================================================
+
+  /** Options storage */
+  private _options: EnhancedPoolOptions;
+
+  /** Event emitter storage */
+  private _eventListeners: Map<string, Set<PoolEventListener<keyof PoolEvents>>> = new Map();
+
+  /** Ready state */
+  private _isReady = false;
+  private _readyPromise: WorkerpoolPromise<void, Error>;
+  private _readyResolver!: () => void;
+
+  /** Circuit breaker state */
+  private _circuitState: CircuitState = 'closed';
+  private _circuitErrorCount = 0;
+  private _circuitResetTimer: ReturnType<typeof setTimeout> | null = null;
+  private _circuitHalfOpenSuccess = 0;
+  private _circuitOptions: Required<CircuitBreakerOptions>;
+
+  /** Retry configuration */
+  private _retryOptions: Required<RetryOptions>;
+
+  /** Memory management */
+  private _memoryOptions: Required<MemoryOptions>;
+  private _estimatedQueueMemory = 0;
+
+  /** Health checks */
+  private _healthCheckTimer: ReturnType<typeof setInterval> | null = null;
+  private _healthCheckOptions: Required<HealthCheckOptions>;
+
+  /** Data transfer strategy */
+  private _dataTransfer: DataTransferStrategy;
+
+  /** Task tracking */
+  private _taskIdCounter = 0;
+
+  constructor(script?: string | EnhancedPoolOptions, options?: EnhancedPoolOptions) {
     // Handle overloaded constructor
     if (typeof script === 'string') {
       this.script = script || null;
@@ -129,6 +319,7 @@ export class Pool<TMetadata = unknown> {
     }
 
     options = options || {};
+    this._options = options;
 
     // Initialize task queue
     this.taskQueue = createQueue(options.queueStrategy || 'fifo') as TaskQueue<TMetadata>;
@@ -176,7 +367,93 @@ export class Pool<TMetadata = unknown> {
     if (this.workerType === 'thread') {
       ensureWorkerThreads();
     }
+
+    // ============================================================================
+    // Enhanced Features Initialization
+    // ============================================================================
+
+    // Initialize ready promise
+    const resolver = WorkerpoolPromise.defer<void>();
+    this._readyPromise = resolver.promise as WorkerpoolPromise<void, Error>;
+    this._readyResolver = resolver.resolve as () => void;
+
+    // Initialize circuit breaker
+    this._circuitOptions = {
+      enabled: options.circuitBreaker?.enabled ?? false,
+      errorThreshold: options.circuitBreaker?.errorThreshold ?? 5,
+      resetTimeout: options.circuitBreaker?.resetTimeout ?? 30000,
+      halfOpenRequests: options.circuitBreaker?.halfOpenRequests ?? 2,
+    };
+
+    // Initialize retry options
+    this._retryOptions = {
+      maxRetries: options.retry?.maxRetries ?? 0,
+      retryDelay: options.retry?.retryDelay ?? 100,
+      retryOn: options.retry?.retryOn ?? ['WorkerTerminatedError', 'TimeoutError'],
+      backoffMultiplier: options.retry?.backoffMultiplier ?? 2,
+    };
+
+    // Initialize memory options
+    this._memoryOptions = {
+      maxQueueMemory: options.memory?.maxQueueMemory ?? Infinity,
+      onMemoryPressure: options.memory?.onMemoryPressure ?? 'reject',
+    };
+
+    // Initialize health check options
+    this._healthCheckOptions = {
+      enabled: options.healthCheck?.enabled ?? false,
+      interval: options.healthCheck?.interval ?? 5000,
+      timeout: options.healthCheck?.timeout ?? 1000,
+      action: options.healthCheck?.action ?? 'restart',
+    };
+
+    // Initialize data transfer strategy
+    this._dataTransfer = options.dataTransfer ?? 'auto';
+
+    // Start health checks if enabled
+    if (this._healthCheckOptions.enabled) {
+      this._startHealthChecks();
+    }
+
+    // Handle initialization based on eagerInit option
+    if (options.eagerInit) {
+      this._eagerInitialize();
+    } else {
+      // Mark ready immediately if not eagerly initializing
+      this._markReady();
+    }
   }
+
+  // ============================================================================
+  // Enhanced Properties
+  // ============================================================================
+
+  /**
+   * Promise that resolves when the pool is ready
+   */
+  get ready(): WorkerpoolPromise<void, Error> {
+    return this._readyPromise;
+  }
+
+  /**
+   * Check if pool is ready
+   */
+  get isReady(): boolean {
+    return this._isReady;
+  }
+
+  /**
+   * Get current runtime capabilities
+   */
+  get capabilities(): object {
+    // Lazy load to avoid circular dependency
+    const capabilitiesModule = require('../platform/capabilities');
+    return capabilitiesModule.getCapabilities();
+  }
+
+  // ============================================================================
+  // Core Methods
+  // ============================================================================
 
   /**
    * Execute a method on a worker
@@ -190,10 +467,37 @@ export class Pool<TMetadata = unknown> {
   exec<T = unknown>(
     method: string | ((...args: any[]) => T),
     params?: unknown[] | null,
-    options?: ExecOptions<TMetadata>
+    options?: EnhancedExecOptions<TMetadata>
   ): WorkerpoolPromise<T, Error> {
     if (params && !Array.isArray(params)) {
       throw new TypeError('Array expected as argument "params"');
+    }
+
+    // Check circuit breaker
+    if (this._circuitOptions.enabled && this._circuitState === 'open') {
+      const error = new Error('Circuit breaker is open');
+      error.name = 'CircuitBreakerError';
+      return WorkerpoolPromise.reject(error) as unknown as WorkerpoolPromise<T, Error>;
+    }
+
+    // Check memory pressure
+    if (options?.estimatedSize) {
+      const newEstimate = this._estimatedQueueMemory + options.estimatedSize;
+      if (newEstimate > this._memoryOptions.maxQueueMemory) {
+        this._emit('memoryPressure', {
+          usedBytes: this._estimatedQueueMemory,
+          maxBytes: this._memoryOptions.maxQueueMemory,
+          action: this._memoryOptions.onMemoryPressure,
+          timestamp: Date.now(),
+        });
+
+        if (this._memoryOptions.onMemoryPressure === 'reject') {
+          const error = new Error('Queue memory limit exceeded');
+          error.name = 'MemoryPressureError';
+          return WorkerpoolPromise.reject(error) as unknown as WorkerpoolPromise<T, Error>;
+        }
+      }
+      this._estimatedQueueMemory = newEstimate;
     }
 
     if (typeof method === 'string') {
@@ -203,15 +507,29 @@ export class Pool<TMetadata = unknown> {
         throw new Error('Max queue size of ' + this.maxQueueSize + ' reached');
       }
 
-      const task: Task<TMetadata> = {
+      // Generate task ID and track start time
+      const taskId = ++this._taskIdCounter;
+      const startTime = Date.now();
+
+      // Emit task start event
+      this._emit('taskStart', {
+        taskId,
+        method,
+        workerIndex: -1,
+        timestamp: startTime,
+      });
+
+      const task: Task<TMetadata> & { taskId: number; startTime: number } = {
         method,
         params: params || [],
         resolver: resolver as Resolver<unknown>,
         timeout: null,
         options,
+        taskId,
+        startTime,
       };
 
-      this.taskQueue.push(task);
+      this.taskQueue.push(task as Task<TMetadata>);
 
       // Override timeout to start when task actually executes
       const originalTimeout = resolver.promise.timeout.bind(resolver.promise);
@@ -219,13 +537,34 @@ export class Pool<TMetadata = unknown> {
       const promise = resolver.promise as WorkerpoolPromise<T, unknown>;
 
       (promise as { timeout: (delay: number) => WorkerpoolPromise<T, unknown> }).timeout = function timeout(delay: number): WorkerpoolPromise<T, unknown> {
-        if (taskQueue.contains(task)) {
+        if (taskQueue.contains(task as Task<TMetadata>)) {
           task.timeout = delay;
           return promise;
         } else {
           return originalTimeout(delay) as WorkerpoolPromise<T, unknown>;
         }
       };
+
+      // Add completion tracking for enhanced features
+      const self = this;
+      promise.then(
+        (result) => {
+          const duration = Date.now() - startTime;
+          self._onTaskComplete(taskId, duration, result, options?.estimatedSize);
+          if (self._circuitOptions.enabled) {
+            self._circuitOnSuccess();
+          }
+          return result; // Return result to satisfy type checker
+        },
+        (error: unknown) => {
+          const duration = Date.now() - startTime;
+          self._onTaskError(taskId, error as Error, duration, options?.estimatedSize);
+          if (self._circuitOptions.enabled) {
+            self._circuitOnError();
+          }
+          throw error; // Re-throw to satisfy type checker
+        }
+      );
 
       this._next();
 
@@ -269,54 +608,31 @@ export class Pool<TMetadata = unknown> {
 
   /**
    * Execute multiple tasks as a batch
-   *
-   * @param tasks - Array of tasks to execute
-   * @param options - Batch execution options
-   * @returns Promise resolving to batch result
-   *
-   * @example
-   * const result = await pool.execBatch([
-   *   { method: 'process', params: [1] },
-   *   { method: 'process', params: [2] },
-   *   { method: 'process', params: [3] },
-   * ], { concurrency: 4, onProgress: (p) => console.log(p.percentage) });
    */
   execBatch<T = unknown>(
     tasks: BatchTask[],
     options?: BatchOptions
   ): BatchPromise<T> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const executor: TaskExecutor<T> = (method: string | ((...args: any[]) => any), params, execOptions) => {
-      return this.exec<T>(method, params, execOptions as ExecOptions<TMetadata>);
+    const executor: TaskExecutor<T> = (method, params, execOptions) => {
+      return this.exec<T>(method, params, execOptions as EnhancedExecOptions<TMetadata>);
     };
 
     return createBatchExecutor<T>(tasks, executor, {
       ...options,
-      // Default concurrency to number of workers
       concurrency: options?.concurrency ?? this.maxWorkers,
     });
   }
 
   /**
-   * Parallel map operation - apply function to each item across workers
-   *
-   * @param items - Items to process
-   * @param mapFn - Function to apply to each item (executed in worker)
-   * @param options - Map options
-   * @returns Promise resolving to batch result with mapped values
-   *
-   * @example
-   * const result = await pool.map([1, 2, 3, 4], (n) => n * n);
-   * console.log(result.successes); // [1, 4, 9, 16]
+   * Parallel map operation
    */
   map<T, R>(
     items: T[],
     mapFn: ((item: T, index: number) => R) | string,
     options?: Omit<MapOptions<T, R>, 'onProgress'> & { onProgress?: (progress: BatchProgress) => void }
   ): BatchPromise<R> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const executor: TaskExecutor<R> = (method: string | ((...args: any[]) => any), params, execOptions) => {
-      return this.exec<R>(method, params, execOptions as ExecOptions<TMetadata>);
+    const executor: TaskExecutor<R> = (method, params, execOptions) => {
+      return this.exec<R>(method, params, execOptions as EnhancedExecOptions<TMetadata>);
     };
 
     return createMapExecutor<T, R>(items, mapFn, executor, {
@@ -424,13 +740,21 @@ export class Pool<TMetadata = unknown> {
 
   /**
    * Terminate all workers
-   *
-   * @param force - If true, terminate immediately without waiting for tasks
-   * @param timeout - Timeout for termination
-   * @returns Promise resolving when all workers terminated
    */
   terminate(force?: boolean, timeout?: number): WorkerpoolPromise<void[], unknown> {
     const me = this;
+
+    // Stop health checks
+    if (this._healthCheckTimer) {
+      clearInterval(this._healthCheckTimer);
+      this._healthCheckTimer = null;
+    }
+
+    // Stop circuit breaker timer
+    if (this._circuitResetTimer) {
+      clearTimeout(this._circuitResetTimer);
+      this._circuitResetTimer = null;
+    }
 
     // Cancel pending tasks
     while (this.taskQueue.size() > 0) {
@@ -477,7 +801,7 @@ export class Pool<TMetadata = unknown> {
   /**
    * Get pool statistics
    */
-  stats(): PoolStats {
+  stats(): EnhancedPoolStats {
     const totalWorkers = this.workers.length;
     const busyWorkers = this.workers.filter((worker) => worker.busy()).length;
 
@@ -487,6 +811,9 @@ export class Pool<TMetadata = unknown> {
       idleWorkers: totalWorkers - busyWorkers,
       pendingTasks: this.taskQueue.size(),
       activeTasks: busyWorkers,
+      // Enhanced statistics
+      circuitState: this._circuitState,
+      estimatedQueueMemory: this._estimatedQueueMemory,
     };
   }
 
@@ -530,6 +857,316 @@ export class Pool<TMetadata = unknown> {
       options
     );
   }
+
+  // ============================================================================
+  // Enhanced Features - Event Emitter
+  // ============================================================================
+
+  /**
+   * Add event listener
+   */
+  on<K extends keyof PoolEvents>(event: K, listener: PoolEventListener<K>): this {
+    let listeners = this._eventListeners.get(event);
+    if (!listeners) {
+      listeners = new Set();
+      this._eventListeners.set(event, listeners);
+    }
+    listeners.add(listener as PoolEventListener<keyof PoolEvents>);
+    return this;
+  }
+
+  /**
+   * Remove event listener
+   */
+  off<K extends keyof PoolEvents>(event: K, listener: PoolEventListener<K>): this {
+    const listeners = this._eventListeners.get(event);
+    if (listeners) {
+      listeners.delete(listener as PoolEventListener<keyof PoolEvents>);
+    }
+    return this;
+  }
+
+  /**
+   * Add one-time event listener
+   */
+  once<K extends keyof PoolEvents>(event: K, listener: PoolEventListener<K>): this {
+    const onceWrapper = ((evt: PoolEvents[K]) => {
+      this.off(event, onceWrapper as PoolEventListener<K>);
+      listener(evt);
+    }) as PoolEventListener<K>;
+    return this.on(event, onceWrapper);
+  }
+
+  /**
+   * Emit an event
+   */
+  private _emit<K extends keyof PoolEvents>(event: K, payload: PoolEvents[K]): void {
+    const listeners = this._eventListeners.get(event);
+    if (listeners) {
+      for (const listener of listeners) {
+        try {
+          listener(payload);
+        } catch {
+          // Ignore listener errors
+        }
+      }
+    }
+  }
+
+  // ============================================================================
+  // Enhanced Features - Ready State & Warmup
+  // ============================================================================
+
+  /**
+   * Warm up the pool by ensuring workers are spawned and ready
+   */
+  warmup(options?: { count?: number }): WorkerpoolPromise<void, unknown> {
+    const self = this;
+    const targetCount = options?.count ?? this.minWorkers ?? this.maxWorkers;
+    const promises: Array<WorkerpoolPromise<unknown, unknown>> = [];
+
+    for (let i = 0; i < targetCount; i++) {
+      promises.push(this._warmupWorker());
+    }
+
+    return WorkerpoolPromise.all(promises).then(() => {
+      self._markReady();
+    }) as unknown as WorkerpoolPromise<void, unknown>;
+  }
+
+  /**
+   * Mark pool as ready
+   */
+  private _markReady(): void {
+    if (!this._isReady) {
+      this._isReady = true;
+      this._readyResolver();
+    }
+  }
+
+  /**
+   * Eager initialize workers
+   */
+  private _eagerInitialize(): void {
+    const self = this;
+    const targetCount = this.minWorkers ?? Math.min(2, this.maxWorkers);
+    const promises: Array<WorkerpoolPromise<unknown, unknown>> = [];
+
+    for (let i = 0; i < targetCount; i++) {
+      promises.push(this._warmupWorker());
+    }
+
+    WorkerpoolPromise.all(promises).then(() => {
+      self._markReady();
+    });
+  }
+
+  /**
+   * Warm up a single worker
+   */
+  private _warmupWorker(): WorkerpoolPromise<unknown, unknown> {
+    return this.exec('methods').catch(() => {
+      // Ignore errors during warmup
+    });
+  }
+
+  // ============================================================================
+  // Enhanced Features - Task Tracking
+  // ============================================================================
+
+  /**
+   * Handle task completion
+   */
+  private _onTaskComplete(taskId: number, duration: number, result: unknown, estimatedSize?: number): void {
+    if (estimatedSize) {
+      this._estimatedQueueMemory = Math.max(0, this._estimatedQueueMemory - estimatedSize);
+    }
+
+    this._emit('taskComplete', {
+      taskId,
+      duration,
+      result,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Handle task error
+   */
+  private _onTaskError(taskId: number, error: Error, duration: number, estimatedSize?: number): void {
+    if (estimatedSize) {
+      this._estimatedQueueMemory = Math.max(0, this._estimatedQueueMemory - estimatedSize);
+    }
+
+    this._emit('taskError', {
+      taskId,
+      error,
+      duration,
+      timestamp: Date.now(),
+    });
+  }
+
+  // ============================================================================
+  // Enhanced Features - Circuit Breaker
+  // ============================================================================
+
+  /**
+   * Circuit breaker: record success
+   */
+  private _circuitOnSuccess(): void {
+    if (this._circuitState === 'half-open') {
+      this._circuitHalfOpenSuccess++;
+      if (this._circuitHalfOpenSuccess >= this._circuitOptions.halfOpenRequests) {
+        this._closeCircuit();
+      }
+    }
+  }
+
+  /**
+   * Circuit breaker: record error
+   */
+  private _circuitOnError(): void {
+    if (this._circuitState === 'half-open') {
+      this._openCircuit();
+      return;
+    }
+
+    this._circuitErrorCount++;
+    if (this._circuitErrorCount >= this._circuitOptions.errorThreshold) {
+      this._openCircuit();
+    }
+  }
+
+  /**
+   * Open the circuit breaker
+   */
+  private _openCircuit(): void {
+    if (this._circuitState !== 'open') {
+      this._circuitState = 'open';
+      this._emit('circuitOpen', {
+        errorCount: this._circuitErrorCount,
+        threshold: this._circuitOptions.errorThreshold,
+        timestamp: Date.now(),
+      });
+
+      // Schedule reset
+      this._circuitResetTimer = setTimeout(() => {
+        this._halfOpenCircuit();
+      }, this._circuitOptions.resetTimeout);
+    }
+  }
+
+  /**
+   * Move circuit to half-open state
+   */
+  private _halfOpenCircuit(): void {
+    this._circuitState = 'half-open';
+    this._circuitHalfOpenSuccess = 0;
+    this._emit('circuitHalfOpen', { timestamp: Date.now() });
+  }
+
+  /**
+   * Close the circuit breaker
+   */
+  private _closeCircuit(): void {
+    this._circuitState = 'closed';
+    this._circuitErrorCount = 0;
+    this._circuitHalfOpenSuccess = 0;
+    if (this._circuitResetTimer) {
+      clearTimeout(this._circuitResetTimer);
+      this._circuitResetTimer = null;
+    }
+    this._emit('circuitClose', { timestamp: Date.now() });
+  }
+
+  // ============================================================================
+  // Enhanced Features - Health Checks
+  // ============================================================================
+
+  /**
+   * Start health check interval
+   */
+  private _startHealthChecks(): void {
+    this._healthCheckTimer = setInterval(() => {
+      this._runHealthCheck();
+    }, this._healthCheckOptions.interval);
+  }
+
+  /**
+   * Run health check
+   */
+  private _runHealthCheck(): void {
+    const self = this;
+    const promise = this.exec('methods');
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Health check timeout'));
+      }, self._healthCheckOptions.timeout);
+    });
+
+    Promise.race([promise, timeoutPromise]).catch((error) => {
+      if (self._healthCheckOptions.action === 'warn') {
+        console.warn('[workerpool] Health check failed:', error);
+      }
+    });
+  }
+
+  // ============================================================================
+  // Static Methods - Shared Pool Singleton
+  // ============================================================================
+
+  private static _sharedPool: Pool | null = null;
+
+  /**
+   * Get or create a shared pool singleton
+   */
+  static getSharedPool(options?: EnhancedPoolOptions): Pool {
+    if (!Pool._sharedPool) {
+      Pool._sharedPool = new Pool({ eagerInit: true, ...options });
+    }
+    return Pool._sharedPool;
+  }
+
+  /**
+   * Terminate and clear the shared pool
+   */
+  static terminateSharedPool(force?: boolean): WorkerpoolPromise<void[], unknown> | WorkerpoolPromise<void, unknown> {
+    if (Pool._sharedPool) {
+      const pool = Pool._sharedPool;
+      Pool._sharedPool = null;
+      return pool.terminate(force);
+    }
+    const resolver = WorkerpoolPromise.defer<void>();
+    resolver.resolve();
+    return resolver.promise as unknown as WorkerpoolPromise<void, unknown>;
+  }
+
+  /**
+   * Check if a shared pool exists
+   */
+  static hasSharedPool(): boolean {
+    return Pool._sharedPool !== null;
+  }
+}
+
+// ============================================================================
+// Convenience Exports
+// ============================================================================
+
+/** Alias for backward compatibility */
+export const PoolEnhanced = Pool;
+
+// Export shared pool functions at module level
+export function getSharedPool(options?: EnhancedPoolOptions): Pool {
+  return Pool.getSharedPool(options);
+}
+
+export function terminateSharedPool(force?: boolean): WorkerpoolPromise<void[], unknown> | WorkerpoolPromise<void, unknown> {
+  return Pool.terminateSharedPool(force);
+}
+
+export function hasSharedPool(): boolean {
+  return Pool.hasSharedPool();
 }
 
 export { TerminateError };

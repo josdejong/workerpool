@@ -281,7 +281,7 @@ export {
   getSharedPool,
   terminateSharedPool,
   hasSharedPool,
-} from './core/PoolEnhanced';
+} from './core/Pool';
 
 export type {
   EnhancedPoolOptions,
@@ -296,7 +296,7 @@ export type {
   RetryOptions,
   MemoryOptions,
   HealthCheckOptions,
-} from './core/PoolEnhanced';
+} from './core/Pool';
 
 // Capabilities API (Issue 8.1)
 export {
@@ -351,9 +351,9 @@ export type {
 /**
  * Create an enhanced pool with all advanced features
  */
-export function enhancedPool(script?: string | Record<string, unknown>, options?: Record<string, unknown>): InstanceType<typeof import('./core/PoolEnhanced').PoolEnhanced> {
-  const { PoolEnhanced } = require('./core/PoolEnhanced');
-  return new PoolEnhanced(script as string | undefined, options);
+export function enhancedPool(script?: string | Record<string, unknown>, options?: Record<string, unknown>): InstanceType<typeof import('./core/Pool').Pool> {
+  const { Pool } = require('./core/Pool');
+  return new Pool(script as string | undefined, options);
 }
 
 // ============================================================================
