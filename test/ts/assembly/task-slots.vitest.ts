@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { initMemory, _resetMemory } from '../../assembly-stubs/memory';
+import { initMemory, _resetMemory } from '../../../assembly-stubs/memory';
 import {
   initTaskSlots,
   allocateSlot,
@@ -24,7 +24,7 @@ import {
   getAllocatedCount,
   isAllocated,
   _resetSlots,
-} from '../../assembly-stubs/task-slots';
+} from '../../../assembly-stubs/task-slots';
 
 describe('Task Slots Module', () => {
   beforeEach(() => {

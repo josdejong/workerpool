@@ -1,4 +1,4 @@
-var workerpool = require('../../');
+var workerpool = require('../../../');
 
 // Test returning a Transfer object from an async function (covers lines 283-287)
 function asyncTransfer(size) {

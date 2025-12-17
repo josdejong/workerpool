@@ -31,7 +31,7 @@ import {
   isSuccess,
   successResult,
   errorResult,
-} from '../../assembly-stubs/errors';
+} from '../../../assembly-stubs/errors';
 
 describe('Errors Module', () => {
   describe('Error Code Constants', () => {

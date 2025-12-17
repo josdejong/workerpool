@@ -1,5 +1,5 @@
 var assert = require('assert');
-var {Promise} = require('../src/js/Promise');
+var {Promise} = require('../../src/js/Promise');
 
 describe ('Promise', function () {
 

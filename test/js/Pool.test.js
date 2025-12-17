@@ -1,10 +1,10 @@
 var assert = require('assert');
-var {Promise} = require('../src/js/Promise');
-var Pool = require('../src/js/Pool');
+var {Promise} = require('../../src/js/Promise');
+var Pool = require('../../src/js/Pool');
 var tryRequire = require('./utils').tryRequire
 
 // Import workerpool module for enhanced features tests
-var workerpool = require('../dist/workerpool.js');
+var workerpool = require('../../dist/workerpool.js');
 var capabilities = workerpool.capabilities;
 var getCapabilities = workerpool.getCapabilities;
 var canUseOptimalTransfer = workerpool.canUseOptimalTransfer;

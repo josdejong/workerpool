@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { initMemory, _resetMemory } from '../../assembly-stubs/memory';
+import { initMemory, _resetMemory } from '../../../assembly-stubs/memory';
 import {
   initPriorityQueue,
   getPriorityQueueSize,
@@ -17,7 +17,7 @@ import {
   priorityQueueClear,
   isPriorityQueueFull,
   _resetPriorityQueue,
-} from '../../assembly-stubs/priority-queue';
+} from '../../../assembly-stubs/priority-queue';
 
 describe('Priority Queue Module', () => {
   beforeEach(() => {

@@ -1,5 +1,5 @@
 // a worker which does initialization asynchronously
-var workerpool = require('../../');
+var workerpool = require('../../../');
 
 function add(a, b) {
   return a + b;

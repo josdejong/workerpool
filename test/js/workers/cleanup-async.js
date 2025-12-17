@@ -1,4 +1,4 @@
-var workerpool = require("../..");
+var workerpool = require("../../..");
 
 var port;
 
@@ -7,7 +7,7 @@ function asyncAdd(a, b, c) {
   return new Promise(function (resolve) {
     setTimeout(function () {
       resolve(a + b);
-    }, 500);
+    }, 100);
   });
 }
 
@@ -18,7 +18,12 @@ workerpool.worker(
   },
   {
     onTerminate: function (code) {
-      port.postMessage(code);
-    }
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          port.postMessage(code);
+          resolve();
+        }, 100);
+      });
+    },
   }
 );

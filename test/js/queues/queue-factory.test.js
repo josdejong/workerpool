@@ -1,7 +1,7 @@
 const assert = require('assert');
 
 // Import queue implementations from JavaScript source
-const { FIFOQueue, LIFOQueue } = require('../../src/queues');
+const { FIFOQueue, LIFOQueue } = require('../../../src/js/queues');
 
 // Simple PriorityQueue implementation for testing (matches TypeScript version)
 function PriorityQueue(comparator) {

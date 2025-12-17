@@ -1,5 +1,5 @@
 // a simple worker
-var workerpool = require("../../");
+var workerpool = require("../../../");
 
 function transfer(size) {
   var array = new Uint8Array(size).map((_v, i) => i);

@@ -1,5 +1,5 @@
 // a simple worker
-var workerpool = require("../../");
+var workerpool = require("../../../");
 
 function transfer(array) {
   return array.byteLength;

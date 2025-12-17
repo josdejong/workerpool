@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { initMemory, _resetMemory } from '../../assembly-stubs/memory';
+import { initMemory, _resetMemory } from '../../../assembly-stubs/memory';
 import {
   packEntry,
   unpackSlotIndex,
@@ -17,7 +17,7 @@ import {
   isFull,
   clear,
   contains,
-} from '../../assembly-stubs/ring-buffer';
+} from '../../../assembly-stubs/ring-buffer';
 
 describe('Ring Buffer Module', () => {
   beforeEach(() => {

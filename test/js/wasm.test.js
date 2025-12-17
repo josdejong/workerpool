@@ -14,7 +14,7 @@ describe('WASM Module', function () {
 
   before(async function () {
     // Load WASM bytes
-    const wasmPath = path.join(__dirname, '..', 'dist', 'workerpool.wasm');
+    const wasmPath = path.join(__dirname, '../..', 'dist', 'workerpool.wasm');
     if (!fs.existsSync(wasmPath)) {
       console.log('    WASM file not found at', wasmPath);
       console.log('    Run "npm run build:wasm" to build WASM module');
@@ -26,7 +26,7 @@ describe('WASM Module', function () {
     // Dynamic import of the WASM bridge (TypeScript via tsx loader)
     try {
       // Use tsx to load TypeScript module directly
-      const wasmModule = await import('../src/wasm/index.ts');
+      const wasmModule = await import('../../src/ts/wasm/index.ts');
       // Handle both ESM and CJS-wrapped module formats
       const exports = wasmModule.default || wasmModule;
       WasmBridge = exports.WasmBridge || wasmModule.WasmBridge;

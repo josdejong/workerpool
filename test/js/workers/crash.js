@@ -1,7 +1,7 @@
 /**
  * Worker that intentionally crashes for testing crash handling
  */
-var workerpool = require('../../');
+var workerpool = require('../../../');
 
 // Register worker methods
 workerpool.worker({
