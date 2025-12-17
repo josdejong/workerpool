@@ -21,12 +21,12 @@
  * @module workerpool/minimal
  */
 
-// Import CommonJS modules
-import Pool from './Pool';
-import workerModule from './worker';
-import PromiseModule from './Promise';
-import TransferModule from './transfer';
-import environment from './environment';
+// Import TypeScript modules
+import { Pool } from './core/Pool';
+import { add as workerAdd, emit as workerEmitFn } from './workers/worker';
+import { WorkerpoolPromise } from './core/Promise';
+import Transfer from './platform/transfer';
+import { platform, isMainThread, cpus } from './platform/environment';
 
 // Re-export types
 export type {
@@ -35,37 +35,35 @@ export type {
   PoolStats,
   WorkerType,
   QueueStrategy,
-  WorkerpoolPromise,
+  WorkerpoolPromise as WorkerpoolPromiseType,
   WorkerProxy,
   Task,
   TaskQueue,
 } from './types/index';
 
 // Core pool function
-export function pool(script?: string | Record<string, unknown>, options?: Record<string, unknown>): InstanceType<typeof Pool> {
+export function pool(script?: string | Record<string, unknown>, options?: Record<string, unknown>): Pool {
   return new Pool(script as string | undefined, options);
 }
 
 // Worker registration function
 export function worker(methods?: Record<string, (...args: unknown[]) => unknown>, options?: object): void {
-  workerModule.add(methods, options);
+  workerAdd(methods, options);
 }
 
 // Worker emit function
 export function workerEmit(payload: unknown): void {
-  workerModule.emit(payload);
+  workerEmitFn(payload);
 }
 
 // Promise implementation
-export const Promise = PromiseModule.Promise;
+export const Promise = WorkerpoolPromise;
 
-// Transfer utility
-export const Transfer = TransferModule;
+// Transfer utility - re-export
+export { Transfer };
 
-// Platform detection
-export const platform = environment.platform;
-export const isMainThread = environment.isMainThread;
-export const cpus = environment.cpus;
+// Platform detection - re-export
+export { platform, isMainThread, cpus };
 
 // Error classes (essential only)
 export {

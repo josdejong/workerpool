@@ -1,6 +1,6 @@
 const assert = require('assert')
-const isNode = require('../src/environment').isNode
-const Pool = require('../src/Pool')
+const isNode = require('../src/js/environment').isNode
+const Pool = require('../src/js/Pool')
 const tryRequire = require('./utils').tryRequire
 
 describe('Environment Detection', function () {
@@ -18,7 +18,7 @@ describe('Environment Detection', function () {
 
 describe('Main Thread Detection', function () {
   it('should detect isMainThread in main process', function () {
-    assert.strictEqual(require('../src/environment').isMainThread, true);
+    assert.strictEqual(require('../src/js/environment').isMainThread, true);
   })
 
   it('should detect isMainThread in child_process', function () {

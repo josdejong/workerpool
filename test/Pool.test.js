@@ -1,6 +1,6 @@
 var assert = require('assert');
-var {Promise} = require('../src/Promise');
-var Pool = require('../src/Pool');
+var {Promise} = require('../src/js/Promise');
+var Pool = require('../src/js/Pool');
 var tryRequire = require('./utils').tryRequire
 
 // Import workerpool module for enhanced features tests

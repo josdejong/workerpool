@@ -4,18 +4,17 @@
     "noEmit": false,
     "declaration": true,
     "declarationMap": true,
-    "declarationDir": "./types",
+    "declarationDir": "./types/ts",
     "emitDeclarationOnly": true,
     "sourceMap": false
   },
   "include": [
-    "src/**/*.ts"
+    "src/ts/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "test",
-    "src/generated",
-    "src/**/*.js"
+    "src/ts/generated"
   ]
 }

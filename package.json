@@ -19,40 +19,45 @@
     "pool",
     "isomorphic"
   ],
-  "main": "src/index.js",
+  "main": "src/js/index.js",
   "browser": "dist/workerpool.js",
   "types": "types/index.d.ts",
   "exports": {
     ".": {
       "types": "./types/index.d.ts",
-      "import": "./src/index.js",
-      "require": "./src/index.js",
+      "import": "./src/js/index.js",
+      "require": "./src/js/index.js",
       "browser": "./dist/workerpool.js"
     },
+    "./modern": {
+      "types": "./types/ts/index.d.ts",
+      "import": "./dist/ts/index.js",
+      "require": "./dist/ts/index.js"
+    },
     "./minimal": {
-      "types": "./types/minimal.d.ts",
-      "import": "./src/minimal.ts",
-      "require": "./src/minimal.ts"
+      "types": "./types/ts/minimal.d.ts",
+      "import": "./dist/ts/minimal.js",
+      "require": "./dist/ts/minimal.js"
     },
     "./full": {
-      "types": "./types/full.d.ts",
-      "import": "./src/full.ts",
-      "require": "./src/full.ts"
+      "types": "./types/ts/full.d.ts",
+      "import": "./dist/ts/full.js",
+      "require": "./dist/ts/full.js"
     },
     "./wasm": {
-      "types": "./types/wasm.d.ts",
-      "import": "./src/wasm/index.ts",
-      "require": "./src/wasm/index.ts"
+      "types": "./types/ts/wasm/index.d.ts",
+      "import": "./dist/ts/wasm/index.js",
+      "require": "./dist/ts/wasm/index.js"
     },
     "./errors": {
-      "types": "./types/errors.d.ts",
-      "import": "./src/errors.ts",
-      "require": "./src/errors.ts"
+      "types": "./types/ts/errors.d.ts",
+      "import": "./dist/ts/errors.js",
+      "require": "./dist/ts/errors.js"
     },
     "./debug": {
-      "types": "./types/debug.d.ts",
-      "import": "./src/debug.ts",
-      "require": "./src/debug.ts"
+      "types": "./types/ts/debug.d.ts",
+      "import": "./dist/ts/debug.js",
+      "require": "./dist/ts/debug.js"
     }
   },
   "files": [
@@ -64,11 +69,12 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rollup -c rollup.config.mjs && npm run build:types",
+    "build": "node scripts/build-js.mjs",
     "build:js": "node scripts/build-js.mjs",
     "build:js:watch": "node scripts/build-js.mjs --watch",
-    "build:js:types": "node scripts/build-js.mjs --types",
-    "build:types": "tsc -p tsconfig.build.json",
+    "build:ts": "node scripts/build-js.mjs --ts",
+    "build:ts:watch": "node scripts/build-js.mjs --ts --watch",
+    "build:types": "node scripts/build-js.mjs --types",
     "build:wasm": "node scripts/build-wasm.mjs --release",
     "build:wasm:debug": "node scripts/build-wasm.mjs --debug",
     "build:wasm:esm": "node scripts/build-wasm.mjs --esm",
@@ -78,7 +84,7 @@
     "build:wasm:validate": "node scripts/build-wasm.mjs --all --validate",
     "build:wasm:clean": "node scripts/build-wasm.mjs --clean --all",
     "build:wasm:watch": "node scripts/build-wasm.mjs --watch",
-    "build:all": "npm run build:wasm:embed && npm run build:js",
+    "build:all": "npm run build:wasm:embed && node scripts/build-js.mjs --all",
     "typecheck": "tsc --noEmit",
     "typecheck:wasm": "tsc -p assembly/tsconfig.json --noEmit",
     "watch": "rollup -c rollup.config.mjs -w",
