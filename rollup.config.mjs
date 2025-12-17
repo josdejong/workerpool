@@ -62,7 +62,7 @@ function createBanner() {
     const today = format.asString('yyyy-MM-dd', new Date()); // today, formatted as yyyy-MM-dd
     const version = packages.version;  // module version
 
-    return String(fse.readFileSync('./src/header.js'))
+    return String(fse.readFileSync('./src/js/header.js'))
         .replace('@@date', today)
         .replace('@@version', version);
 }
@@ -71,7 +71,7 @@ function createBanner() {
 const wasmBackup = preserveWasmFiles();
 fse.emptyDirSync("./dist/");
 wasmBackup.restore();
-fse.copyFileSync('./src/header.js', './dist/workerpool.min.js.LICENSE.txt')
+fse.copyFileSync('./src/js/header.js', './dist/workerpool.min.js.LICENSE.txt')
 const commonPlugin = [
     resolve({
         extensions: [".js", ".ts", ".html"],
@@ -80,7 +80,7 @@ const commonPlugin = [
         browser: true
     }),
     typescript({
-        tsconfig: './tsconfig.json',
+        tsconfig: './tsconfig.rollup.json',
         compilerOptions: {
             declaration: false,
             declarationMap: false,
@@ -111,18 +111,25 @@ const buildEmbeddedWorker = (bundledWorkerCode) => {
         ' * changes made in this file will be overwritten.\n' +
         ' */\n' +
         'module.exports = ' + JSON.stringify(bundledWorkerCode) + ';\n';
-    fse.writeFileSync('./src/generated/embeddedWorker.js', embedded);
+    fse.writeFileSync('./src/js/generated/embeddedWorker.js', embedded);
 }
 
 
-// TypeScript entry points for new codebase
-// TODO: Switch to these when ready to migrate fully
-// const WORKER_ENTRY = "./src/workers/worker.ts";
-// const MAIN_ENTRY = "./src/index.ts";
+// ============================================================================
+// DUAL-MODE BUILD CONFIGURATION
+// ============================================================================
 
-// Current entry points (original JS files)
-const WORKER_ENTRY = "./src/worker.js";
-const MAIN_ENTRY = "./src/index.js";
+// JavaScript entry points (legacy, pure JS)
+const JS_WORKER_ENTRY = "./src/js/worker.js";
+const JS_MAIN_ENTRY = "./src/js/index.js";
+
+// TypeScript entry points (modern, TS + WASM support)
+const TS_WORKER_ENTRY = "./src/ts/workers/worker.ts";
+const TS_MAIN_ENTRY = "./src/ts/index.ts";
+
+// Current mode - use JS entry points for default build
+const WORKER_ENTRY = JS_WORKER_ENTRY;
+const MAIN_ENTRY = JS_MAIN_ENTRY;
 
 export default defineConfig([
     {

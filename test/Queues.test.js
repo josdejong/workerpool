@@ -1,5 +1,5 @@
 var assert = require("assert");
-var { FIFOQueue, LIFOQueue } = require("../src/queues");
+var { FIFOQueue, LIFOQueue } = require("../src/js/queues");
 
 describe("Queues", function () {
   describe("FIFOQueue", function () {

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "CommonJS",
+    "module": "ESNext",
     "lib": ["ES2020", "DOM", "WebWorker"],
     "strict": true,
     "esModuleInterop": true,
@@ -9,27 +9,23 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
+    "declarationMap": false,
     "sourceMap": true,
-    "outDir": "./dist/ts",
-    "rootDir": "./src/ts",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/ts/*"]
-    },
+    "outDir": "./dist",
+    "rootDir": "./src",
     "types": ["node"],
-    "allowJs": false,
+    "allowJs": true,
     "checkJs": false,
-    "noEmit": true
+    "noEmit": false
   },
   "include": [
-    "src/ts/**/*.ts"
+    "src/js/**/*.js",
+    "src/js/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "test",
-    "src/ts/generated"
+    "test"
   ]
 }
