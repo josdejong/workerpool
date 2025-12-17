@@ -7,6 +7,12 @@
 
 /** WASM module exports interface */
 export interface WasmExports {
+  // AssemblyScript runtime initialization
+  _initialize?(): void;
+
+  // AssemblyScript varargs support (for functions with optional parameters)
+  __setArgumentsLength?(length: number): void;
+
   // Memory management
   memory: WebAssembly.Memory;
   initMemory(capacity: number): number;
@@ -109,7 +115,11 @@ export function calculateMemoryPages(capacity: number): number {
 
   // Memory page is 64KB (65536 bytes)
   const pageSize = 65536;
-  return Math.ceil(totalBytes / pageSize);
+  const calculatedPages = Math.ceil(totalBytes / pageSize);
+
+  // WASM module requires minimum 16 pages (as per asconfig.json initialMemory)
+  const MIN_PAGES = 16;
+  return Math.max(calculatedPages, MIN_PAGES);
 }
 
 /**
@@ -179,9 +189,16 @@ export async function loadWasm(
     instance = result.instance;
   }
 
+  const exports = instance.exports as unknown as WasmExports;
+
+  // Call AssemblyScript runtime initialization if available
+  if (typeof exports._initialize === 'function') {
+    exports._initialize();
+  }
+
   return {
     instance,
-    exports: instance.exports as unknown as WasmExports,
+    exports,
     memory,
     buffer: memory.buffer as SharedArrayBuffer | ArrayBuffer,
   };
@@ -223,10 +240,16 @@ export async function loadWasmFromBytes(
   const wasmResult = await WebAssembly.instantiate(bytes as BufferSource, imports);
   // When passing bytes, result is WebAssemblyInstantiatedSource with instance property
   const instance = (wasmResult as WebAssembly.WebAssemblyInstantiatedSource).instance;
+  const exports = instance.exports as unknown as WasmExports;
+
+  // Call AssemblyScript runtime initialization if available
+  if (typeof exports._initialize === 'function') {
+    exports._initialize();
+  }
 
   return {
     instance,
-    exports: instance.exports as unknown as WasmExports,
+    exports,
     memory,
     buffer: memory.buffer as SharedArrayBuffer | ArrayBuffer,
   };
@@ -268,10 +291,16 @@ export function loadWasmSync(
 
   const module = new WebAssembly.Module(bytes as BufferSource);
   const instance = new WebAssembly.Instance(module, imports);
+  const exports = instance.exports as unknown as WasmExports;
+
+  // Call AssemblyScript runtime initialization if available
+  if (typeof exports._initialize === 'function') {
+    exports._initialize();
+  }
 
   return {
     instance,
-    exports: instance.exports as unknown as WasmExports,
+    exports,
     memory,
     buffer: memory.buffer as SharedArrayBuffer | ArrayBuffer,
   };

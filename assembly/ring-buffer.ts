@@ -21,17 +21,20 @@ const ENTRY_EMPTY: u64 = 0;
 /**
  * Pack task ID and priority into a single u64 entry
  * Upper 32 bits: priority (higher = more important)
- * Lower 32 bits: task slot index
+ * Lower 32 bits: task slot index + 1 (to ensure entry is never 0)
+ *
+ * Note: We store slotIndex + 1 so that slot 0 with priority 0
+ * produces entry value 1, not 0 (which would collide with ENTRY_EMPTY)
  */
 export function packEntry(slotIndex: u32, priority: u32): u64 {
-  return ((<u64>priority) << 32) | <u64>slotIndex;
+  return ((<u64>priority) << 32) | <u64>(slotIndex + 1);
 }
 
 /**
  * Unpack slot index from entry
  */
 export function unpackSlotIndex(entry: u64): u32 {
-  return <u32>(entry & 0xFFFFFFFF);
+  return <u32>((entry & 0xFFFFFFFF) - 1);
 }
 
 /**

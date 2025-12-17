@@ -16,18 +16,25 @@ describe('WASM Module', function () {
     // Load WASM bytes
     const wasmPath = path.join(__dirname, '..', 'dist', 'workerpool.wasm');
     if (!fs.existsSync(wasmPath)) {
+      console.log('    WASM file not found at', wasmPath);
+      console.log('    Run "npm run build:wasm" to build WASM module');
       this.skip();
       return;
     }
     wasmBytes = fs.readFileSync(wasmPath);
 
-    // Dynamic import of the WASM bridge (TypeScript compiled to JS)
+    // Dynamic import of the WASM bridge (TypeScript via tsx loader)
     try {
-      const wasmModule = await import('../src/wasm/index.js');
-      WasmBridge = wasmModule.WasmBridge;
-      isSharedMemorySupported = wasmModule.isSharedMemorySupported;
-    } catch {
-      // Fallback: module might not be compiled yet
+      // Use tsx to load TypeScript module directly
+      const wasmModule = await import('../src/wasm/index.ts');
+      // Handle both ESM and CJS-wrapped module formats
+      const exports = wasmModule.default || wasmModule;
+      WasmBridge = exports.WasmBridge || wasmModule.WasmBridge;
+      isSharedMemorySupported = exports.isSharedMemorySupported || wasmModule.isSharedMemorySupported;
+    } catch (err) {
+      // Fallback: module might not be loadable without tsx
+      console.log('    WASM module import failed:', err.message);
+      console.log('    Run tests with: npx tsx node_modules/mocha/bin/mocha test/wasm.test.js');
       this.skip();
     }
   });
@@ -51,7 +58,7 @@ describe('WASM Module', function () {
       try {
         bridge = await WasmBridge.createFromBytes(wasmBytes, 64);
       } catch (err) {
-        console.log('Failed to create WasmBridge:', err.message);
+        console.log('    Failed to create WasmBridge:', err.message);
         this.skip();
       }
     });

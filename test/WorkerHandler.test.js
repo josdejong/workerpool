@@ -328,8 +328,26 @@ describe('WorkerHandler', function () {
 
   });
 
-  it.skip('should handle crashing of a worker (3)', function (done) {
-    // TODO: create a worker from a script, which really crashes itself
+  it('should handle crashing of a worker via process.exit', function (done) {
+    var handler = new WorkerHandler(__dirname + '/workers/crash.js', {
+      forkOpts: {
+        cwd: path.resolve(__dirname, '../')
+      }
+    });
+
+    handler.exec('crashWithExit', [42])
+      .then(function () {
+        done(new Error('Promise should not be resolved'));
+      })
+      .catch(function (err) {
+        try {
+          assert.ok(err.toString().match(/Error: Workerpool Worker terminated Unexpectedly/));
+          assert.ok(err.toString().match(/exitCode: `42`/));
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
   });
 
   describe('tryRequireWorkerThreads', function() {

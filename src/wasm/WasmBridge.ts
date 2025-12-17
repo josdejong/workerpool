@@ -216,6 +216,10 @@ export class WasmBridge {
     this.exports.setTimestamp(slotIndex, BigInt(Date.now()));
 
     // Push to ring buffer
+    // AssemblyScript requires setting argument count before calling varargs functions
+    if (this.exports.__setArgumentsLength) {
+      this.exports.__setArgumentsLength(2); // slotIndex and priority
+    }
     const success = this.exports.push(slotIndex, priority);
     if (!success) {
       // Queue full, free the slot
