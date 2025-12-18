@@ -21,7 +21,17 @@
  * ```
  */
 
-import { platform, cpus, hasWorkerThreads } from './environment';
+import {
+  platform,
+  cpus,
+  hasWorkerThreads,
+  isBun,
+  bunVersion,
+  recommendedWorkerType,
+  getWorkerTypeSupport,
+  type WorkerType,
+} from './environment';
+import type { WorkerTypeSupport } from '../types/internal';
 import {
   hasWebAssembly,
   hasSharedArrayBuffer,
@@ -61,6 +71,14 @@ export interface Capabilities {
   secureContext: boolean;
   /** Best available data transfer method */
   recommendedTransfer: 'shared' | 'transferable' | 'binary' | 'json';
+  /** Running in Bun runtime */
+  isBun: boolean;
+  /** Bun version if running in Bun */
+  bunVersion: string | null;
+  /** Recommended worker type for optimal performance */
+  recommendedWorkerType: WorkerType;
+  /** Support matrix for different worker types */
+  workerTypeSupport: WorkerTypeSupport;
 }
 
 /**
@@ -178,6 +196,10 @@ export function getCapabilities(): Capabilities {
     workerThreads: hasWorkerThreads,
     secureContext: isSecureContext(),
     recommendedTransfer: getRecommendedTransfer(),
+    isBun,
+    bunVersion,
+    recommendedWorkerType,
+    workerTypeSupport: getWorkerTypeSupport(),
   };
 }
 
@@ -239,8 +261,15 @@ export function getCapabilityReport(): string {
   const lines: string[] = [
     '=== Workerpool Capabilities Report ===',
     `Platform: ${caps.platform}`,
+    `Runtime: ${caps.isBun ? `Bun ${caps.bunVersion}` : 'Node.js'}`,
     `Max Workers: ${caps.maxWorkers}`,
     `Estimated Memory: ${Math.round(caps.estimatedMemoryLimit / (1024 * 1024))}MB`,
+    '',
+    '--- Worker Types ---',
+    `Recommended: ${caps.recommendedWorkerType}`,
+    `Thread Support: ${caps.workerTypeSupport.thread ? 'YES' : 'NO'}`,
+    `Process Support: ${caps.workerTypeSupport.process ? 'YES' : 'NO (Bun limitation)'}`,
+    `Web Support: ${caps.workerTypeSupport.web ? 'YES' : 'NO'}`,
     '',
     '--- Data Transfer ---',
     `SharedArrayBuffer: ${caps.sharedArrayBuffer ? 'YES' : 'NO'}`,

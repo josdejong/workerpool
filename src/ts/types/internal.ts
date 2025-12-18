@@ -101,6 +101,20 @@ export interface DebugPortInfo {
 }
 
 /**
+ * Worker type support matrix
+ */
+export interface WorkerTypeSupport {
+  /** Worker threads (Node.js) */
+  thread: boolean;
+  /** Child process (Node.js) - limited in Bun */
+  process: boolean;
+  /** Web workers (Browser) */
+  web: boolean;
+  /** Auto detection */
+  auto: boolean;
+}
+
+/**
  * Platform detection results
  */
 export interface PlatformInfo {
@@ -116,6 +130,14 @@ export interface PlatformInfo {
   hasSharedArrayBuffer: boolean;
   /** Whether Atomics is available */
   hasAtomics: boolean;
+  /** Whether running in Bun runtime */
+  isBun: boolean;
+  /** Bun version if running in Bun, null otherwise */
+  bunVersion: string | null;
+  /** Recommended worker type for this runtime */
+  recommendedWorkerType: 'auto' | 'thread' | 'process' | 'web';
+  /** Support matrix for different worker types */
+  workerTypeSupport: WorkerTypeSupport;
 }
 
 /**
