@@ -85,7 +85,6 @@
     "build:wasm:clean": "node scripts/build-wasm.mjs --clean --all",
     "build:wasm:watch": "node scripts/build-wasm.mjs --watch",
     "build:ts:full": "npm run build:wasm:embed && npm run build:ts",
-    "build:all": "npm run build:wasm:embed && node scripts/build-js.mjs --all",
     "typecheck": "tsc --noEmit",
     "typecheck:wasm": "tsc -p src/ts/assembly/tsconfig.json --noEmit",
     "watch": "rollup -c rollup.config.mjs -w",
