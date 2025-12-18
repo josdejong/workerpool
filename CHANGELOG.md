@@ -10,12 +10,15 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ## [Unreleased]
 
 ### Added
+- **Dual Build System**: Separate JavaScript (`build:js`) and TypeScript+WASM (`build:wasm`) builds
+- **Benchmark Suite**: `benchmark.mjs` comparing JS vs TS+WASM performance (TS+WASM up to 34% faster for concurrent workloads)
 - TypeScript Build Infrastructure (tsconfig.json, tsconfig.build.json, rollup plugin)
-- Core Type Definitions in src/types/
-- Platform Module in src/platform/ (environment.ts, transfer.ts)
-- Core Module in src/core/ (Promise.ts, TaskQueue.ts, Pool.ts, WorkerHandler.ts, etc.)
-- AssemblyScript WASM Module in assembly/
-- WASM JavaScript Bridge in src/wasm/
+- Core Type Definitions in src/ts/types/
+- Platform Module in src/ts/platform/ (environment.ts, transfer.ts)
+- Core Module in src/ts/core/ (Promise.ts, TaskQueue.ts, Pool.ts, WorkerHandler.ts, etc.)
+- AssemblyScript WASM Module in src/ts/assembly/
+- AssemblyScript stubs for testing in src/ts/assembly/stubs/
+- WASM JavaScript Bridge in src/ts/wasm/
 - Queue Factory with fifo, lifo, priority, wasm, auto strategies
 - **Sprint 5: Worker Pre-Warming & Adaptive Scaling**
   - MetricsCollector: Task latency histograms, worker utilization, queue depths, error rates
@@ -52,7 +55,13 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - Performance benchmark suite (benchmark/suite.ts)
 
 ### Changed
+- **Directory Restructure**: Moved legacy JS to `src/js/`, TypeScript to `src/ts/`
+- **Assembly Location**: Moved `assembly/` to `src/ts/assembly/`, stubs to `src/ts/assembly/stubs/`
 - Updated package.json and rollup.config.mjs for TypeScript
+- Simplified build scripts: removed `build:all`, renamed combined TS+WASM build to `build:wasm`
+
+### Fixed
+- Worker path resolution in TypeScript WorkerHandler (was looking for wrong path)
 
 ### Infrastructure
 - Phase 1 Sprints 1-4 COMPLETED

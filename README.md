@@ -17,8 +17,9 @@
 - Cancel running tasks
 - Set a timeout on tasks
 - Handles crashed workers
-- Small: 9 kB minified and gzipped
+- Small: 9 kB minified and gzipped (JS build)
 - Supports transferable objects (only for web workers and worker_threads)
+- **TypeScript + WASM build** with up to 34% faster concurrent task processing
 
 ## Why
 
@@ -548,7 +549,35 @@ Install the project dependencies:
 
     npm install
 
-Then, the project can be build by executing the build script via npm:
+### Dual Build System
+
+The library supports two separate builds:
+
+**JavaScript Build** (Legacy):
+```bash
+npm run build:js     # Build JavaScript bundles (src/js/ → dist/)
+```
+Outputs: `dist/workerpool.js`, `dist/workerpool.min.js`, `dist/worker.js`
+
+**TypeScript + WASM Build** (Modern):
+```bash
+npm run build:wasm   # Build TypeScript + WASM (src/ts/ → dist/ts/)
+```
+Outputs: `dist/ts/index.js`, `dist/ts/full.js`, `dist/ts/minimal.js`, `dist/workerpool.wasm`
+
+The TypeScript+WASM build provides up to 34% better performance for concurrent workloads thanks to WASM-accelerated task queues.
+
+### Benchmarking
+
+Compare performance between the two builds:
+
+```bash
+node benchmark.mjs
+```
+
+### Legacy Build
+
+The default build command builds the JavaScript version:
 
     npm run build
 

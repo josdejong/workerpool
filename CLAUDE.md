@@ -12,12 +12,32 @@ npm run test:types   # Test TypeScript type definitions only
 npm run coverage     # Generate test coverage report (output: ./coverage/index.html)
 ```
 
-WASM build commands:
+### Dual Build System
+
+The library supports two separate builds:
+
+**JavaScript Build** (Legacy):
 ```bash
-npm run build:wasm        # Build AssemblyScript to WASM (release)
+npm run build:js     # Build JavaScript bundles (src/js/ → dist/)
+```
+
+**TypeScript + WASM Build** (Modern):
+```bash
+npm run build:wasm   # Build TypeScript + WASM (src/ts/ → dist/ts/)
+```
+
+This compiles AssemblyScript to WASM, generates embedded bindings, and compiles TypeScript.
+
+### Additional WASM Commands
+```bash
 npm run build:wasm:debug  # Build WASM with debug info
-npm run build:wasm:embed  # Build WASM and generate embedded bindings
-npm run build:all         # Build everything (WASM + JS + types)
+npm run build:wasm:embed  # Build WASM and generate embedded bindings only
+npm run build:wasm:all    # Build all WASM variants
+```
+
+### Benchmarking
+```bash
+node benchmark.mjs   # Compare JS vs TS+WASM performance
 ```
 
 To run a single test file:
@@ -33,22 +53,23 @@ npm run build && mocha test/Pool.test.js
 
 The library provides multiple entry points for different use cases:
 
-- **`workerpool`** (default) - Legacy JS API via `src/index.js`
+- **`workerpool`** (default) - Legacy JS API via `src/js/index.js`
+- **`workerpool/modern`** - TypeScript build via `dist/ts/index.js`
 - **`workerpool/minimal`** - Lightweight TypeScript build (~5KB) without WASM
-- **`workerpool/full`** - Complete TypeScript build (~15KB) with WASM support, debug utilities
+- **`workerpool/full`** - Complete TypeScript build (~25KB) with WASM support, debug utilities
 - **`workerpool/wasm`** - Direct WASM utilities only
 - **`workerpool/errors`** - Error classes only
 - **`workerpool/debug`** - Debug/logging utilities only
 
-### Core Components (Legacy JS)
+### Core Components (Legacy JS in `src/js/`)
 
-- **`src/index.js`** - Public API entry point. Exports `pool()`, `worker()`, `workerEmit()`, `Transfer`, and utility constants.
-- **`src/Pool.js`** - Manages worker lifecycle and task queue. Creates `WorkerHandler` instances on demand up to `maxWorkers`. Tasks are queued (FIFO/LIFO/custom) and dispatched to available workers.
-- **`src/WorkerHandler.js`** - Controls a single worker (child process, worker thread, or web worker). Handles message passing, task execution, timeouts, cancellation, and graceful termination with cleanup.
-- **`src/worker.js`** - Runs inside the worker process/thread. Receives RPC messages, executes registered methods, handles abort listeners for cleanup before termination.
-- **`src/Promise.js`** - Custom Promise implementation with `cancel()`, `timeout()`, and `always()` methods.
+- **`src/js/index.js`** - Public API entry point. Exports `pool()`, `worker()`, `workerEmit()`, `Transfer`, and utility constants.
+- **`src/js/Pool.js`** - Manages worker lifecycle and task queue. Creates `WorkerHandler` instances on demand up to `maxWorkers`. Tasks are queued (FIFO/LIFO/custom) and dispatched to available workers.
+- **`src/js/WorkerHandler.js`** - Controls a single worker (child process, worker thread, or web worker). Handles message passing, task execution, timeouts, cancellation, and graceful termination with cleanup.
+- **`src/js/worker.js`** - Runs inside the worker process/thread. Receives RPC messages, executes registered methods, handles abort listeners for cleanup before termination.
+- **`src/js/Promise.js`** - Custom Promise implementation with `cancel()`, `timeout()`, and `always()` methods.
 
-### TypeScript Core (`src/core/`)
+### TypeScript Core (`src/ts/core/`)
 
 TypeScript rewrites with enhanced type safety:
 - **`Pool.ts`** - Type-safe pool implementation
@@ -56,16 +77,17 @@ TypeScript rewrites with enhanced type safety:
 - **`Promise.ts`** - Typed Promise with cancellation
 - **`TaskQueue.ts`** / **`QueueFactory.ts`** - Pluggable queue strategies
 
-### WASM Layer (`src/wasm/` + `assembly/`)
+### WASM Layer (`src/ts/wasm/` + `src/ts/assembly/`)
 
 Optional WebAssembly acceleration for lock-free task queues:
-- **`assembly/*.ts`** - AssemblyScript source compiled to WASM (priority queue, ring buffer, atomics)
-- **`WasmBridge.ts`** - JavaScript-WASM interop layer
-- **`WasmTaskQueue.ts`** - WASM-backed queue implementation
-- **`EmbeddedWasmLoader.ts`** - Load pre-embedded WASM bytes
-- **`feature-detection.ts`** - Runtime checks for WebAssembly, SharedArrayBuffer, Atomics
+- **`src/ts/assembly/*.ts`** - AssemblyScript source compiled to WASM (priority queue, ring buffer, atomics)
+- **`src/ts/assembly/stubs/`** - Pure TypeScript stubs for testing without WASM
+- **`src/ts/wasm/WasmBridge.ts`** - JavaScript-WASM interop layer
+- **`src/ts/wasm/WasmTaskQueue.ts`** - WASM-backed queue implementation
+- **`src/ts/wasm/EmbeddedWasmLoader.ts`** - Load pre-embedded WASM bytes
+- **`src/ts/wasm/feature-detection.ts`** - Runtime checks for WebAssembly, SharedArrayBuffer, Atomics
 
-### Platform Abstraction (`src/platform/`)
+### Platform Abstraction (`src/ts/platform/`)
 
 - **`environment.ts`** - Detects Node.js vs browser, main thread vs worker
 - **`transfer.ts`** - Typed helpers for transferable objects (ArrayBuffer, TypedArrays, ImageData)
