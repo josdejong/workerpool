@@ -32,7 +32,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
-const ASSEMBLY_DIR = path.join(ROOT_DIR, 'assembly');
+const ASSEMBLY_DIR = path.join(ROOT_DIR, 'src', 'ts', 'assembly');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -168,7 +168,7 @@ function checkSourceFiles() {
 
   // Count source files
   const files = fs.readdirSync(ASSEMBLY_DIR).filter(f => f.endsWith('.ts'));
-  console.log(`📁 Found ${files.length} AssemblyScript source files in assembly/\n`);
+  console.log(`📁 Found ${files.length} AssemblyScript source files in src/ts/assembly/\n`);
 
   return files;
 }
@@ -185,7 +185,7 @@ async function buildTarget(targetName) {
   console.log(`  🔧 Building ${targetName}: ${target.description}`);
 
   const ascArgs = [
-    'assembly/index.ts',
+    'src/ts/assembly/index.ts',
     '--config', 'asconfig.json',
     '--target', target.target,
   ];
@@ -263,7 +263,7 @@ async function watchMode() {
   // Use nodemon for watching
   await runCommand('npx', [
     'nodemon',
-    '--watch', 'assembly',
+    '--watch', 'src/ts/assembly',
     '--ext', 'ts',
     '--exec', 'node scripts/build-wasm.mjs --debug',
   ]);

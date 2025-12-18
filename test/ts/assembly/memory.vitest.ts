@@ -23,7 +23,7 @@ import {
   getTail,
   getSlotAddress,
   _resetMemory,
-} from '../../../assembly-stubs/memory';
+} from '../../../src/ts/assembly/stubs/memory';
 
 describe('Memory Module', () => {
   beforeEach(() => {

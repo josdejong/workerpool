@@ -1,5 +1,5 @@
 {
-  "entries": ["assembly/index.ts"],
+  "entries": ["src/ts/assembly/index.ts"],
   "targets": {
     "debug": {
       "outFile": "dist/workerpool.debug.wasm",
