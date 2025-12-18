@@ -24,3 +24,6 @@ export * from './priority-queue';
 export * from './errors';
 export * from './stats';
 export * from './atomics';
+
+// Metrics
+export * from './histogram';
