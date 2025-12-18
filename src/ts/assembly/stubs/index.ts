@@ -19,12 +19,16 @@ export * from './errors';
 export * from './stats';
 export * from './atomics';
 
+// SIMD batch operations
+export * from './simd-batch';
+
 // Testing utilities
 import { _resetMemory } from './memory';
 import { _resetSlots } from './task-slots';
 import { _resetPriorityQueue } from './priority-queue';
 import { _resetStats } from './stats';
 import { _resetAtomics } from './atomics';
+import { _resetSimd } from './simd-batch';
 
 /**
  * Reset all internal state for testing
@@ -36,4 +40,5 @@ export function _resetAll(): void {
   _resetPriorityQueue();
   _resetStats();
   _resetAtomics();
+  _resetSimd();
 }
