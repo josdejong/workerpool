@@ -2,11 +2,11 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    // Test file patterns
-    include: ['test/**/*.vitest.ts', 'test/**/*.vitest.js'],
+    // Test file patterns - TypeScript tests in test/ts/
+    include: ['test/ts/**/*.vitest.ts', 'test/ts/**/*.vitest.js'],
 
     // Exclude patterns
-    exclude: ['node_modules', 'dist', 'examples'],
+    exclude: ['node_modules', 'dist', 'examples', 'test/js'],
 
     // Environment
     environment: 'node',
