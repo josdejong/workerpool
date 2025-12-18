@@ -11,7 +11,7 @@
 ## Features
 
 - Easy to use
-- Runs in the browser and on node.js
+- Runs in the browser, Node.js, and **Bun**
 - Dynamically offload functions to a worker
 - Access workers via a proxy
 - Cancel running tasks
@@ -20,6 +20,7 @@
 - Small: 9 kB minified and gzipped (JS build)
 - Supports transferable objects (only for web workers and worker_threads)
 - **TypeScript + WASM build** with up to 34% faster concurrent task processing
+- **Bun compatible** with automatic runtime detection and optimal configuration
 
 ## Why
 
@@ -61,6 +62,37 @@ importScripts('workerpool.js');
 ```
 
 Setting up the workerpool with React or webpack5 requires additional configuration steps, as outlined in the [webpack5 section](examples%2Fwebpack5%2FREADME.md).
+
+## Bun Support
+
+The TypeScript build (`workerpool/modern`) provides first-class support for the [Bun](https://bun.sh/) runtime:
+
+```js
+// Using the TypeScript build with Bun
+const workerpool = require('workerpool/modern');
+
+// Option 1: Use optimalPool() for automatic best configuration
+const pool = workerpool.optimalPool();
+
+// Option 2: Explicitly use thread workers (recommended for Bun)
+const pool = workerpool.pool({ workerType: 'thread' });
+
+// Check runtime information
+console.log(workerpool.getRuntimeInfo());
+// { runtime: 'bun', version: '1.3.4', recommendedWorkerType: 'thread', ... }
+
+// Check worker type support
+console.log(workerpool.getWorkerTypeSupport());
+// { thread: true, process: false, web: false, auto: true }
+```
+
+**Important notes for Bun:**
+- Use `workerType: 'thread'` or `workerType: 'auto'` (both work correctly)
+- Avoid `workerType: 'process'` as it has known IPC issues with Bun's `child_process.fork()`
+- The library automatically selects `'thread'` when running in Bun with `'auto'` or default settings
+- All 533 TypeScript tests pass on Bun
+
+See [docs/BUN_COMPATIBILITY.md](docs/BUN_COMPATIBILITY.md) for detailed compatibility information.
 
 ## Use
 
@@ -515,6 +547,16 @@ Following properties are available for convenience:
 - **platform**: The Javascript platform. Either _node_ or _browser_
 - **isMainThread**: Whether the code is running in main thread or not (Workers)
 - **cpus**: The number of CPUs/cores available
+
+The TypeScript build (`workerpool/modern`) provides additional utilities for Bun compatibility:
+
+- **isBun**: Boolean indicating if running in Bun runtime
+- **bunVersion**: Bun version string if running in Bun, null otherwise
+- **recommendedWorkerType**: Best worker type for current runtime ('thread' for Bun, 'auto' for Node.js, 'web' for browser)
+- **getWorkerTypeSupport()**: Returns support matrix `{ thread, process, web, auto }` for all worker types
+- **isWorkerTypeSupported(type)**: Check if a specific worker type is fully supported
+- **optimalPool([script], [options])**: Create a pool with optimal settings for the current runtime
+- **getRuntimeInfo()**: Returns `{ runtime, version, recommendedWorkerType, workerTypeSupport }`
 
 ## Roadmap
 
