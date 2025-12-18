@@ -15,6 +15,7 @@
     "node_modules",
     "dist",
     "test",
-    "src/ts/generated"
+    "src/ts/generated",
+    "src/ts/assembly"
   ]
 }
