@@ -22,6 +22,9 @@ export * from './atomics';
 // SIMD batch operations
 export * from './simd-batch';
 
+// Metrics
+export * from './histogram';
+
 // Testing utilities
 import { _resetMemory } from './memory';
 import { _resetSlots } from './task-slots';
@@ -29,6 +32,7 @@ import { _resetPriorityQueue } from './priority-queue';
 import { _resetStats } from './stats';
 import { _resetAtomics } from './atomics';
 import { _resetSimd } from './simd-batch';
+import { _resetHistogram } from './histogram';
 
 /**
  * Reset all internal state for testing
@@ -41,4 +45,5 @@ export function _resetAll(): void {
   _resetStats();
   _resetAtomics();
   _resetSimd();
+  _resetHistogram();
 }
