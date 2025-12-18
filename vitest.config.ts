@@ -15,7 +15,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      include: ['src/**/*.ts', 'assembly/**/*.ts'],
+      include: ['src/**/*.ts'],
       exclude: ['**/*.d.ts', '**/*.test.ts', '**/*.vitest.ts'],
     },
 
@@ -34,7 +34,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Alias for assembly stubs during testing
-      '@assembly': './assembly-stubs',
+      '@assembly': './src/ts/assembly/stubs',
     },
   },
 });
