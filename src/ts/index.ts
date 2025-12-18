@@ -6,7 +6,17 @@
  * @packageDocumentation
  */
 
-import { platform, isMainThread, cpus } from './platform/environment';
+import {
+  platform,
+  isMainThread,
+  cpus,
+  isBun,
+  bunVersion,
+  recommendedWorkerType,
+  getWorkerTypeSupport,
+  isWorkerTypeSupported,
+} from './platform/environment';
+import type { WorkerTypeSupport } from './types/internal';
 import {
   Pool,
   PoolEnhanced,
@@ -115,6 +125,9 @@ export { Transfer };
 // Export platform info
 export { platform, isMainThread, cpus };
 
+// Export Bun compatibility utilities
+export { isBun, bunVersion, recommendedWorkerType, getWorkerTypeSupport, isWorkerTypeSupported };
+
 // Export error types
 export { TerminateError };
 
@@ -155,6 +168,8 @@ export type {
   BinarySerializedData,
   WorkerConfig,
   WorkerConfigOptions,
+  // Bun compatibility types
+  WorkerTypeSupport,
 };
 
 /**
@@ -185,10 +200,89 @@ export function enhancedPool(script?: string | EnhancedPoolOptions, options?: En
   return new Pool(script, options);
 }
 
+/**
+ * Create a pool with optimal settings for the current runtime
+ *
+ * Automatically selects the best worker type for the platform:
+ * - Bun: Uses 'thread' (worker_threads) due to IPC issues with child_process
+ * - Node.js: Uses 'auto' (will select thread or process based on availability)
+ * - Browser: Uses 'web' (Web Workers)
+ *
+ * @param script - Path to worker script (optional)
+ * @param options - Pool configuration options (workerType will be overridden)
+ * @returns New Pool instance with optimal settings
+ *
+ * @example
+ * ```typescript
+ * // Create optimally configured pool
+ * const pool = workerpool.optimalPool('./worker.js');
+ *
+ * // Works correctly in Node.js, Bun, and browsers
+ * const result = await pool.exec('myMethod', [arg1, arg2]);
+ * ```
+ */
+export function optimalPool(script?: string | PoolOptions, options?: PoolOptions): Pool {
+  const baseOptions: PoolOptions = typeof script === 'object' ? script : (options || {});
+  const scriptPath = typeof script === 'string' ? script : undefined;
+
+  const optimalOptions: PoolOptions = {
+    ...baseOptions,
+    workerType: recommendedWorkerType,
+    maxWorkers: baseOptions.maxWorkers ?? Math.max((cpus || 4) - 1, 1),
+  };
+
+  return new Pool(scriptPath, optimalOptions);
+}
+
+/**
+ * Get runtime information for diagnostics
+ *
+ * @returns Object with runtime details
+ *
+ * @example
+ * ```typescript
+ * const info = workerpool.getRuntimeInfo();
+ * console.log(info);
+ * // {
+ * //   runtime: 'bun',  // or 'node' or 'browser'
+ * //   version: '1.3.4', // runtime version
+ * //   recommendedWorkerType: 'thread',
+ * //   workerTypeSupport: { thread: true, process: false, web: false, auto: true }
+ * // }
+ * ```
+ */
+export function getRuntimeInfo(): {
+  runtime: 'bun' | 'node' | 'browser';
+  version: string | null;
+  recommendedWorkerType: string;
+  workerTypeSupport: WorkerTypeSupport;
+} {
+  let runtime: 'bun' | 'node' | 'browser';
+  let version: string | null = null;
+
+  if (platform === 'browser') {
+    runtime = 'browser';
+  } else if (isBun) {
+    runtime = 'bun';
+    version = bunVersion;
+  } else {
+    runtime = 'node';
+    version = typeof process !== 'undefined' ? process.version : null;
+  }
+
+  return {
+    runtime,
+    version,
+    recommendedWorkerType,
+    workerTypeSupport: getWorkerTypeSupport(),
+  };
+}
+
 // Default export for CommonJS compatibility
 export default {
   pool,
   enhancedPool,
+  optimalPool,
   worker,
   workerEmit,
   Promise: WorkerpoolPromise,
@@ -220,4 +314,11 @@ export default {
   deserializeBinary,
   shouldUseBinarySerialization,
   estimateBinarySize,
+  // Bun compatibility
+  isBun,
+  bunVersion,
+  recommendedWorkerType,
+  getWorkerTypeSupport,
+  isWorkerTypeSupported,
+  getRuntimeInfo,
 };

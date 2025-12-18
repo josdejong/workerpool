@@ -21,7 +21,7 @@ import {
   workerThreadOptsNames,
   workerOptsNames,
 } from './validateOptions';
-import { platform } from '../platform/environment';
+import { platform, isBun, recommendedWorkerType } from '../platform/environment';
 
 /** Special message to terminate worker */
 export const TERMINATE_METHOD_ID = '__workerpool-terminate__';
@@ -380,20 +380,43 @@ function setupProcessWorker(
 }
 
 /**
+ * Get effective worker type, considering platform capabilities
+ * In Bun, 'auto' and undefined map to 'thread' due to IPC issues with child_process.fork
+ */
+function getEffectiveWorkerType(workerType: WorkerType | undefined): WorkerType {
+  if (workerType && workerType !== 'auto') {
+    return workerType;
+  }
+  // Use recommended worker type for 'auto' or undefined
+  return recommendedWorkerType;
+}
+
+/**
  * Setup a worker based on configuration
  */
 function setupWorker(script: string, options: WorkerHandlerOptions): WorkerInstance {
-  if (options.workerType === 'web') {
+  const effectiveWorkerType = getEffectiveWorkerType(options.workerType);
+
+  // Warn if using 'process' type in Bun (explicitly requested)
+  if (isBun && options.workerType === 'process') {
+    console.warn(
+      '[workerpool] Warning: workerType "process" has known IPC issues in Bun. ' +
+        'Consider using "thread" for better compatibility. ' +
+        'See: https://github.com/oven-sh/bun/issues for updates.'
+    );
+  }
+
+  if (effectiveWorkerType === 'web') {
     ensureWebWorker();
     return setupBrowserWorker(script, options.workerOpts, Worker);
-  } else if (options.workerType === 'thread') {
+  } else if (effectiveWorkerType === 'thread') {
     const WorkerThreads = ensureWorkerThreads();
     return setupWorkerThreadWorker(script, WorkerThreads, options);
-  } else if (options.workerType === 'process' || !options.workerType) {
+  } else if (effectiveWorkerType === 'process') {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return setupProcessWorker(script, resolveForkOptions(options), require('child_process'));
   } else {
-    // auto detection
+    // auto detection fallback (should not reach here normally)
     if (platform === 'browser') {
       ensureWebWorker();
       return setupBrowserWorker(script, options.workerOpts, Worker);

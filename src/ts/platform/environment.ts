@@ -1,9 +1,10 @@
 /**
  * Platform detection utilities for workerpool
  * Detects runtime environment (Node.js vs browser) and available features
+ * Includes Bun runtime detection for optimal configuration
  */
 
-import type { PlatformInfo } from '../types/internal';
+import type { PlatformInfo, WorkerTypeSupport } from '../types/internal';
 
 /**
  * Check if running in Node.js environment
@@ -26,6 +27,22 @@ export function isNode(nodeProcess?: unknown): boolean {
  */
 export const platform: 'node' | 'browser' =
   typeof process !== 'undefined' && isNode(process) ? 'node' : 'browser';
+
+/**
+ * Check if running in Bun runtime
+ * Bun sets process.versions.bun to indicate it's the runtime
+ */
+export const isBun: boolean =
+  typeof process !== 'undefined' &&
+  process.versions !== undefined &&
+  typeof (process.versions as Record<string, string>).bun === 'string';
+
+/**
+ * Bun version if running in Bun, null otherwise
+ */
+export const bunVersion: string | null = isBun
+  ? (process.versions as Record<string, string>).bun
+  : null;
 
 /**
  * Check if worker_threads module is available
@@ -94,6 +111,49 @@ export const hasSharedArrayBuffer: boolean = typeof SharedArrayBuffer !== 'undef
 export const hasAtomics: boolean = typeof Atomics !== 'undefined';
 
 /**
+ * Worker type options
+ */
+export type WorkerType = 'auto' | 'thread' | 'process' | 'web';
+
+/**
+ * Recommended worker type for the current runtime
+ * - In Bun: 'thread' is recommended (child_process.fork has IPC issues)
+ * - In Node.js: 'auto' (will choose thread or process based on availability)
+ * - In browser: 'web'
+ */
+export const recommendedWorkerType: WorkerType = (() => {
+  if (platform === 'browser') {
+    return 'web';
+  }
+  // Bun has issues with child_process.fork IPC, prefer thread
+  if (isBun) {
+    return 'thread';
+  }
+  return 'auto';
+})();
+
+/**
+ * Get worker type support matrix for current environment
+ */
+export function getWorkerTypeSupport(): WorkerTypeSupport {
+  return {
+    thread: platform === 'node' && hasWorkerThreads,
+    process: platform === 'node' && !isBun, // Limited support in Bun
+    web: platform === 'browser',
+    auto: true,
+  };
+}
+
+/**
+ * Check if a specific worker type is fully supported
+ * @param workerType - The worker type to check
+ */
+export function isWorkerTypeSupported(workerType: WorkerType): boolean {
+  const support = getWorkerTypeSupport();
+  return support[workerType];
+}
+
+/**
  * Get complete platform information
  */
 export function getPlatformInfo(): PlatformInfo {
@@ -104,6 +164,10 @@ export function getPlatformInfo(): PlatformInfo {
     hasWorkerThreads,
     hasSharedArrayBuffer,
     hasAtomics,
+    isBun,
+    bunVersion,
+    recommendedWorkerType,
+    workerTypeSupport: getWorkerTypeSupport(),
   };
 }
 
@@ -118,5 +182,10 @@ export default {
   hasWorkerThreads,
   hasSharedArrayBuffer,
   hasAtomics,
+  isBun,
+  bunVersion,
+  recommendedWorkerType,
+  getWorkerTypeSupport,
+  isWorkerTypeSupported,
   getPlatformInfo,
 };

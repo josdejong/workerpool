@@ -10,6 +10,18 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ## [Unreleased]
 
 ### Added
+- **Bun Runtime Compatibility** (TypeScript build only):
+  - Automatic Bun detection via `isBun` and `bunVersion` exports
+  - `recommendedWorkerType` returns optimal worker type per runtime ('thread' for Bun, 'auto' for Node.js, 'web' for browser)
+  - `getWorkerTypeSupport()` returns support matrix for all worker types
+  - `isWorkerTypeSupported(type)` checks if a specific worker type is fully supported
+  - `optimalPool()` creates pool with best settings for current runtime
+  - `getRuntimeInfo()` returns complete runtime diagnostics
+  - WorkerHandler auto-selects 'thread' in Bun to avoid child_process.fork IPC issues
+  - Warning when explicitly using 'process' worker type in Bun
+  - Extended `Capabilities` interface with Bun fields
+  - Extended `PlatformInfo` with Bun-specific information
+  - 20 new unit tests for Bun detection and worker type support
 - **Dual Build System**: Separate JavaScript (`build:js`) and TypeScript+WASM (`build:wasm`) builds
 - **Benchmark Suite**: `benchmark.mjs` comparing JS vs TS+WASM performance (TS+WASM up to 34% faster for concurrent workloads)
 - TypeScript Build Infrastructure (tsconfig.json, tsconfig.build.json, rollup plugin)
