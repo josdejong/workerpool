@@ -129,7 +129,7 @@ async function buildTypeScript() {
       sourceMap: true,
     },
     include: ['src/ts/**/*.ts'],
-    exclude: ['node_modules', 'dist', 'test', 'src/ts/generated'],
+    exclude: ['node_modules', 'dist', 'test', 'src/ts/generated', 'src/ts/assembly'],
   };
 
   const tempConfigPath = path.join(ROOT_DIR, 'tsconfig.compile.json');
