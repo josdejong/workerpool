@@ -230,7 +230,7 @@ function getDefaultWorker(): string {
     const blob = new Blob([embeddedWorker], { type: 'text/javascript' });
     return window.URL.createObjectURL(blob);
   } else {
-    return __dirname + '/worker.js';
+    return __dirname + '/../workers/worker.js';
   }
 }
 
