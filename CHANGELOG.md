@@ -17,8 +17,9 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - FIFOQueue now uses GrowableCircularBuffer internally (O(1) push/shift)
   - WorkerHandler uses Map<> instead of Object.create(null) for better iteration performance
   - MetricsCollector uses CircularBuffer for O(1) operations instead of array.shift()
-  - **Benchmark Results (Node.js)**: TS+WASM is 1.85x faster for pool creation, 1.46x faster for concurrent tasks
-  - **Benchmark Results (Bun)**: TS+WASM is 1.33x faster for queue throughput, 1.29x faster for concurrent tasks
+  - AssemblyScript circular buffer for WASM (initBuffer, pushGrowable, pushWithEviction, shift, peek, drain)
+  - **Benchmark Results (Node.js)**: TS+WASM is 2.32x faster for pool creation, 1.30x faster for concurrent tasks, 1.32x faster for queue throughput
+  - **Benchmark Results (Bun)**: TS+WASM is 1.57x faster for queue throughput, 1.36x faster for pool creation, 1.11x faster for concurrent tasks
 
 ### Added
 - **Bun Runtime Compatibility** (TypeScript build only):
@@ -43,6 +44,10 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 - AssemblyScript stubs for testing in src/ts/assembly/stubs/
 - WASM JavaScript Bridge in src/ts/wasm/
 - Queue Factory with fifo, lifo, priority, wasm, auto strategies
+- **Full Bundle Integration** (`workerpool/full`): All orphaned modules now exported:
+  - Worker Management: AdaptiveScaler, HealthMonitor, IdleRecycler, WorkerAffinity, WorkerCache
+  - Platform: MessageBatcher, ChannelFactory, StructuredClone, ResultStream, TransferDetection
+  - Core: BatchSerializer, SIMDProcessor
 - **Sprint 5: Worker Pre-Warming & Adaptive Scaling**
   - MetricsCollector: Task latency histograms, worker utilization, queue depths, error rates
   - AdaptiveScaler: Dynamic min/max scaling with hysteresis
@@ -82,9 +87,13 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 - **Assembly Location**: Moved `assembly/` to `src/ts/assembly/`, stubs to `src/ts/assembly/stubs/`
 - Updated package.json and rollup.config.mjs for TypeScript
 - Simplified build scripts: removed `build:all`, renamed combined TS+WASM build to `build:wasm`
+- Removed duplicate QueueFactory.ts (TaskQueue.ts provides createQueue())
+- Full bundle size increased from ~15KB to ~34KB due to integrated modules
 
 ### Fixed
 - Worker path resolution in TypeScript WorkerHandler (was looking for wrong path)
+- Circular dependency between types/index.ts and types/worker-methods.ts (extracted shared types to types/core.ts)
+- Missing simd-batch.ts export in assembly/index.ts
 
 ### Infrastructure
 - Phase 1 Sprints 1-4 COMPLETED
