@@ -3,9 +3,13 @@
  *
  * Tracks task latency histograms, worker utilization, queue depths,
  * error rates, and provides metrics export via callback.
+ *
+ * Performance optimized with CircularBuffer for O(1) operations
+ * instead of O(n) array.shift() calls.
  */
 
 import type { WorkerInfo, WorkerState } from '../types/internal';
+import { CircularBuffer, TimeWindowBuffer } from './circular-buffer';
 
 /**
  * Histogram bucket for latency distribution
@@ -131,14 +135,6 @@ export interface MetricsCollectorOptions {
 const DEFAULT_BUCKETS = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
 
 /**
- * Rolling window data point
- */
-interface DataPoint {
-  timestamp: number;
-  value: number;
-}
-
-/**
  * MetricsCollector - Comprehensive metrics collection
  *
  * @example
@@ -172,19 +168,19 @@ export class MetricsCollector {
   private latencySum = 0;
   private latencyMin = Infinity;
   private latencyMax = 0;
-  private latencyValues: DataPoint[] = [];  // For percentile calculations
+  private latencyValues: TimeWindowBuffer<number>;  // For percentile calculations - O(1) push
 
   // Queue tracking
   private queueDepth = 0;
   private peakQueueDepth = 0;
   private totalEnqueued = 0;
   private totalDequeued = 0;
-  private queueWaitTimes: DataPoint[] = [];
+  private queueWaitTimes: TimeWindowBuffer<number>;  // O(1) push
 
   // Error tracking
   private totalErrors = 0;
   private errorsByType: Map<string, number> = new Map();
-  private recentErrors: Array<{ timestamp: number; type: string; message: string }> = [];
+  private recentErrors: CircularBuffer<{ timestamp: number; type: string; message: string }>;  // O(1) push
 
   // Worker tracking
   private workerMetrics: Map<number, {
@@ -192,11 +188,11 @@ export class MetricsCollector {
     tasksFailed: number;
     totalBusyTime: number;
     lastBusyStart?: number;
-    taskDurations: number[];
+    taskDurations: CircularBuffer<number>;  // O(1) push
   }> = new Map();
 
   // Rate calculation
-  private taskCompletions: DataPoint[] = [];
+  private taskCompletions: TimeWindowBuffer<number>;  // O(1) push
   private startTime: number;
 
   constructor(options: MetricsCollectorOptions = {}) {
@@ -208,6 +204,12 @@ export class MetricsCollector {
 
     // Initialize bucket counts
     this.latencyBuckets = new Array(this.buckets.length + 1).fill(0);
+
+    // Initialize circular buffers for O(1) operations
+    this.latencyValues = new TimeWindowBuffer<number>(this.rateWindow, 10000);
+    this.queueWaitTimes = new TimeWindowBuffer<number>(this.rateWindow, 10000);
+    this.taskCompletions = new TimeWindowBuffer<number>(this.rateWindow, 10000);
+    this.recentErrors = new CircularBuffer(this.maxRecentErrors);
 
     // Start export timer if configured
     if (options.exportInterval && options.exportInterval > 0 && this.onExport) {
@@ -221,8 +223,6 @@ export class MetricsCollector {
    * Record a completed task
    */
   recordTaskComplete(workerId: number, durationMs: number): void {
-    const now = Date.now();
-
     // Update latency histogram
     this.latencyCount++;
     this.latencySum += durationMs;
@@ -240,13 +240,11 @@ export class MetricsCollector {
       }
     }
 
-    // Store for percentile calculation (keep last N values)
-    this.latencyValues.push({ timestamp: now, value: durationMs });
-    this.pruneDataPoints(this.latencyValues);
+    // Store for percentile calculation - O(1) with CircularBuffer
+    this.latencyValues.push(durationMs);
 
-    // Update task completions for rate calculation
-    this.taskCompletions.push({ timestamp: now, value: 1 });
-    this.pruneDataPoints(this.taskCompletions);
+    // Update task completions for rate calculation - O(1)
+    this.taskCompletions.push(1);
 
     // Update worker metrics
     this.updateWorkerTaskComplete(workerId, durationMs);
@@ -263,15 +261,12 @@ export class MetricsCollector {
     this.totalErrors++;
     this.errorsByType.set(errorType, (this.errorsByType.get(errorType) || 0) + 1);
 
-    // Add to recent errors
+    // Add to recent errors - O(1) with CircularBuffer (auto-evicts oldest)
     this.recentErrors.push({
       timestamp: now,
       type: errorType,
       message: error.message,
     });
-    if (this.recentErrors.length > this.maxRecentErrors) {
-      this.recentErrors.shift();
-    }
 
     // Update worker metrics
     const workerMetric = this.getOrCreateWorkerMetric(workerId);
@@ -298,8 +293,8 @@ export class MetricsCollector {
     this.totalDequeued++;
     this.queueDepth = Math.max(0, this.queueDepth - 1);
 
-    this.queueWaitTimes.push({ timestamp: Date.now(), value: waitTimeMs });
-    this.pruneDataPoints(this.queueWaitTimes);
+    // O(1) with TimeWindowBuffer
+    this.queueWaitTimes.push(waitTimeMs);
   }
 
   /**
@@ -344,27 +339,25 @@ export class MetricsCollector {
 
     // Calculate summary statistics
     const avgLatency = this.latencyCount > 0 ? this.latencySum / this.latencyCount : 0;
-    const sortedLatencies = this.latencyValues
-      .map(p => p.value)
-      .sort((a, b) => a - b);
+    // Get values within time window and sort for percentiles
+    const sortedLatencies = this.latencyValues.getValues().sort((a, b) => a - b);
 
     const p50 = this.percentile(sortedLatencies, 50);
     const p95 = this.percentile(sortedLatencies, 95);
     const p99 = this.percentile(sortedLatencies, 99);
 
-    // Calculate task rate
-    const recentCompletions = this.taskCompletions.filter(
-      p => now - p.timestamp < this.rateWindow
-    ).length;
+    // Calculate task rate using TimeWindowBuffer
+    const recentCompletions = this.taskCompletions.countInWindow();
     const tasksPerSecond = (recentCompletions / this.rateWindow) * 1000;
 
     // Calculate error rate
     const totalTasks = this.latencyCount + this.totalErrors;
     const errorRate = totalTasks > 0 ? this.totalErrors / totalTasks : 0;
 
-    // Queue metrics
-    const avgWaitTime = this.queueWaitTimes.length > 0
-      ? this.queueWaitTimes.reduce((sum, p) => sum + p.value, 0) / this.queueWaitTimes.length
+    // Queue metrics using TimeWindowBuffer
+    const waitTimeValues = this.queueWaitTimes.getValues();
+    const avgWaitTime = waitTimeValues.length > 0
+      ? waitTimeValues.reduce((sum, v) => sum + v, 0) / waitTimeValues.length
       : 0;
 
     return {
@@ -390,7 +383,7 @@ export class MetricsCollector {
       errors: {
         total: this.totalErrors,
         byType: new Map(this.errorsByType),
-        recent: [...this.recentErrors],
+        recent: this.recentErrors.toArray(),  // Convert CircularBuffer to array
       },
       summary: {
         totalWorkers: workers.length,
@@ -415,20 +408,20 @@ export class MetricsCollector {
     this.latencySum = 0;
     this.latencyMin = Infinity;
     this.latencyMax = 0;
-    this.latencyValues = [];
+    this.latencyValues.clear();
 
     this.queueDepth = 0;
     this.peakQueueDepth = 0;
     this.totalEnqueued = 0;
     this.totalDequeued = 0;
-    this.queueWaitTimes = [];
+    this.queueWaitTimes.clear();
 
     this.totalErrors = 0;
     this.errorsByType.clear();
-    this.recentErrors = [];
+    this.recentErrors.clear();
 
     this.workerMetrics.clear();
-    this.taskCompletions = [];
+    this.taskCompletions.clear();
     this.startTime = Date.now();
   }
 
@@ -452,7 +445,7 @@ export class MetricsCollector {
         tasksCompleted: 0,
         tasksFailed: 0,
         totalBusyTime: 0,
-        taskDurations: [],
+        taskDurations: new CircularBuffer<number>(100),  // O(1) operations
       };
       this.workerMetrics.set(workerId, metric);
     }
@@ -465,12 +458,8 @@ export class MetricsCollector {
   private updateWorkerTaskComplete(workerId: number, durationMs: number): void {
     const metric = this.getOrCreateWorkerMetric(workerId);
     metric.tasksCompleted++;
+    // O(1) push with CircularBuffer (auto-evicts oldest when full)
     metric.taskDurations.push(durationMs);
-
-    // Keep only recent durations for avg calculation
-    if (metric.taskDurations.length > 100) {
-      metric.taskDurations.shift();
-    }
   }
 
   /**
@@ -487,8 +476,10 @@ export class MetricsCollector {
       }
 
       const utilization = elapsed > 0 ? (busyTime / elapsed) * 100 : 0;
-      const avgDuration = metric.taskDurations.length > 0
-        ? metric.taskDurations.reduce((a, b) => a + b, 0) / metric.taskDurations.length
+      // Use CircularBuffer reduce for average calculation
+      const durations = metric.taskDurations;
+      const avgDuration = durations.size > 0
+        ? durations.reduce((sum, val) => sum + val, 0) / durations.size
         : 0;
 
       utilizations.push({
@@ -514,19 +505,8 @@ export class MetricsCollector {
     return sorted[Math.max(0, index)];
   }
 
-  /**
-   * Prune old data points outside rate window
-   */
-  private pruneDataPoints(points: DataPoint[]): void {
-    const cutoff = Date.now() - this.rateWindow;
-    while (points.length > 0 && points[0].timestamp < cutoff) {
-      points.shift();
-    }
-    // Also limit array size
-    while (points.length > 10000) {
-      points.shift();
-    }
-  }
+  // Note: pruneDataPoints method removed - replaced by CircularBuffer and TimeWindowBuffer
+  // which provide O(1) operations with automatic eviction
 }
 
 export default MetricsCollector;

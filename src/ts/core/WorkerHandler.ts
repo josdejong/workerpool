@@ -448,14 +448,15 @@ function handleEmittedStdPayload(
   handler: WorkerHandler,
   payload: { stdout?: string; stderr?: string }
 ): void {
-  const processTask = (task: ProcessingTask | undefined) => {
-    if (task?.options?.on) {
+  const processTask = (task: ProcessingTask) => {
+    if (task.options?.on) {
       task.options.on(payload);
     }
   };
 
-  Object.values(handler.processing).forEach(processTask);
-  Object.values(handler.tracking).forEach(processTask);
+  // Use Map iteration for O(1) per-entry access
+  handler.processing.forEach(processTask);
+  handler.tracking.forEach(processTask);
 }
 
 /**
@@ -489,11 +490,11 @@ export class WorkerHandler {
   /** Queue of requests waiting for worker ready */
   private requestQueue: QueuedRequest[] = [];
 
-  /** Tasks currently being processed */
-  processing: Record<number, ProcessingTask> = Object.create(null);
+  /** Tasks currently being processed - Map for O(1) operations */
+  processing: Map<number, ProcessingTask> = new Map();
 
-  /** Tasks being tracked for cleanup */
-  tracking: Record<number, TrackingTask> = Object.create(null);
+  /** Tasks being tracked for cleanup - Map for O(1) operations */
+  tracking: Map<number, TrackingTask> = new Map();
 
   /** Whether termination is in progress */
   private terminating = false;
@@ -592,7 +593,7 @@ export class WorkerHandler {
     response: TaskSuccessResponse | TaskErrorResponse | WorkerEvent | CleanupResponse
   ): void {
     const id = response.id;
-    const task = this.processing[id];
+    const task = this.processing.get(id);
 
     if (task !== undefined) {
       if ('isEvent' in response && response.isEvent) {
@@ -602,7 +603,7 @@ export class WorkerHandler {
         }
       } else {
         // Task completed
-        delete this.processing[id];
+        this.processing.delete(id);
 
         if (this.terminating) {
           this.terminate();
@@ -616,7 +617,7 @@ export class WorkerHandler {
       }
     } else {
       // Check tracked tasks
-      const trackedTask = this.tracking[id];
+      const trackedTask = this.tracking.get(id);
       if (trackedTask !== undefined) {
         if ('isEvent' in response && response.isEvent) {
           if (trackedTask.options?.on) {
@@ -628,7 +629,7 @@ export class WorkerHandler {
 
     // Handle cleanup response
     if ('method' in response && response.method === CLEANUP_METHOD_ID) {
-      const trackedTask = this.tracking[id];
+      const trackedTask = this.tracking.get(id);
       if (trackedTask !== undefined) {
         if (trackedTask.timeoutId) {
           clearTimeout(trackedTask.timeoutId);
@@ -640,7 +641,7 @@ export class WorkerHandler {
           trackedTask.resolver.reject(new WrappedTimeoutError(trackedTask.error as TimeoutError));
         }
       }
-      delete this.tracking[id];
+      this.tracking.delete(id);
     }
   }
 
@@ -650,13 +651,12 @@ export class WorkerHandler {
   private onError(error: Error): void {
     this.terminated = true;
 
-    for (const id in this.processing) {
-      if (this.processing[id] !== undefined) {
-        this.processing[id].resolver.reject(error);
-      }
+    // Iterate and reject all processing tasks
+    for (const [, task] of this.processing) {
+      task.resolver.reject(error);
     }
 
-    this.processing = Object.create(null);
+    this.processing.clear();
   }
 
   /**
@@ -691,11 +691,11 @@ export class WorkerHandler {
 
     const id = ++this.lastId;
 
-    this.processing[id] = {
+    this.processing.set(id, {
       id,
       resolver: resolver as Resolver<unknown>,
       options,
-    };
+    });
 
     const request: TaskRequest = {
       id,
@@ -722,17 +722,17 @@ export class WorkerHandler {
       if (error instanceof CancellationError || error instanceof TimeoutError) {
         const trackingResolver = WorkerpoolPromise.defer<T>();
 
-        me.tracking[id] = {
+        me.tracking.set(id, {
           id,
           resolver: trackingResolver as Resolver<unknown>,
           options,
           error: error as Error,
-        };
+        });
 
-        delete me.processing[id];
+        me.processing.delete(id);
 
         trackingResolver.promise = trackingResolver.promise.catch((err: unknown) => {
-          delete me.tracking[id];
+          me.tracking.delete(id);
 
           if (err instanceof WrappedTimeoutError) {
             throw err.originalError;
@@ -753,11 +753,15 @@ export class WorkerHandler {
           method: CLEANUP_METHOD_ID,
         });
 
-        me.tracking[id].timeoutId = setTimeout(() => {
-          if (me.tracking[id]) {
-            me.tracking[id].resolver.reject(error);
-          }
-        }, me.workerTerminateTimeout);
+        const trackedTask = me.tracking.get(id);
+        if (trackedTask) {
+          trackedTask.timeoutId = setTimeout(() => {
+            const task = me.tracking.get(id);
+            if (task) {
+              task.resolver.reject(error);
+            }
+          }, me.workerTerminateTimeout);
+        }
 
         return trackingResolver.promise;
       } else {
@@ -770,7 +774,7 @@ export class WorkerHandler {
    * Check if worker is busy
    */
   busy(): boolean {
-    return this.cleaning || Object.keys(this.processing).length > 0;
+    return this.cleaning || this.processing.size > 0;
   }
 
   /**
@@ -780,22 +784,21 @@ export class WorkerHandler {
     const me = this;
 
     if (force) {
-      for (const id in this.processing) {
-        if (this.processing[id] !== undefined) {
-          this.processing[id].resolver.reject(new Error('Worker terminated'));
-        }
+      // Reject all processing tasks
+      for (const [, task] of this.processing) {
+        task.resolver.reject(new Error('Worker terminated'));
       }
-      this.processing = Object.create(null);
+      this.processing.clear();
     }
 
     // Cancel tracked tasks
-    for (const task of Object.values(me.tracking)) {
+    for (const [, task] of me.tracking) {
       if (task.timeoutId) {
         clearTimeout(task.timeoutId);
       }
       task.resolver.reject(new Error('Worker Terminating'));
     }
-    me.tracking = Object.create(null);
+    me.tracking.clear();
 
     if (typeof callback === 'function') {
       this.terminationHandler = callback;
