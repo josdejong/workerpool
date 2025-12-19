@@ -356,6 +356,177 @@ export function enhancedPool(script?: string | Record<string, unknown>, options?
 }
 
 // ============================================================================
+// Worker Management (Advanced Features)
+// ============================================================================
+
+// Adaptive Scaler - Dynamic worker pool scaling
+export {
+  AdaptiveScaler,
+  ScaleAction,
+} from './workers/adaptive-scaler';
+
+export type {
+  ScaleDecision,
+  ScalingThresholds,
+  AdaptiveScalerOptions,
+} from './workers/adaptive-scaler';
+
+// Health Monitor - Worker health tracking
+export {
+  HealthMonitor,
+  HealthStatus,
+} from './workers/health-monitor';
+
+export type {
+  WorkerHealthCheck,
+  HealthMonitorOptions,
+} from './workers/health-monitor';
+
+// Idle Recycler - Worker recycling based on idle time
+export {
+  IdleRecycler,
+  RecycleReason,
+} from './workers/recycler';
+
+export type {
+  RecycleCandidate,
+  IdleRecyclerOptions,
+} from './workers/recycler';
+
+// Worker Affinity - Task-to-worker affinity for cache locality
+export {
+  WorkerAffinity,
+  AffinityStrategy,
+} from './workers/affinity';
+
+export type {
+  AffinityHint,
+  AffinityMapping,
+  WorkerAffinityOptions,
+  AffinityStats,
+} from './workers/affinity';
+
+// Worker Cache - Worker instance caching
+export {
+  WorkerCache,
+} from './workers/WorkerCache';
+
+export type {
+  WorkerCacheOptions,
+  CachedWorker,
+  WorkerCacheStats,
+} from './workers/WorkerCache';
+
+// ============================================================================
+// Platform Optimization (Advanced Features)
+// ============================================================================
+
+// Message Batcher - Batch small messages for throughput
+export {
+  MessageBatcher,
+  AdaptiveBatcher,
+} from './platform/message-batcher';
+
+export type {
+  BatcherConfig,
+  BatchedMessage,
+  MessageBatch,
+  BatchSendCallback,
+} from './platform/message-batcher';
+
+// Channel Factory - Communication channel abstraction
+export {
+  ChannelType,
+  canUseSharedMemory as canUseSharedMemoryChannel,
+  createChannel,
+  MessagePassingChannel,
+} from './platform/channel-factory';
+
+export type {
+  IChannel,
+  SendResult as ChannelSendResult,
+  ChannelFactoryOptions,
+} from './platform/channel-factory';
+
+// Structured Clone Optimization
+export {
+  optimizeForTransfer,
+  hasTransferableContent,
+  createOptimizedTransfer,
+  CloneStrategy,
+} from './platform/structured-clone';
+
+export type {
+  CloneOptimization,
+  CloneOptions,
+} from './platform/structured-clone';
+
+// Result Stream - Streaming large results
+export {
+  ResultStreamSender,
+  ResultStreamReceiver,
+  StreamState,
+  SharedMemoryResultStream,
+} from './platform/result-stream';
+
+export type {
+  StreamChunk,
+  StreamConfig,
+  StreamProgress,
+  StreamCallbacks,
+} from './platform/result-stream';
+
+// Transfer Detection - Transferable object detection
+export {
+  isTransferable,
+  detectTransferables,
+  getTransferableType,
+  validateTransferables,
+  TransferableType,
+} from './platform/transfer-detection';
+
+// ============================================================================
+// Core Optimization (Advanced Features)
+// ============================================================================
+
+// Batch Serializer - Efficient batch task serialization
+export {
+  serializeBatch,
+  deserializeBatch,
+  serializeTaskResult,
+  deserializeTaskResults,
+  generateBatchId,
+  serializeFunction,
+  estimateBatchSize,
+  collectTransferables,
+  createBatchAggregator,
+} from './core/batch-serializer';
+
+export type {
+  SerializedTask,
+  SerializedBatch,
+  SerializedTaskResult,
+  SerializedBatchResult,
+  SerializerConfig,
+} from './core/batch-serializer';
+
+// SIMD Processor - SIMD-accelerated operations
+export {
+  getSIMDProcessor,
+  canUseSIMD,
+  simdMapF32,
+  simdReduceF32,
+  simdDotProduct,
+  resetSIMDProcessor,
+} from './wasm/simd-processor';
+
+export type {
+  SIMDProcessor,
+  SIMDOperation,
+  ReduceOperation,
+} from './wasm/simd-processor';
+
+// ============================================================================
 // Metadata
 // ============================================================================
 
