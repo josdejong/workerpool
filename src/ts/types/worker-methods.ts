@@ -5,7 +5,7 @@
  * enabling IDE autocompletion and type checking for worker communication.
  */
 
-import type { WorkerpoolPromise, ExecOptions } from './index';
+import type { WorkerpoolPromise, ExecOptions } from './core';
 
 // ============================================================================
 // Worker Method Definition Types

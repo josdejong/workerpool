@@ -28,3 +28,6 @@ export * from './atomics';
 
 // Metrics
 export * from './histogram';
+
+// SIMD batch operations
+export * from './simd-batch';
