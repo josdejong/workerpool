@@ -24,6 +24,17 @@ import {
   transferObject,
 } from '../../src/ts/platform/transfer';
 
+// Import transfer detection utilities (new exports)
+import {
+  isTransferable,
+  detectTransferables,
+  getTransferableType,
+  validateTransferables,
+  getTransferableSize,
+  hasTransferables,
+  getTransferHint,
+} from '../../src/ts/platform/transfer-detection';
+
 describe('Transfer', () => {
   describe('constructor', () => {
     it('should create a Transfer instance', () => {
@@ -382,6 +393,215 @@ describe('Transfer', () => {
 
       expect(transfer.message).toBe(data);
       expect(transfer.transfer).toEqual([buffer]);
+    });
+  });
+});
+
+// =============================================================================
+// Transfer Detection Utilities (new exports from platform/transfer-detection)
+// =============================================================================
+
+describe('Transfer Detection Utilities', () => {
+  describe('isTransferable', () => {
+    it('should return true for ArrayBuffer', () => {
+      expect(isTransferable(new ArrayBuffer(16))).toBe(true);
+    });
+
+    it('should return false for TypedArrays (only their buffers are transferable)', () => {
+      expect(isTransferable(new Uint8Array(16))).toBe(false);
+      expect(isTransferable(new Float64Array(16))).toBe(false);
+    });
+
+    it('should return false for plain objects', () => {
+      expect(isTransferable({})).toBe(false);
+      expect(isTransferable({ data: 'test' })).toBe(false);
+    });
+
+    it('should return false for primitives', () => {
+      expect(isTransferable(null)).toBe(false);
+      expect(isTransferable(undefined)).toBe(false);
+      expect(isTransferable(42)).toBe(false);
+      expect(isTransferable('string')).toBe(false);
+    });
+
+    it('should return false for arrays', () => {
+      expect(isTransferable([1, 2, 3])).toBe(false);
+    });
+  });
+
+  describe('getTransferableType', () => {
+    it('should return "ArrayBuffer" for ArrayBuffer', () => {
+      expect(getTransferableType(new ArrayBuffer(16))).toBe('ArrayBuffer');
+    });
+
+    it('should return null for non-transferable values', () => {
+      expect(getTransferableType({})).toBeNull();
+      expect(getTransferableType(null)).toBeNull();
+      expect(getTransferableType(42)).toBeNull();
+      expect(getTransferableType(new Uint8Array(16))).toBeNull();
+    });
+  });
+
+  describe('getTransferableSize', () => {
+    it('should return correct size for ArrayBuffer', () => {
+      expect(getTransferableSize(new ArrayBuffer(1024))).toBe(1024);
+      expect(getTransferableSize(new ArrayBuffer(0))).toBe(0);
+    });
+  });
+
+  describe('detectTransferables', () => {
+    it('should find ArrayBuffer in object', () => {
+      const buffer = new ArrayBuffer(1024);
+      const result = detectTransferables({ buffer, name: 'test' });
+
+      expect(result.transferables).toHaveLength(1);
+      expect(result.transferables[0].object).toBe(buffer);
+      expect(result.transferables[0].type).toBe('ArrayBuffer');
+      expect(result.totalSize).toBe(1024);
+    });
+
+    it('should find TypedArray buffer', () => {
+      const array = new Float64Array([1.5, 2.5, 3.5]);
+      const result = detectTransferables({ data: array });
+
+      expect(result.transferables).toHaveLength(1);
+      expect(result.transferables[0].object).toBe(array.buffer);
+      expect(result.transferables[0].type).toBe('ArrayBuffer');
+    });
+
+    it('should find nested transferables', () => {
+      const buffer = new ArrayBuffer(512);
+      const data = {
+        level1: {
+          level2: {
+            buffer,
+          },
+        },
+      };
+      const result = detectTransferables(data);
+
+      expect(result.transferables).toHaveLength(1);
+      expect(result.transferables[0].path).toBe('level1.level2.buffer');
+    });
+
+    it('should find multiple transferables', () => {
+      const buf1 = new ArrayBuffer(256);
+      const buf2 = new ArrayBuffer(512);
+      const result = detectTransferables({ a: buf1, b: buf2 });
+
+      expect(result.transferables).toHaveLength(2);
+      expect(result.totalSize).toBe(768);
+    });
+
+    it('should not duplicate shared buffers', () => {
+      const buffer = new ArrayBuffer(1024);
+      const view1 = new Uint8Array(buffer);
+      const view2 = new Float32Array(buffer);
+      const result = detectTransferables({ view1, view2 });
+
+      expect(result.transferables).toHaveLength(1);
+    });
+
+    it('should return empty result for primitives', () => {
+      expect(detectTransferables(null).transferables).toHaveLength(0);
+      expect(detectTransferables(undefined).transferables).toHaveLength(0);
+      expect(detectTransferables(42).transferables).toHaveLength(0);
+      expect(detectTransferables('test').transferables).toHaveLength(0);
+    });
+
+    it('should detect large buffers', () => {
+      const largeBuffer = new ArrayBuffer(2 * 1024 * 1024); // 2MB
+      const result = detectTransferables({ data: largeBuffer });
+
+      expect(result.hasLargeBuffers).toBe(true);
+    });
+
+    it('should handle arrays of transferables', () => {
+      const buffers = [new ArrayBuffer(100), new ArrayBuffer(200)];
+      const result = detectTransferables(buffers);
+
+      expect(result.transferables).toHaveLength(2);
+      expect(result.totalSize).toBe(300);
+    });
+  });
+
+  describe('hasTransferables', () => {
+    it('should return true when object contains transferables', () => {
+      expect(hasTransferables({ buffer: new ArrayBuffer(16) })).toBe(true);
+      expect(hasTransferables(new ArrayBuffer(16))).toBe(true);
+      expect(hasTransferables({ data: new Uint8Array(16) })).toBe(true);
+    });
+
+    it('should return false when object has no transferables', () => {
+      expect(hasTransferables({})).toBe(false);
+      expect(hasTransferables({ name: 'test', value: 42 })).toBe(false);
+      expect(hasTransferables(null)).toBe(false);
+      expect(hasTransferables([1, 2, 3])).toBe(false);
+    });
+  });
+
+  describe('validateTransferables', () => {
+    it('should validate valid transferables', () => {
+      const buffer = new ArrayBuffer(16);
+      const result = validateTransferables([buffer]);
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should detect duplicate transferables', () => {
+      const buffer = new ArrayBuffer(16);
+      const result = validateTransferables([buffer, buffer]);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('Duplicate'))).toBe(true);
+    });
+
+    it('should warn about empty ArrayBuffers', () => {
+      const buffer = new ArrayBuffer(0);
+      const result = validateTransferables([buffer]);
+
+      expect(result.valid).toBe(true);
+      expect(result.warnings.some(w => w.includes('Empty'))).toBe(true);
+    });
+
+    it('should validate empty list', () => {
+      const result = validateTransferables([]);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+  });
+
+  describe('getTransferHint', () => {
+    it('should recommend transfer for large buffers', () => {
+      const largeBuffer = new ArrayBuffer(2 * 1024 * 1024);
+      const hint = getTransferHint({ data: largeBuffer });
+
+      expect(hint.shouldTransfer).toBe(true);
+      expect(hint.impact).toBe('high');
+    });
+
+    it('should recommend transfer for medium buffers', () => {
+      const buffer = new ArrayBuffer(50 * 1024); // 50KB
+      const hint = getTransferHint({ data: buffer });
+
+      expect(hint.shouldTransfer).toBe(true);
+      expect(hint.impact).toBe('medium');
+    });
+
+    it('should not recommend transfer for no transferables', () => {
+      const hint = getTransferHint({ name: 'test', value: 42 });
+
+      expect(hint.shouldTransfer).toBe(false);
+      expect(hint.impact).toBe('none');
+    });
+
+    it('should recommend transfer for small buffers with low impact', () => {
+      const buffer = new ArrayBuffer(1024); // 1KB
+      const hint = getTransferHint({ data: buffer });
+
+      expect(hint.shouldTransfer).toBe(true);
+      expect(hint.impact).toBe('low');
     });
   });
 });
