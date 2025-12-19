@@ -14,6 +14,8 @@ export * from './core';
 export * from './internal';
 export * from './messages';
 export * from './worker-methods';
+export * from './parallel';
+export * from './session';
 
 /**
  * Worker type determines which backend is used for worker execution

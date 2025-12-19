@@ -36,8 +36,29 @@ import type {
   BatchPromise,
   BatchProgress,
   MapOptions,
+  ParallelOptions,
+  ReduceOptions,
+  FindOptions,
+  PredicateOptions,
+  ForEachResult,
+  ParallelPromise,
+  ReducerFn,
+  CombinerFn,
+  PredicateFn,
+  ConsumerFn,
 } from '../types/index';
 import { createBatchExecutor, createMapExecutor, type TaskExecutor } from './batch-executor';
+import {
+  createParallelReduce,
+  createParallelForEach,
+  createParallelFilter,
+  createParallelSome,
+  createParallelEvery,
+  createParallelFind,
+  createParallelFindIndex,
+} from './parallel-processing';
+import { SessionManager, type SessionManagerPool } from './session-manager';
+import type { Session, SessionOptions } from '../types/session';
 
 /** Global debug port allocator */
 const DEBUG_PORT_ALLOCATOR = new DebugPortAllocator();
@@ -308,6 +329,9 @@ export class Pool<TMetadata = unknown> {
 
   /** Task tracking */
   private _taskIdCounter = 0;
+
+  /** Session manager */
+  private _sessionManager: SessionManager | null = null;
 
   constructor(script?: string | EnhancedPoolOptions, options?: EnhancedPoolOptions) {
     // Handle overloaded constructor
@@ -639,6 +663,344 @@ export class Pool<TMetadata = unknown> {
       ...options,
       concurrency: options?.concurrency ?? this.maxWorkers,
     } as BatchOptions & { chunkSize?: number });
+  }
+
+  // ============================================================================
+  // Parallel Array Operations
+  // ============================================================================
+
+  /**
+   * Parallel reduce: reduce array to single value in parallel
+   *
+   * Note: For parallel reduce to work correctly, the reducer must be
+   * associative (order of operations doesn't affect result).
+   *
+   * @param items - Array of items to reduce
+   * @param reducerFn - Reducer function (executed in worker)
+   * @param combinerFn - Function to combine partial results
+   * @param options - Reduce options with initial value
+   * @returns Promise resolving to the reduced value
+   *
+   * @example
+   * ```typescript
+   * // Parallel sum
+   * const sum = await pool.reduce(
+   *   [1, 2, 3, 4, 5, 6, 7, 8],
+   *   (acc, x) => acc + x,
+   *   (left, right) => left + right,
+   *   { initialValue: 0 }
+   * );
+   * console.log(sum); // 36
+   * ```
+   */
+  reduce<T, A>(
+    items: T[],
+    reducerFn: ReducerFn<T, A> | string,
+    combinerFn: CombinerFn<A>,
+    options: ReduceOptions<A>
+  ): ParallelPromise<A> {
+    const executor: TaskExecutor<A> = (method, params, execOptions) => {
+      return this.exec<A>(method, params, execOptions as EnhancedExecOptions<TMetadata>);
+    };
+
+    return createParallelReduce<T, A>(items, reducerFn, combinerFn, executor, {
+      ...options,
+      concurrency: options.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  /**
+   * Parallel forEach: execute function for each item in parallel
+   *
+   * @param items - Array of items to process
+   * @param fn - Consumer function (executed in worker)
+   * @param options - Parallel processing options
+   * @returns Promise resolving when all items are processed
+   *
+   * @example
+   * ```typescript
+   * await pool.forEach(urls, async (url) => {
+   *   await processUrl(url);
+   * });
+   * ```
+   */
+  forEach<T>(
+    items: T[],
+    fn: ConsumerFn<T> | string,
+    options?: ParallelOptions
+  ): ParallelPromise<ForEachResult> {
+    const executor: TaskExecutor<void> = (method, params, execOptions) => {
+      return this.exec<void>(method, params, execOptions as EnhancedExecOptions<TMetadata>);
+    };
+
+    return createParallelForEach<T>(items, fn, executor, {
+      ...options,
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  /**
+   * Parallel filter: filter items in parallel
+   *
+   * @param items - Array of items to filter
+   * @param predicateFn - Predicate function (executed in worker)
+   * @param options - Parallel processing options
+   * @returns Promise resolving to filtered items (order preserved)
+   *
+   * @example
+   * ```typescript
+   * const evens = await pool.filter([1, 2, 3, 4, 5, 6], x => x % 2 === 0);
+   * console.log(evens); // [2, 4, 6]
+   * ```
+   */
+  filter<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: ParallelOptions
+  ): ParallelPromise<T[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method, params, execOptions as EnhancedExecOptions<TMetadata>);
+    };
+
+    return createParallelFilter<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  /**
+   * Parallel some: test if any item matches predicate
+   *
+   * @param items - Array of items to test
+   * @param predicateFn - Predicate function (executed in worker)
+   * @param options - Predicate options
+   * @returns Promise resolving to true if any item matches
+   *
+   * @example
+   * ```typescript
+   * const hasNegative = await pool.some(numbers, x => x < 0);
+   * ```
+   */
+  some<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: PredicateOptions
+  ): ParallelPromise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method, params, execOptions as EnhancedExecOptions<TMetadata>);
+    };
+
+    return createParallelSome<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  /**
+   * Parallel every: test if all items match predicate
+   *
+   * @param items - Array of items to test
+   * @param predicateFn - Predicate function (executed in worker)
+   * @param options - Predicate options
+   * @returns Promise resolving to true if all items match
+   *
+   * @example
+   * ```typescript
+   * const allPositive = await pool.every(numbers, x => x > 0);
+   * ```
+   */
+  every<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: PredicateOptions
+  ): ParallelPromise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method, params, execOptions as EnhancedExecOptions<TMetadata>);
+    };
+
+    return createParallelEvery<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  /**
+   * Parallel find: find first matching item
+   *
+   * Note: With parallel execution and shortCircuit=true, the item returned
+   * may not be the first in array order - it's the first found by any worker.
+   * Use shortCircuit=false for guaranteed order.
+   *
+   * @param items - Array of items to search
+   * @param predicateFn - Predicate function (executed in worker)
+   * @param options - Find options
+   * @returns Promise resolving to found item or undefined
+   *
+   * @example
+   * ```typescript
+   * const user = await pool.find(users, u => u.id === targetId);
+   * ```
+   */
+  find<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: FindOptions
+  ): ParallelPromise<T | undefined> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method, params, execOptions as EnhancedExecOptions<TMetadata>);
+    };
+
+    return createParallelFind<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  /**
+   * Parallel findIndex: find index of first matching item
+   *
+   * @param items - Array of items to search
+   * @param predicateFn - Predicate function (executed in worker)
+   * @param options - Find options
+   * @returns Promise resolving to index or -1
+   *
+   * @example
+   * ```typescript
+   * const index = await pool.findIndex(items, x => x.matches);
+   * ```
+   */
+  findIndex<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: FindOptions
+  ): ParallelPromise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method, params, execOptions as EnhancedExecOptions<TMetadata>);
+    };
+
+    return createParallelFindIndex<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: options?.concurrency ?? this.maxWorkers,
+    });
+  }
+
+  // ============================================================================
+  // Session Support
+  // ============================================================================
+
+  /**
+   * Get or create the session manager
+   */
+  private _getSessionManager(): SessionManager {
+    if (!this._sessionManager) {
+      const poolAdapter: SessionManagerPool = {
+        execOnWorker: <T>(
+          workerIndex: number,
+          method: string,
+          params: unknown[],
+          options?: ExecOptions
+        ): WorkerpoolPromise<T, unknown> => {
+          // Execute on specific worker
+          const worker = this.workers[workerIndex];
+          if (!worker) {
+            return WorkerpoolPromise.reject(
+              new Error(`Worker ${workerIndex} not found`)
+            ) as unknown as WorkerpoolPromise<T, unknown>;
+          }
+
+          // Use exec with the dynamic run method
+          return this.exec<T>('run', [method, params], options as EnhancedExecOptions<TMetadata>) as WorkerpoolPromise<T, unknown>;
+        },
+        getWorkerCount: () => this.workers.length || this.maxWorkers,
+        getWorker: (index: number) => this.workers[index],
+        removeSession: (id: string) => {
+          // Session cleanup - no-op for now
+        },
+      };
+
+      this._sessionManager = new SessionManager(poolAdapter);
+    }
+
+    return this._sessionManager;
+  }
+
+  /**
+   * Create a new session for stateful task execution
+   *
+   * A session routes all its tasks to the same worker, maintaining
+   * state between calls. Useful for multi-step operations that need
+   * shared context.
+   *
+   * @param options - Session configuration options
+   * @returns Promise resolving to the new session
+   *
+   * @example
+   * ```typescript
+   * // Create a session with initial state
+   * const session = await pool.createSession<{ counter: number }>({
+   *   initialState: { counter: 0 },
+   *   timeout: 60000,
+   * });
+   *
+   * // Execute tasks within the session - state persists between calls
+   * await session.exec('increment', [5]);
+   * await session.exec('increment', [3]);
+   * const count = await session.exec('getCounter');
+   * console.log(count); // 8
+   *
+   * // Close the session when done
+   * await session.close();
+   * ```
+   */
+  createSession<TState = unknown>(
+    options?: SessionOptions<TState>
+  ): WorkerpoolPromise<Session<TState>, unknown> {
+    return this._getSessionManager().createSession<TState>(options);
+  }
+
+  /**
+   * Get a session by ID
+   *
+   * @param id - Session ID
+   * @returns Session if found, undefined otherwise
+   */
+  getSession(id: string): Session | undefined {
+    if (!this._sessionManager) {
+      return undefined;
+    }
+    return this._sessionManager.getSession(id);
+  }
+
+  /**
+   * Get all active sessions
+   *
+   * @returns Array of active sessions
+   */
+  getSessions(): Session[] {
+    if (!this._sessionManager) {
+      return [];
+    }
+    return this._sessionManager.getSessions();
+  }
+
+  /**
+   * Close all sessions
+   *
+   * @param force - Force close without waiting for cleanup
+   * @returns Promise resolving when all sessions are closed
+   */
+  closeSessions(force?: boolean): WorkerpoolPromise<void[], unknown> {
+    if (!this._sessionManager) {
+      const { promise, resolve } = WorkerpoolPromise.defer<void[]>();
+      resolve([]);
+      return promise as WorkerpoolPromise<void[], unknown>;
+    }
+    return this._sessionManager.closeSessions(force);
   }
 
   /**

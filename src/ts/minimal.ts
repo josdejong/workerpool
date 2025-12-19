@@ -52,6 +52,14 @@ import {
 // Import queue implementations
 import { FIFOQueue, LIFOQueue } from './core/TaskQueue';
 
+// Import graceful degradation
+import {
+  MainThreadExecutor,
+  hasWorkerSupport,
+  createPoolWithFallback,
+  mainThreadExecutor,
+} from './core/main-thread-executor';
+
 // ============================================================================
 // Type Exports
 // ============================================================================
@@ -98,6 +106,9 @@ export type {
 
 // Re-export circular buffer types
 export type { TimestampedValue } from './core/circular-buffer';
+
+// Re-export graceful degradation types
+export type { MainThreadExecutorOptions } from './core/main-thread-executor';
 
 // ============================================================================
 // Core APIs
@@ -253,6 +264,32 @@ export { FIFOQueue };
 export { LIFOQueue };
 
 // ============================================================================
+// Graceful Degradation (Main Thread Fallback)
+// ============================================================================
+
+/**
+ * Main thread executor for environments without Web Worker support.
+ * Provides the same API as Pool but executes on the main thread.
+ */
+export { MainThreadExecutor };
+
+/**
+ * Check if Web Workers are supported in the current environment
+ */
+export { hasWorkerSupport };
+
+/**
+ * Create either a Pool or MainThreadExecutor based on environment capabilities.
+ * Falls back to main thread execution when workers aren't available.
+ */
+export { createPoolWithFallback };
+
+/**
+ * Create a MainThreadExecutor instance
+ */
+export { mainThreadExecutor };
+
+// ============================================================================
 // Error Classes
 // ============================================================================
 
@@ -318,6 +355,11 @@ export default {
   // Queue implementations
   FIFOQueue,
   LIFOQueue,
+  // Graceful degradation
+  MainThreadExecutor,
+  hasWorkerSupport,
+  createPoolWithFallback,
+  mainThreadExecutor,
   // Metadata
   VERSION,
   BUILD_TYPE,

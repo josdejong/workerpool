@@ -70,6 +70,28 @@ import {
 // Import metrics collector
 import { MetricsCollector } from './core/metrics';
 
+// Import parallel processing
+import {
+  createParallelReduce,
+  createParallelForEach,
+  createParallelFilter,
+  createParallelSome,
+  createParallelEvery,
+  createParallelFind,
+  createParallelFindIndex,
+} from './core/parallel-processing';
+
+// Import main thread executor for graceful degradation
+import {
+  MainThreadExecutor,
+  hasWorkerSupport,
+  createPoolWithFallback,
+  mainThreadExecutor,
+} from './core/main-thread-executor';
+
+// Import session manager
+import { SessionManager } from './core/session-manager';
+
 import type { PoolOptions, ExecOptions, PoolStats, WorkerProxy } from './types/index';
 import type { Capabilities } from './platform/capabilities';
 import type { BinarySerializedData } from './core/binary-serializer';
@@ -83,6 +105,32 @@ import type {
   ErrorMetrics,
   MetricsCollectorOptions,
 } from './core/metrics';
+import type { MainThreadExecutorOptions } from './core/main-thread-executor';
+import type {
+  ParallelOptions,
+  ReduceOptions,
+  FindOptions,
+  PredicateOptions,
+  FilterResult,
+  FindResult,
+  ReduceResult,
+  PredicateResult,
+  ForEachResult,
+  ParallelPromise,
+  MapperFn,
+  ReducerFn,
+  CombinerFn,
+  PredicateFn,
+  ConsumerFn,
+} from './types/parallel';
+import type {
+  Session,
+  SessionOptions,
+  SessionStats,
+  SessionState,
+  SessionExecOptions,
+  WorkerSessionAPI,
+} from './types/session';
 
 // Backwards compatibility alias
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -313,6 +361,59 @@ export { LIFOQueue };
 export { MetricsCollector };
 
 // ============================================================================
+// Graceful Degradation (Main Thread Fallback)
+// ============================================================================
+
+/**
+ * Main thread executor for environments without Web Worker support.
+ * Provides the same API as Pool but executes on the main thread.
+ */
+export { MainThreadExecutor };
+
+/**
+ * Check if Web Workers are supported in the current environment
+ */
+export { hasWorkerSupport };
+
+/**
+ * Create either a Pool or MainThreadExecutor based on environment capabilities.
+ * Falls back to main thread execution when workers aren't available.
+ */
+export { createPoolWithFallback };
+
+/**
+ * Create a MainThreadExecutor instance
+ */
+export { mainThreadExecutor };
+
+// ============================================================================
+// Session Support
+// ============================================================================
+
+/**
+ * Session manager for stateful worker tasks.
+ * Manages worker affinity and session lifecycle.
+ */
+export { SessionManager };
+
+// ============================================================================
+// Parallel Processing Utilities
+// ============================================================================
+
+/**
+ * Lower-level parallel processing functions for custom implementations.
+ */
+export {
+  createParallelReduce,
+  createParallelForEach,
+  createParallelFilter,
+  createParallelSome,
+  createParallelEvery,
+  createParallelFind,
+  createParallelFindIndex,
+};
+
+// ============================================================================
 // Type Exports
 // ============================================================================
 
@@ -351,6 +452,31 @@ export type {
   QueueMetrics,
   ErrorMetrics,
   MetricsCollectorOptions,
+  // Graceful degradation types
+  MainThreadExecutorOptions,
+  // Parallel processing types
+  ParallelOptions,
+  ReduceOptions,
+  FindOptions,
+  PredicateOptions,
+  FilterResult,
+  FindResult,
+  ReduceResult,
+  PredicateResult,
+  ForEachResult,
+  ParallelPromise,
+  MapperFn,
+  ReducerFn,
+  CombinerFn,
+  PredicateFn,
+  ConsumerFn,
+  // Session types
+  Session,
+  SessionOptions,
+  SessionStats,
+  SessionState,
+  SessionExecOptions,
+  WorkerSessionAPI,
 };
 
 // Re-export batch types
@@ -567,6 +693,21 @@ export default {
   LIFOQueue,
   // Metrics
   MetricsCollector,
+  // Graceful degradation
+  MainThreadExecutor,
+  hasWorkerSupport,
+  createPoolWithFallback,
+  mainThreadExecutor,
+  // Session support
+  SessionManager,
+  // Parallel processing utilities
+  createParallelReduce,
+  createParallelForEach,
+  createParallelFilter,
+  createParallelSome,
+  createParallelEvery,
+  createParallelFind,
+  createParallelFindIndex,
   // Metadata
   VERSION,
   BUILD_TYPE,

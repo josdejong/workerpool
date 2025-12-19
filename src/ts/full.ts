@@ -682,6 +682,68 @@ export type {
 } from './wasm/simd-processor';
 
 // ============================================================================
+// Graceful Degradation (Main Thread Fallback)
+// ============================================================================
+
+export {
+  MainThreadExecutor,
+  hasWorkerSupport,
+  createPoolWithFallback,
+  mainThreadExecutor,
+} from './core/main-thread-executor';
+
+export type {
+  MainThreadExecutorOptions,
+} from './core/main-thread-executor';
+
+// ============================================================================
+// Session Support
+// ============================================================================
+
+export { SessionManager } from './core/session-manager';
+
+export type {
+  Session,
+  SessionOptions,
+  SessionStats,
+  SessionState,
+  SessionExecOptions,
+  WorkerSessionAPI,
+} from './types/session';
+
+// ============================================================================
+// Parallel Processing Utilities
+// ============================================================================
+
+export {
+  createParallelReduce,
+  createParallelForEach,
+  createParallelFilter,
+  createParallelSome,
+  createParallelEvery,
+  createParallelFind,
+  createParallelFindIndex,
+} from './core/parallel-processing';
+
+export type {
+  ParallelOptions,
+  ReduceOptions,
+  FindOptions,
+  PredicateOptions,
+  FilterResult,
+  FindResult,
+  ReduceResult,
+  PredicateResult,
+  ForEachResult,
+  ParallelPromise,
+  MapperFn,
+  ReducerFn,
+  CombinerFn,
+  PredicateFn,
+  ConsumerFn,
+} from './types/parallel';
+
+// ============================================================================
 // Metadata
 // ============================================================================
 
