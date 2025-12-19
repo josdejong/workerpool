@@ -70,7 +70,7 @@ The library provides multiple entry points via `package.json` exports:
 | `workerpool` | Legacy JS API (default) | `src/js/index.js` |
 | `workerpool/modern` | TypeScript build | `dist/ts/index.js` |
 | `workerpool/minimal` | Lightweight (~5KB), no WASM | `dist/ts/minimal.js` |
-| `workerpool/full` | Complete (~15KB) with WASM, debug | `dist/ts/full.js` |
+| `workerpool/full` | Complete (~34KB) with WASM, debug | `dist/ts/full.js` |
 | `workerpool/wasm` | Direct WASM utilities only | `dist/ts/wasm/index.js` |
 | `workerpool/errors` | Error classes only | `dist/ts/errors.js` |
 | `workerpool/debug` | Debug/logging utilities only | `dist/ts/debug.js` |
@@ -102,7 +102,6 @@ src/
 │   │   ├── WorkerHandler.ts   # Worker lifecycle management
 │   │   ├── Promise.ts         # Typed Promise with cancellation
 │   │   ├── TaskQueue.ts       # Queue interface & implementations
-│   │   ├── QueueFactory.ts    # Pluggable queue strategies
 │   │   ├── validateOptions.ts # Options validation
 │   │   ├── binary-serializer.ts   # Binary data serialization
 │   │   ├── batch-serializer.ts    # Batch operation serialization
@@ -149,12 +148,15 @@ src/
 │   │   ├── memory.ts          # Memory management
 │   │   ├── stats.ts           # Statistics tracking
 │   │   ├── errors.ts          # WASM error handling
+│   │   ├── histogram.ts       # Histogram implementation
+│   │   ├── circular-buffer.ts # O(1) circular buffer
 │   │   ├── simd-batch.ts      # SIMD batch operations
 │   │   ├── tsconfig.json      # AssemblyScript config
 │   │   └── stubs/             # Pure TS stubs for testing
 │   │
 │   ├── types/             # TypeScript type definitions
 │   │   ├── index.ts           # Core types export
+│   │   ├── core.ts            # Shared types (ExecOptions, WorkerpoolPromise)
 │   │   ├── internal.ts        # Internal types
 │   │   ├── messages.ts        # Message protocol types
 │   │   └── worker-methods.ts  # Worker method types
@@ -192,7 +194,10 @@ test/
         ├── ring-buffer.vitest.ts
         ├── task-slots.vitest.ts
         ├── memory.vitest.ts
-        └── errors.vitest.ts
+        ├── errors.vitest.ts
+        ├── histogram.vitest.ts
+        ├── circular-buffer.vitest.ts
+        └── simd-batch.vitest.ts
 ```
 
 ### Worker Types
