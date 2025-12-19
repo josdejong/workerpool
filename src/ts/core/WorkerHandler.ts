@@ -22,6 +22,7 @@ import {
   workerOptsNames,
 } from './validateOptions';
 import { platform, isBun, recommendedWorkerType } from '../platform/environment';
+import { GrowableCircularBuffer } from './circular-buffer';
 
 /** Special message to terminate worker */
 export const TERMINATE_METHOD_ID = '__workerpool-terminate__';
@@ -487,8 +488,8 @@ export class WorkerHandler {
   /** Timeout for worker termination */
   readonly workerTerminateTimeout: number;
 
-  /** Queue of requests waiting for worker ready */
-  private requestQueue: QueuedRequest[] = [];
+  /** Queue of requests waiting for worker ready - O(1) operations */
+  private requestQueue: GrowableCircularBuffer<QueuedRequest> = new GrowableCircularBuffer(8);
 
   /** Tasks currently being processed - Map for O(1) operations */
   processing: Map<number, ProcessingTask> = new Map();
@@ -663,7 +664,8 @@ export class WorkerHandler {
    * Dispatch queued requests to worker
    */
   private dispatchQueuedRequests(): void {
-    const requests = this.requestQueue.splice(0);
+    // Drain all queued requests efficiently with O(n) single pass
+    const requests = this.requestQueue.drain();
     for (const request of requests) {
       this.worker!.send(request.message, request.transfer);
     }
