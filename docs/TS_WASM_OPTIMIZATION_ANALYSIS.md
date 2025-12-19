@@ -429,12 +429,30 @@ private serializeMessage(message: unknown): { bytes: Uint8Array; type: number } 
 
 ### Quick Wins (1-4 hours each)
 
-| Optimization | File | Time | Expected Gain |
-|-------------|------|------|---------------|
-| Enable SIMD Processor | `src/ts/wasm/simd-processor.ts` | 1 hour | 3-4x for numeric ops |
-| Metrics Circular Buffer | `src/ts/core/metrics.ts` | 2 hours | 15-20% GC reduction |
-| WorkerHandler Map Conversion | `src/ts/core/WorkerHandler.ts` | 1 hour | Better iteration perf |
-| Pre-allocate FIFO capacity | `src/ts/core/TaskQueue.ts` | 1 hour | Reduce grow() calls |
+| Optimization | File | Time | Expected Gain | Status |
+|-------------|------|------|---------------|--------|
+| Enable SIMD Processor | `src/ts/wasm/simd-processor.ts` | 1 hour | 3-4x for numeric ops | Pending (requires WASM build) |
+| Metrics Circular Buffer | `src/ts/core/metrics.ts` | 2 hours | 15-20% GC reduction | ✅ **COMPLETED** |
+| WorkerHandler Map Conversion | `src/ts/core/WorkerHandler.ts` | 1 hour | Better iteration perf | ✅ **COMPLETED** |
+| Pre-allocate FIFO capacity | `src/ts/core/TaskQueue.ts` | 1 hour | Reduce grow() calls | ✅ **COMPLETED** |
+
+### Benchmark Results (after Quick Wins implementation)
+
+**Node.js:**
+| Benchmark | JS (ms) | TS+WASM (ms) | Improvement |
+|-----------|---------|--------------|-------------|
+| Pool Creation | 0.014 | 0.007 | **1.85x faster** |
+| Task Execution | 0.269 | 0.237 | 1.13x faster |
+| Concurrent Tasks | 2.658 | 1.821 | **1.46x faster** |
+| Queue Throughput | 3.501 | 3.317 | 1.06x faster |
+
+**Bun:**
+| Benchmark | JS (ms) | TS+WASM (ms) | Improvement |
+|-----------|---------|--------------|-------------|
+| Pool Creation | 0.014 | 0.015 | ~same |
+| Task Execution | 0.191 | 0.183 | 1.04x faster |
+| Concurrent Tasks | 3.140 | 2.432 | **1.29x faster** |
+| Queue Throughput | 6.666 | 5.017 | **1.33x faster** |
 
 ### Medium-Term (1-2 weeks)
 
