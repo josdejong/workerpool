@@ -13,6 +13,7 @@ export * from './memory';
 export * from './ring-buffer';
 export * from './task-slots';
 export * from './priority-queue';
+export * from './circular-buffer';
 
 // Utilities
 export * from './errors';
@@ -29,6 +30,7 @@ export * from './histogram';
 import { _resetMemory } from './memory';
 import { _resetSlots } from './task-slots';
 import { _resetPriorityQueue } from './priority-queue';
+import { _reset as _resetCircularBuffer } from './circular-buffer';
 import { _resetStats } from './stats';
 import { _resetAtomics } from './atomics';
 import { _resetSimd } from './simd-batch';
@@ -42,6 +44,7 @@ export function _resetAll(): void {
   _resetMemory();
   _resetSlots();
   _resetPriorityQueue();
+  _resetCircularBuffer();
   _resetStats();
   _resetAtomics();
   _resetSimd();

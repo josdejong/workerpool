@@ -19,6 +19,7 @@ export * from './memory';
 export * from './ring-buffer';
 export * from './task-slots';
 export * from './priority-queue';
+export * from './circular-buffer';
 
 // Utilities
 export * from './errors';
