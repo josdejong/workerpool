@@ -699,12 +699,12 @@ import {
 
 ## Roadmap
 
-- Implement functions for parallel processing: `map`, `reduce`, `forEach`,
-  `filter`, `some`, `every`, ...
-- Implement graceful degradation on old browsers not supporting webworkers:
-  fallback to processing tasks in the main application.
-- Implement session support: be able to handle a series of related tasks by a
-  single worker, which can keep a state for the session.
+- ~~Implement functions for parallel processing: `map`, `reduce`, `forEach`,
+  `filter`, `some`, `every`, ...~~ ✅ **Completed** - Available in TypeScript API (`workerpool/modern`)
+- ~~Implement graceful degradation on old browsers not supporting webworkers:
+  fallback to processing tasks in the main application.~~ ✅ **Completed** - `MainThreadExecutor` and `createPoolWithFallback()`
+- ~~Implement session support: be able to handle a series of related tasks by a
+  single worker, which can keep a state for the session.~~ ✅ **Completed** - `SessionManager` with `pool.createSession()`
 
 ## Related libraries
 

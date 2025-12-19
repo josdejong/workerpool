@@ -122,7 +122,10 @@ src/
 │   │   ├── batch-executor.ts      # Batch task execution
 │   │   ├── metrics.ts         # Performance metrics collection
 │   │   ├── circular-buffer.ts # O(1) circular buffer implementations
-│   │   └── debug-port-allocator.ts # Debug port management
+│   │   ├── debug-port-allocator.ts # Debug port management
+│   │   ├── parallel-processing.ts # Parallel array operations (reduce, filter, etc.)
+│   │   ├── main-thread-executor.ts # Graceful degradation fallback
+│   │   └── session-manager.ts # Worker session management
 │   │
 │   ├── platform/          # Platform abstraction layer
 │   │   ├── environment.ts     # Node.js vs browser vs Bun detection
@@ -185,7 +188,9 @@ src/
 │   │   ├── core.ts            # Shared types (ExecOptions, WorkerpoolPromise)
 │   │   ├── internal.ts        # Internal types
 │   │   ├── messages.ts        # Message protocol types
-│   │   └── worker-methods.ts  # Worker method types
+│   │   ├── worker-methods.ts  # Worker method types
+│   │   ├── parallel.ts        # Parallel processing types (MapperFn, ReducerFn, etc.)
+│   │   └── session.ts         # Session types (Session, SessionOptions, etc.)
 │   │
 │   └── generated/         # Auto-generated files
 │       ├── embeddedWasm.ts    # Embedded WASM bytes
@@ -237,6 +242,9 @@ test/
     ├── environment.vitest.ts  # Environment tests
     ├── wasm.vitest.ts         # WASM tests
     ├── circular-buffer.vitest.ts # Circular buffer tests
+    ├── parallel-processing.vitest.ts # Parallel array operations tests
+    ├── main-thread-executor.vitest.ts # Graceful degradation tests
+    ├── session-manager.vitest.ts # Session management tests
     └── assembly/              # AssemblyScript module tests
         ├── priority-queue.vitest.ts
         ├── ring-buffer.vitest.ts
@@ -272,6 +280,9 @@ Workers communicate via JSON-RPC style messages with `id`, `method`, `params`, `
 4. **Transferable objects**: Use `workerpool.Transfer` to efficiently pass ArrayBuffers between threads
 5. **WASM queues**: Use `workerpool/full` with `canUseWasmThreads()` for lock-free task scheduling
 6. **Batch operations**: `pool.execBatch()` and `pool.map()` for parallel task execution
+7. **Parallel array operations**: `pool.reduce()`, `pool.filter()`, `pool.find()`, etc. for chunked parallel processing
+8. **Graceful degradation**: `MainThreadExecutor` provides fallback when workers aren't available
+9. **Session support**: `pool.createSession()` for stateful worker interactions with worker affinity
 
 ## Runtime Support
 
@@ -497,6 +508,24 @@ const results = await pool.execBatch([
 
 // Parallel map
 const results = await pool.map([1, 2, 3], (x) => x * 2);
+
+// Parallel reduce
+const sum = await pool.reduce(
+  [1, 2, 3, 4, 5],
+  (acc, x) => acc + x,
+  (left, right) => left + right,
+  { initialValue: 0 }
+);
+
+// Parallel filter
+const evens = await pool.filter([1, 2, 3, 4, 5], (x) => x % 2 === 0);
+
+// Parallel find
+const found = await pool.find([1, 2, 3, 4, 5], (x) => x > 3);
+
+// Parallel some/every
+const hasEven = await pool.some([1, 2, 3], (x) => x % 2 === 0);
+const allPositive = await pool.every([1, 2, 3], (x) => x > 0);
 ```
 
 ### Worker Registration
@@ -521,6 +550,58 @@ await pool.terminate(true);
 
 // With timeout
 await pool.terminate(false, 5000);
+```
+
+### Session Support
+```javascript
+// Create a session (worker affinity)
+const session = await pool.createSession({
+  initialState: { count: 0 },
+  timeout: 60000,  // Auto-close after 60s idle
+  maxTasks: 100    // Max tasks before forced close
+});
+
+// Execute tasks on the same worker
+await session.exec('increment', [5]);
+await session.exec('increment', [10]);
+
+// Access session state
+const state = await session.getState();
+await session.setState({ count: 100 });
+
+// Close when done
+await session.close();
+
+// Close all sessions
+await pool.closeSessions();
+```
+
+### Graceful Degradation
+```javascript
+import {
+  MainThreadExecutor,
+  hasWorkerSupport,
+  createPoolWithFallback
+} from 'workerpool/modern';
+
+// Check worker support
+if (!hasWorkerSupport()) {
+  console.log('Workers not available, using main thread');
+}
+
+// Auto-fallback to main thread if workers unavailable
+const pool = createPoolWithFallback(__dirname + '/worker.js');
+
+// Or create executor directly
+const executor = new MainThreadExecutor({
+  methods: {
+    add: (a, b) => a + b,
+    multiply: (a, b) => a * b
+  }
+});
+
+// Same API as Pool
+const result = await executor.exec('add', [2, 3]);
 ```
 
 ### TypeScript API Exports
@@ -586,6 +667,48 @@ import {
 } from 'workerpool/modern';
 ```
 
+#### Parallel Processing (modern/full builds)
+```typescript
+import {
+  // Parallel array operations (available on Pool)
+  // pool.reduce(), pool.filter(), pool.find(), etc.
+
+  // Types
+  ParallelOptions,
+  ReduceOptions,
+  FindOptions,
+  PredicateOptions,
+  ForEachResult,
+  MapperFn,
+  ReducerFn,
+  CombinerFn,
+  PredicateFn,
+  ConsumerFn,
+} from 'workerpool/modern';
+```
+
+#### Graceful Degradation (all builds)
+```typescript
+import {
+  MainThreadExecutor,       // Pool-like API for main thread execution
+  hasWorkerSupport,         // Check if workers are available
+  createPoolWithFallback,   // Auto-fallback to main thread
+  mainThreadExecutor,       // Factory function
+} from 'workerpool/minimal';
+```
+
+#### Session Support (modern/full builds)
+```typescript
+import {
+  SessionManager,           // Manages worker sessions
+  // Types
+  Session,
+  SessionOptions,
+  SessionStats,
+  SessionState,
+} from 'workerpool/modern';
+```
+
 #### Full Build Extras
 ```typescript
 import {
@@ -595,5 +718,7 @@ import {
   LogLevel, enableDebug, disableDebug,
   // Worker management
   AdaptiveScaler, HealthMonitor, WorkerCache,
+  // Session support
+  SessionManager,
 } from 'workerpool/full';
 ```

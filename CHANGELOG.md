@@ -10,6 +10,39 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ## [Unreleased]
 
 ### Added
+- **Parallel Processing Functions** (TypeScript API):
+  - `pool.reduce()` - Parallel reduce with chunked execution and proper initialValue handling
+  - `pool.forEach()` - Parallel iteration with progress tracking
+  - `pool.filter()` - Parallel filtering with order preservation
+  - `pool.some()` - Early-exit predicate check (any match)
+  - `pool.every()` - Early-exit all-match check
+  - `pool.find()` - Parallel search for first matching item
+  - `pool.findIndex()` - Parallel search for index of first match
+  - All functions support cancellation, pause/resume, and chunked execution
+
+- **Graceful Degradation** (MainThreadExecutor):
+  - `MainThreadExecutor` class - Same API as Pool, runs on main thread
+  - `hasWorkerSupport()` - Detect Web Worker availability
+  - `createPoolWithFallback()` - Auto-select Pool or MainThreadExecutor based on environment
+  - `mainThreadExecutor()` - Factory function for creating executor instances
+  - Supports old browsers without Web Worker support
+  - Useful for testing environments and SSR scenarios
+
+- **Session Support** (SessionManager):
+  - `pool.createSession()` - Create a stateful session bound to a worker
+  - `session.exec()` - Execute tasks on the session's dedicated worker
+  - `session.getState()` / `session.setState()` - Manage session state
+  - `session.close()` - Clean up session resources
+  - Session timeout and max task limits
+  - Automatic load balancing across workers
+  - Worker affinity for related task sequences
+
+- **74 new TypeScript tests** for new features:
+  - test/ts/parallel-processing.vitest.ts: 24 tests for parallel array operations
+  - test/ts/main-thread-executor.vitest.ts: 13 tests for graceful degradation
+  - test/ts/session-manager.vitest.ts: 37 tests for session management
+  - Total TypeScript test count: 798 tests (up from 724)
+
 - **Expanded TypeScript API Exports** for better developer integration:
   - **Platform Detection** (all builds): `isNode()`, `getPlatformInfo()`, `hasWorkerThreads`, `hasSharedArrayBuffer`, `hasAtomics`
   - **Bun Compatibility** (all builds): `isBun`, `bunVersion`, `recommendedWorkerType`, `getWorkerTypeSupport()`, `isWorkerTypeSupported()`
