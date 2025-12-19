@@ -9,6 +9,17 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 
 ## [Unreleased]
 
+### Performance
+- **O(1) Circular Buffer Optimizations**:
+  - CircularBuffer: Fixed-size buffer with automatic eviction for metrics (O(1) push vs O(n) shift)
+  - GrowableCircularBuffer: Power-of-2 sizing with bitwise AND for fast modulo operations
+  - TimeWindowBuffer: Time-based metric collection with automatic pruning
+  - FIFOQueue now uses GrowableCircularBuffer internally (O(1) push/shift)
+  - WorkerHandler uses Map<> instead of Object.create(null) for better iteration performance
+  - MetricsCollector uses CircularBuffer for O(1) operations instead of array.shift()
+  - **Benchmark Results (Node.js)**: TS+WASM is 1.85x faster for pool creation, 1.46x faster for concurrent tasks
+  - **Benchmark Results (Bun)**: TS+WASM is 1.33x faster for queue throughput, 1.29x faster for concurrent tasks
+
 ### Added
 - **Bun Runtime Compatibility** (TypeScript build only):
   - Automatic Bun detection via `isBun` and `bunVersion` exports
