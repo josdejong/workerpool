@@ -9,6 +9,21 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 
 ## [Unreleased]
 
+### Added
+- **Expanded TypeScript API Exports** for better developer integration:
+  - **Platform Detection** (all builds): `isNode()`, `getPlatformInfo()`, `hasWorkerThreads`, `hasSharedArrayBuffer`, `hasAtomics`
+  - **Bun Compatibility** (all builds): `isBun`, `bunVersion`, `recommendedWorkerType`, `getWorkerTypeSupport()`, `isWorkerTypeSupported()`
+  - **Data Structures** (all builds): `CircularBuffer`, `GrowableCircularBuffer`, `TimeWindowBuffer`
+  - **Queue Implementations** (all builds): `FIFOQueue`, `LIFOQueue`
+  - **Transfer Detection** (modern/full): `isTransferable()`, `detectTransferables()`, `getTransferableType()`, `validateTransferables()`
+  - **Metrics** (modern/full): `MetricsCollector`
+  - **Runtime Utilities** (modern/full): `optimalPool()`, `getRuntimeInfo()`
+  - **Type exports** for `TransferableType`, batch types, and platform types
+- **99 new TypeScript tests** for export verification:
+  - test/ts/exports.vitest.ts: 73 tests verifying all exports across minimal/modern/full builds
+  - test/ts/transfer.vitest.ts: 26 new tests for transfer detection utilities
+  - Total TypeScript test count: 724 tests (up from 625)
+
 ### Performance
 - **O(1) Circular Buffer Optimizations**:
   - CircularBuffer: Fixed-size buffer with automatic eviction for metrics (O(1) push vs O(n) shift)

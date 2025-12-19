@@ -522,3 +522,78 @@ await pool.terminate(true);
 // With timeout
 await pool.terminate(false, 5000);
 ```
+
+### TypeScript API Exports
+
+The TypeScript builds (`workerpool/minimal`, `workerpool/modern`, `workerpool/full`) export comprehensive APIs for developer integration:
+
+#### Platform Detection (all builds)
+```typescript
+import {
+  platform,              // 'node' | 'browser'
+  isMainThread,          // boolean
+  cpus,                  // number
+  isNode,                // (process: unknown) => boolean
+  getPlatformInfo,       // () => PlatformInfo
+  hasWorkerThreads,      // boolean
+  hasSharedArrayBuffer,  // boolean
+  hasAtomics,            // boolean
+} from 'workerpool/minimal';
+```
+
+#### Bun Compatibility (all builds)
+```typescript
+import {
+  isBun,                    // boolean
+  bunVersion,               // string | null
+  recommendedWorkerType,    // 'auto' | 'thread' | 'process' | 'web'
+  getWorkerTypeSupport,     // () => WorkerTypeSupport
+  isWorkerTypeSupported,    // (type: string) => boolean
+} from 'workerpool/minimal';
+```
+
+#### Data Structures (all builds)
+```typescript
+import {
+  CircularBuffer,         // Fixed-size O(1) circular buffer
+  GrowableCircularBuffer, // Growable circular buffer
+  TimeWindowBuffer,       // Time-based buffer with pruning
+  FIFOQueue,              // First-in-first-out queue
+  LIFOQueue,              // Last-in-first-out queue
+} from 'workerpool/minimal';
+```
+
+#### Transfer Detection (modern/full builds)
+```typescript
+import {
+  isTransferable,         // (value: unknown) => boolean
+  detectTransferables,    // (value: unknown) => DetectionResult
+  getTransferableType,    // (value: unknown) => TransferableType | null
+  validateTransferables,  // (list: Transferable[]) => ValidationResult
+} from 'workerpool/modern';
+```
+
+#### Metrics (modern/full builds)
+```typescript
+import { MetricsCollector } from 'workerpool/modern';
+```
+
+#### Runtime Utilities (modern/full builds)
+```typescript
+import {
+  optimalPool,    // Create pool with optimal settings for current runtime
+  getRuntimeInfo, // Get complete runtime diagnostics
+} from 'workerpool/modern';
+```
+
+#### Full Build Extras
+```typescript
+import {
+  // WASM support
+  canUseWasm, WasmBridge, hasWasmSupport, hasFullWasmSupport,
+  // Debug utilities
+  LogLevel, enableDebug, disableDebug,
+  // Worker management
+  AdaptiveScaler, HealthMonitor, WorkerCache,
+} from 'workerpool/full';
+```

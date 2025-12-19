@@ -548,7 +548,45 @@ Following properties are available for convenience:
 - **isMainThread**: Whether the code is running in main thread or not (Workers)
 - **cpus**: The number of CPUs/cores available
 
-The TypeScript build (`workerpool/modern`) provides additional utilities for Bun compatibility:
+### TypeScript API (workerpool/modern)
+
+The TypeScript build provides a comprehensive API for modern applications. Import from different entry points based on your needs:
+
+```js
+// Modern build (~20KB) - recommended for most use cases
+import * as workerpool from 'workerpool/modern';
+
+// Minimal build (~5KB) - core features only
+import * as workerpool from 'workerpool/minimal';
+
+// Full build (~34KB) - all features including WASM
+import * as workerpool from 'workerpool/full';
+```
+
+#### Platform Detection
+
+All TypeScript builds export platform detection utilities:
+
+```js
+import {
+  platform,           // 'node' or 'browser'
+  isMainThread,       // boolean - true if running in main thread
+  cpus,               // number - CPU count
+  isNode,             // function - check if running in Node.js
+  getPlatformInfo,    // function - get complete platform info
+  hasWorkerThreads,   // boolean - worker_threads available
+  hasSharedArrayBuffer, // boolean - SharedArrayBuffer available
+  hasAtomics,         // boolean - Atomics available
+} from 'workerpool/minimal';
+
+// Get complete platform info
+const info = getPlatformInfo();
+// { platform, isMainThread, cpus, hasWorkerThreads, hasSharedArrayBuffer, hasAtomics, isBun, bunVersion, ... }
+```
+
+#### Bun Compatibility
+
+The TypeScript builds include Bun runtime detection:
 
 - **isBun**: Boolean indicating if running in Bun runtime
 - **bunVersion**: Bun version string if running in Bun, null otherwise
@@ -557,6 +595,107 @@ The TypeScript build (`workerpool/modern`) provides additional utilities for Bun
 - **isWorkerTypeSupported(type)**: Check if a specific worker type is fully supported
 - **optimalPool([script], [options])**: Create a pool with optimal settings for the current runtime
 - **getRuntimeInfo()**: Returns `{ runtime, version, recommendedWorkerType, workerTypeSupport }`
+
+#### Transfer Detection (workerpool/modern and /full)
+
+Utilities for detecting and optimizing transferable objects:
+
+```js
+import {
+  isTransferable,        // Check if value is transferable
+  detectTransferables,   // Find all transferables in an object tree
+  getTransferableType,   // Get the type of a transferable
+  validateTransferables, // Validate transfer list before sending
+} from 'workerpool/modern';
+
+const buffer = new ArrayBuffer(1024);
+console.log(isTransferable(buffer)); // true
+console.log(getTransferableType(buffer)); // 'ArrayBuffer'
+
+const data = { buffer, nested: { another: new Uint8Array(256) } };
+const detected = detectTransferables(data);
+// { transferables: [...], totalSize: 1280, hasLargeBuffers: false, warnings: [] }
+```
+
+#### Data Structures (all builds)
+
+High-performance data structures exported from all TypeScript builds:
+
+```js
+import {
+  CircularBuffer,        // Fixed-size circular buffer with O(1) operations
+  GrowableCircularBuffer, // Circular buffer that grows when full
+  TimeWindowBuffer,      // Time-based buffer with automatic pruning
+  FIFOQueue,             // First-in-first-out queue
+  LIFOQueue,             // Last-in-first-out queue (stack)
+} from 'workerpool/minimal';
+
+// CircularBuffer - evicts oldest when full
+const buffer = new CircularBuffer(3);
+buffer.push(1); buffer.push(2); buffer.push(3);
+buffer.push(4); // Evicts 1
+console.log(buffer.toArray()); // [2, 3, 4]
+
+// GrowableCircularBuffer - grows instead of evicting
+const growable = new GrowableCircularBuffer(2);
+growable.push(1); growable.push(2); growable.push(3);
+console.log(growable.size); // 3
+
+// FIFOQueue and LIFOQueue for task management
+const fifo = new FIFOQueue();
+fifo.push(task1); fifo.push(task2);
+fifo.pop(); // Returns task1 (first in)
+
+const lifo = new LIFOQueue();
+lifo.push(task1); lifo.push(task2);
+lifo.pop(); // Returns task2 (last in)
+```
+
+#### Metrics Collection (workerpool/modern and /full)
+
+```js
+import { MetricsCollector } from 'workerpool/modern';
+
+const metrics = new MetricsCollector();
+metrics.recordTaskLatency(150);
+metrics.recordWorkerUtilization(0.75);
+console.log(metrics.getSnapshot());
+// { avgLatency, p95Latency, utilizationHistory, ... }
+```
+
+#### Error Classes (all builds)
+
+```js
+import {
+  CancellationError,  // Thrown when task is cancelled
+  TimeoutError,       // Thrown when task times out
+  TerminationError,   // Thrown when pool is terminated
+} from 'workerpool/minimal';
+```
+
+#### Full Build Extras (workerpool/full)
+
+The full build includes additional utilities for advanced use cases:
+
+```js
+import {
+  // WASM support
+  canUseWasm,
+  WasmBridge,
+  hasWasmSupport,
+  hasFullWasmSupport,
+
+  // Debug utilities
+  LogLevel,
+  enableDebug,
+  disableDebug,
+
+  // Worker management
+  AdaptiveScaler,
+  HealthMonitor,
+  WorkerCache,
+} from 'workerpool/full';
+```
 
 ## Roadmap
 
