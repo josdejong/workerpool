@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Overview
+
+**workerpool** (`@danielsimonjr/workerpool`) is a thread pool implementation that runs on both Node.js and browsers. It offloads CPU-intensive tasks to worker processes/threads. This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool) with additional TypeScript, WASM, and Bun runtime support.
+
+**Version**: 10.0.1
+**License**: Apache-2.0
+
 ## Build & Test Commands
 
 ```bash
@@ -59,8 +66,6 @@ npx vitest run test/ts/Pool.vitest.ts  # Single test file
 
 ## Architecture
 
-**workerpool** is a thread pool implementation that runs on both Node.js and browsers. It offloads CPU-intensive tasks to worker processes/threads.
-
 ### Entry Points
 
 The library provides multiple entry points via `package.json` exports:
@@ -88,7 +93,16 @@ src/
 │   ├── queues.js          # Task queue implementations
 │   ├── transfer.js        # Transferable object helpers
 │   ├── environment.js     # Platform detection
-│   └── generated/         # Auto-generated files (embeddedWorker.js)
+│   ├── capabilities.js    # Runtime capability detection
+│   ├── validateOptions.js # Options validation
+│   ├── worker-url.js      # Worker URL resolution
+│   ├── binary-serializer.js # Binary data serialization
+│   ├── debug-port-allocator.js # Debug port management
+│   ├── types.js           # Type definitions
+│   ├── header.js          # Banner/header for builds
+│   ├── requireFoolWebpack.js # Webpack workaround
+│   └── generated/         # Auto-generated files
+│       └── embeddedWorker.js
 │
 ├── ts/                    # TypeScript implementation
 │   ├── index.ts           # Main entry (workerpool/modern)
@@ -107,10 +121,11 @@ src/
 │   │   ├── batch-serializer.ts    # Batch operation serialization
 │   │   ├── batch-executor.ts      # Batch task execution
 │   │   ├── metrics.ts         # Performance metrics collection
+│   │   ├── circular-buffer.ts # O(1) circular buffer implementations
 │   │   └── debug-port-allocator.ts # Debug port management
 │   │
 │   ├── platform/          # Platform abstraction layer
-│   │   ├── environment.ts     # Node.js vs browser detection
+│   │   ├── environment.ts     # Node.js vs browser vs Bun detection
 │   │   ├── transfer.ts        # Typed transfer helpers
 │   │   ├── transfer-detection.ts  # Transferable detection
 │   │   ├── capabilities.ts    # Runtime capability detection
@@ -153,6 +168,17 @@ src/
 │   │   ├── simd-batch.ts      # SIMD batch operations
 │   │   ├── tsconfig.json      # AssemblyScript config
 │   │   └── stubs/             # Pure TS stubs for testing
+│   │       ├── index.ts
+│   │       ├── priority-queue.ts
+│   │       ├── ring-buffer.ts
+│   │       ├── task-slots.ts
+│   │       ├── atomics.ts
+│   │       ├── memory.ts
+│   │       ├── stats.ts
+│   │       ├── errors.ts
+│   │       ├── histogram.ts
+│   │       ├── circular-buffer.ts
+│   │       └── simd-batch.ts
 │   │
 │   ├── types/             # TypeScript type definitions
 │   │   ├── index.ts           # Core types export
@@ -177,9 +203,30 @@ test/
 │   ├── Queues.test.js         # Queue tests
 │   ├── environment.test.js    # Environment detection tests
 │   ├── wasm.test.js           # WASM functionality tests
+│   ├── debug-port-allocator-test.js # Debug port tests
+│   ├── utils.js               # Test utilities
+│   ├── queues/                # Queue-specific tests
+│   │   └── queue-factory.test.js
+│   ├── forkToKill/            # Fork/kill tests
+│   │   └── common.js
 │   ├── types/                 # TypeScript type tests
-│   │   └── workerpool-tests.ts
+│   │   ├── workerpool-tests.ts
+│   │   └── tsconfig.json
 │   └── workers/               # Test worker scripts
+│       ├── simple.js
+│       ├── async.js
+│       ├── cleanup.js
+│       ├── cleanup-async.js
+│       ├── cleanup-abort.js
+│       ├── crash.js
+│       ├── emit.js
+│       ├── interval.js
+│       ├── console.js
+│       ├── transfer-to.js
+│       ├── transfer-from.js
+│       ├── transfer-emit.js
+│       ├── testIsMainThread.js
+│       └── worker-cache.test.js
 │
 └── ts/                    # TypeScript tests (vitest)
     ├── Pool.vitest.ts         # Pool tests
@@ -189,6 +236,7 @@ test/
     ├── transfer.vitest.ts     # Transfer tests
     ├── environment.vitest.ts  # Environment tests
     ├── wasm.vitest.ts         # WASM tests
+    ├── circular-buffer.vitest.ts # Circular buffer tests
     └── assembly/              # AssemblyScript module tests
         ├── priority-queue.vitest.ts
         ├── ring-buffer.vitest.ts
@@ -197,7 +245,9 @@ test/
         ├── errors.vitest.ts
         ├── histogram.vitest.ts
         ├── circular-buffer.vitest.ts
-        └── simd-batch.vitest.ts
+        ├── simd-batch.vitest.ts
+        ├── atomics.vitest.ts
+        └── stats.vitest.ts
 ```
 
 ### Worker Types
@@ -221,8 +271,50 @@ Workers communicate via JSON-RPC style messages with `id`, `method`, `params`, `
 3. **Proxy pattern**: `pool.proxy()` returns an object with methods mirroring the worker's registered functions
 4. **Transferable objects**: Use `workerpool.Transfer` to efficiently pass ArrayBuffers between threads
 5. **WASM queues**: Use `workerpool/full` with `canUseWasmThreads()` for lock-free task scheduling
+6. **Batch operations**: `pool.execBatch()` and `pool.map()` for parallel task execution
 
-### Build Scripts
+## Runtime Support
+
+### Node.js
+
+All features fully supported in Node.js 11.7+ (worker_threads) or earlier versions via child_process fallback.
+
+### Bun Compatibility
+
+Workerpool is **fully compatible** with Bun 1.3.x (TypeScript build only):
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Worker Threads (`workerType: 'thread'`) | ✅ Full Support | **Recommended for Bun** |
+| Auto Worker Type (`workerType: 'auto'`) | ✅ Full Support | Uses worker_threads |
+| Child Process (`workerType: 'process'`) | ⚠️ Partial | IPC issues in some scenarios |
+| TypeScript Build | ✅ Full Support | All 513 tests pass |
+| WASM Support | ✅ Full Support | SharedArrayBuffer, Atomics work |
+
+**Recommended Bun configuration:**
+```javascript
+const workerpool = require('workerpool');
+const pool = workerpool.pool({ workerType: 'thread' }); // Always use 'thread' with Bun
+```
+
+**TypeScript API provides Bun helpers:**
+```typescript
+import { isBun, recommendedWorkerType, optimalPool, getRuntimeInfo } from 'workerpool/modern';
+
+if (isBun) {
+  const pool = optimalPool(); // Automatically uses best settings for Bun
+}
+```
+
+See `docs/BUN_COMPATIBILITY.md` for detailed Bun integration guide.
+
+### Browser Support
+
+Works in modern browsers with Web Workers. For SharedArrayBuffer features, requires:
+- HTTPS (secure context)
+- COOP/COEP headers: `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`
+
+## Build Scripts
 
 Located in `scripts/`:
 - `build-js.mjs` - Main build script for JS and TS compilation
@@ -230,14 +322,15 @@ Located in `scripts/`:
 - `generate-wasm-bindings.mjs` - Generate WASM JS bindings
 - `validate-wasm.mjs` - Validate WASM output
 
-### Configuration Files
+## Configuration Files
 
 - `rollup.config.mjs` - Rollup bundler config for JS builds
 - `tsconfig.json` - Main TypeScript config (noEmit for type checking)
 - `tsconfig.build.json` - TypeScript build config (emits to dist/ts/)
 - `tsconfig.rollup.json` - TypeScript config for rollup builds
 - `asconfig.json` - AssemblyScript compiler config
-- `vitest.config.ts` - Vitest test configuration
+- `vitest.config.ts` - Vitest test configuration (test/ts/)
+- `.mocharc.js` - Mocha test configuration (test/js/)
 
 ## Documentation
 
@@ -254,8 +347,8 @@ docs/
 │
 ├── planning/              # Development planning docs
 │   ├── IMPROVEMENT_PLAN.md    # Improvement roadmap
-│   ├── PHASE_1_*.json         # Phase 1 sprint tracking
-│   ├── PHASE_2_*.json         # Phase 2 sprint tracking
+│   ├── PHASE_1_SPRINT_*.json  # Phase 1 sprint tracking (1-8)
+│   ├── PHASE_2_SPRINT_*.json  # Phase 2 sprint tracking (1-8)
 │   ├── BATCH_API_DESIGN.md    # Batch API design
 │   ├── LOCK_FREE_QUEUE_PROTOCOL.md
 │   ├── SHARED_MEMORY_PROTOCOL.md
@@ -263,11 +356,14 @@ docs/
 │
 ├── BROWSER_SUPPORT.md     # Browser compatibility info
 ├── NODE_SUPPORT.md        # Node.js version support
+├── BUN_COMPATIBILITY.md   # Bun runtime compatibility guide
+├── BUN_INTEGRATION_PLAN.md # Bun integration roadmap
 ├── LIBRARY_INTEGRATION.md # Integration guide
 ├── CODEBASE_EVALUATION.md # Codebase analysis
 ├── WORKERPOOL_IMPROVEMENTS.md # Feature improvements
 ├── BREAKING_CHANGES.md    # Breaking changes log
-└── MIGRATION_v10_to_v11.md # Migration guide
+├── MIGRATION_v10_to_v11.md # Migration guide
+└── TS_WASM_OPTIMIZATION_ANALYSIS.md # Performance analysis
 ```
 
 ## Development Workflow
@@ -334,6 +430,22 @@ examples/
 └── webpack5/              # Webpack 5 integration
 ```
 
+## Performance Benchmarks
+
+The TS+WASM build provides significant performance improvements:
+
+**Node.js Benchmarks:**
+- Pool creation: 2.32x faster
+- Concurrent tasks: 1.30x faster
+- Queue throughput: 1.32x faster
+
+**Bun Benchmarks:**
+- Queue throughput: 1.57x faster
+- Pool creation: 1.36x faster
+- Concurrent tasks: 1.11x faster
+
+Run benchmarks: `node benchmark.mjs`
+
 ## Common Issues
 
 ### WASM Build Failures
@@ -347,3 +459,66 @@ SharedArrayBuffer requires secure context (HTTPS) and proper COOP/COEP headers i
 
 ### Type Definition Issues
 If types are out of sync, run `npm run build:types` to regenerate.
+
+### Bun child_process Issues
+If using Bun and experiencing IPC timeouts, always use `workerType: 'thread'` instead of `workerType: 'process'`.
+
+## Key APIs
+
+### Pool Creation
+```javascript
+// Basic pool (auto worker type)
+const pool = workerpool.pool();
+
+// Dedicated worker
+const pool = workerpool.pool(__dirname + '/worker.js');
+
+// With options
+const pool = workerpool.pool({
+  minWorkers: 2,
+  maxWorkers: 4,
+  workerType: 'thread'
+});
+```
+
+### Task Execution
+```javascript
+// Execute function
+const result = await pool.exec((a, b) => a + b, [2, 3]);
+
+// Execute worker method
+const result = await pool.exec('methodName', [args]);
+
+// Batch execution
+const results = await pool.execBatch([
+  ['method1', [arg1]],
+  ['method2', [arg2]]
+]);
+
+// Parallel map
+const results = await pool.map([1, 2, 3], (x) => x * 2);
+```
+
+### Worker Registration
+```javascript
+// worker.js
+const workerpool = require('workerpool');
+
+workerpool.worker({
+  myMethod: function(arg) {
+    return arg * 2;
+  }
+});
+```
+
+### Cleanup
+```javascript
+// Graceful termination
+await pool.terminate();
+
+// Force termination
+await pool.terminate(true);
+
+// With timeout
+await pool.terminate(false, 5000);
+```
