@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { CircularBuffer, TimeWindowBuffer, TimestampedValue } from '../../src/ts/core/circular-buffer';
+import { CircularBuffer, TimeWindowBuffer, TimestampedValue, GrowableCircularBuffer } from '../../src/ts/core/circular-buffer';
 
 describe('CircularBuffer', () => {
   describe('constructor', () => {
@@ -515,5 +515,241 @@ describe('CircularBuffer Performance', () => {
     // Times should be similar (within 2x) regardless of buffer size
     const ratio = durationLarge / durationSmall;
     expect(ratio).toBeLessThan(2);
+  });
+});
+
+describe('GrowableCircularBuffer', () => {
+  describe('constructor', () => {
+    it('should create buffer with power-of-2 capacity', () => {
+      const buffer = new GrowableCircularBuffer<number>(10);
+      expect(buffer.capacity).toBe(16); // Rounded up to power of 2
+      expect(buffer.size).toBe(0);
+    });
+
+    it('should default to capacity 16', () => {
+      const buffer = new GrowableCircularBuffer<number>();
+      expect(buffer.capacity).toBe(16);
+    });
+
+    it('should handle capacity of 1', () => {
+      const buffer = new GrowableCircularBuffer<number>(1);
+      expect(buffer.capacity).toBe(1);
+    });
+  });
+
+  describe('push and shift', () => {
+    it('should add and remove elements in FIFO order', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      expect(buffer.shift()).toBe(1);
+      expect(buffer.shift()).toBe(2);
+      expect(buffer.shift()).toBe(3);
+      expect(buffer.shift()).toBeUndefined();
+    });
+
+    it('should grow when full instead of evicting', () => {
+      const buffer = new GrowableCircularBuffer<number>(2);
+      expect(buffer.capacity).toBe(2);
+
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3); // Should trigger growth
+
+      expect(buffer.capacity).toBe(4);
+      expect(buffer.size).toBe(3);
+      expect(buffer.toArray()).toEqual([1, 2, 3]);
+    });
+
+    it('should handle multiple growth cycles', () => {
+      const buffer = new GrowableCircularBuffer<number>(2);
+
+      for (let i = 1; i <= 100; i++) {
+        buffer.push(i);
+      }
+
+      expect(buffer.size).toBe(100);
+      expect(buffer.capacity).toBeGreaterThanOrEqual(100);
+
+      // Verify FIFO order
+      for (let i = 1; i <= 100; i++) {
+        expect(buffer.shift()).toBe(i);
+      }
+    });
+  });
+
+  describe('peek and peekLast', () => {
+    it('should return oldest element without removing', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      expect(buffer.peek()).toBe(1);
+      expect(buffer.size).toBe(3);
+    });
+
+    it('should return newest element without removing', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      expect(buffer.peekLast()).toBe(3);
+      expect(buffer.size).toBe(3);
+    });
+
+    it('should return undefined for empty buffer', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      expect(buffer.peek()).toBeUndefined();
+      expect(buffer.peekLast()).toBeUndefined();
+    });
+  });
+
+  describe('at', () => {
+    it('should return element at index', () => {
+      const buffer = new GrowableCircularBuffer<number>(8);
+      buffer.push(10);
+      buffer.push(20);
+      buffer.push(30);
+
+      expect(buffer.at(0)).toBe(10);
+      expect(buffer.at(1)).toBe(20);
+      expect(buffer.at(2)).toBe(30);
+    });
+
+    it('should return undefined for invalid index', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+
+      expect(buffer.at(-1)).toBeUndefined();
+      expect(buffer.at(1)).toBeUndefined();
+      expect(buffer.at(100)).toBeUndefined();
+    });
+
+    it('should work after wraparound and growth', () => {
+      const buffer = new GrowableCircularBuffer<number>(2);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.shift(); // Remove 1
+      buffer.push(3);
+      buffer.push(4); // Triggers growth
+
+      expect(buffer.at(0)).toBe(2);
+      expect(buffer.at(1)).toBe(3);
+      expect(buffer.at(2)).toBe(4);
+    });
+  });
+
+  describe('contains', () => {
+    it('should find existing elements', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      expect(buffer.contains(2)).toBe(true);
+      expect(buffer.contains(4)).toBe(false);
+    });
+  });
+
+  describe('clear', () => {
+    it('should remove all elements', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      buffer.clear();
+
+      expect(buffer.size).toBe(0);
+      expect(buffer.isEmpty).toBe(true);
+      expect(buffer.shift()).toBeUndefined();
+    });
+  });
+
+  describe('drain', () => {
+    it('should return all elements and clear buffer', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      const drained = buffer.drain();
+
+      expect(drained).toEqual([1, 2, 3]);
+      expect(buffer.size).toBe(0);
+      expect(buffer.isEmpty).toBe(true);
+    });
+
+    it('should return empty array for empty buffer', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      const drained = buffer.drain();
+
+      expect(drained).toEqual([]);
+    });
+  });
+
+  describe('toArray', () => {
+    it('should return copy of elements in order', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      const arr = buffer.toArray();
+      expect(arr).toEqual([1, 2, 3]);
+
+      // Modifying array shouldn't affect buffer
+      arr[0] = 100;
+      expect(buffer.at(0)).toBe(1);
+    });
+  });
+
+  describe('iterator', () => {
+    it('should support for...of iteration', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      const values: number[] = [];
+      for (const val of buffer) {
+        values.push(val);
+      }
+
+      expect(values).toEqual([1, 2, 3]);
+    });
+
+    it('should support spread operator', () => {
+      const buffer = new GrowableCircularBuffer<number>(4);
+      buffer.push(1);
+      buffer.push(2);
+      buffer.push(3);
+
+      expect([...buffer]).toEqual([1, 2, 3]);
+    });
+  });
+
+  describe('performance', () => {
+    it('should handle high volume push/shift operations', () => {
+      const buffer = new GrowableCircularBuffer<number>(16);
+      const iterations = 50000;
+
+      const start = performance.now();
+      for (let i = 0; i < iterations; i++) {
+        buffer.push(i);
+      }
+      for (let i = 0; i < iterations; i++) {
+        buffer.shift();
+      }
+      const duration = performance.now() - start;
+
+      // Should complete 100k operations in under 100ms
+      expect(duration).toBeLessThan(100);
+      expect(buffer.size).toBe(0);
+    });
   });
 });

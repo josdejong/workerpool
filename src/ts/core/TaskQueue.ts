@@ -3,32 +3,28 @@
  *
  * Provides FIFO, LIFO, and Priority queue implementations
  * with a factory function for creating queues based on strategy.
+ *
+ * Uses GrowableCircularBuffer for efficient O(1) operations.
  */
 
 import type { Task, TaskQueue, QueueStrategy } from '../types/index';
+import { GrowableCircularBuffer } from './circular-buffer';
 
 /**
- * FIFO Queue using circular buffer for O(1) push/pop operations
+ * FIFO Queue using GrowableCircularBuffer for O(1) push/pop operations
  * Uses power-of-2 sizing for fast modulo via bitwise AND
  *
  * @template T - Task metadata type
  */
 export class FIFOQueue<T = unknown> implements TaskQueue<T> {
-  private buffer: Array<Task<T> | undefined>;
-  private head = 0;
-  private tail = 0;
-  private count = 0;
-  private mask: number;
+  private buffer: GrowableCircularBuffer<Task<T>>;
 
   /**
    * Create a new FIFO queue
    * @param initialCapacity - Initial capacity (will be rounded up to power of 2)
    */
   constructor(initialCapacity = 16) {
-    // Round up to next power of 2
-    const capacity = nextPowerOf2(initialCapacity);
-    this.buffer = new Array(capacity);
-    this.mask = capacity - 1;
+    this.buffer = new GrowableCircularBuffer<Task<T>>(initialCapacity);
   }
 
   /**
@@ -36,12 +32,7 @@ export class FIFOQueue<T = unknown> implements TaskQueue<T> {
    * Amortized O(1) time complexity
    */
   push(task: Task<T>): void {
-    if (this.count === this.buffer.length) {
-      this.grow();
-    }
-    this.buffer[this.tail] = task;
-    this.tail = (this.tail + 1) & this.mask;
-    this.count++;
+    this.buffer.push(task);
   }
 
   /**
@@ -49,14 +40,7 @@ export class FIFOQueue<T = unknown> implements TaskQueue<T> {
    * O(1) time complexity
    */
   pop(): Task<T> | undefined {
-    if (this.count === 0) {
-      return undefined;
-    }
-    const task = this.buffer[this.head];
-    this.buffer[this.head] = undefined; // Allow GC
-    this.head = (this.head + 1) & this.mask;
-    this.count--;
-    return task;
+    return this.buffer.shift();
   }
 
   /**
@@ -64,7 +48,7 @@ export class FIFOQueue<T = unknown> implements TaskQueue<T> {
    * O(1) time complexity
    */
   size(): number {
-    return this.count;
+    return this.buffer.size;
   }
 
   /**
@@ -72,45 +56,15 @@ export class FIFOQueue<T = unknown> implements TaskQueue<T> {
    * O(n) time complexity
    */
   contains(task: Task<T>): boolean {
-    for (let i = 0; i < this.count; i++) {
-      const index = (this.head + i) & this.mask;
-      if (this.buffer[index] === task) {
-        return true;
-      }
-    }
-    return false;
+    return this.buffer.contains(task);
   }
 
   /**
    * Remove all tasks from the queue
-   * O(1) time complexity (lazy clear)
+   * O(n) time complexity (clears references for GC)
    */
   clear(): void {
-    // Fill with undefined to allow GC
-    this.buffer.fill(undefined);
-    this.head = 0;
-    this.tail = 0;
-    this.count = 0;
-  }
-
-  /**
-   * Double the buffer size when full
-   */
-  private grow(): void {
-    const oldCapacity = this.buffer.length;
-    const newCapacity = oldCapacity * 2;
-    const newBuffer = new Array<Task<T> | undefined>(newCapacity);
-
-    // Copy elements in order
-    for (let i = 0; i < this.count; i++) {
-      const index = (this.head + i) & this.mask;
-      newBuffer[i] = this.buffer[index];
-    }
-
-    this.buffer = newBuffer;
-    this.head = 0;
-    this.tail = this.count;
-    this.mask = newCapacity - 1;
+    this.buffer.clear();
   }
 }
 
@@ -308,20 +262,6 @@ export class PriorityQueue<T = unknown> implements TaskQueue<T> {
     this.heap[i] = this.heap[j];
     this.heap[j] = temp;
   }
-}
-
-/**
- * Round up to the next power of 2
- */
-function nextPowerOf2(n: number): number {
-  if (n <= 0) return 1;
-  n--;
-  n |= n >> 1;
-  n |= n >> 2;
-  n |= n >> 4;
-  n |= n >> 8;
-  n |= n >> 16;
-  return n + 1;
 }
 
 /**

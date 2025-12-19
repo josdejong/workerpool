@@ -298,4 +298,200 @@ export class TimeWindowBuffer<T> {
   }
 }
 
+/**
+ * GrowableCircularBuffer - O(1) buffer that grows when full instead of evicting
+ *
+ * Unlike CircularBuffer which evicts oldest elements, this buffer doubles
+ * in size when full. Ideal for task queues where no data should be lost.
+ *
+ * Uses power-of-2 sizing for fast modulo via bitwise AND.
+ */
+export class GrowableCircularBuffer<T> {
+  private buffer: (T | undefined)[];
+  private head: number = 0;
+  private tail: number = 0;
+  private _size: number = 0;
+  private mask: number;
+
+  /**
+   * Create a new GrowableCircularBuffer
+   * @param initialCapacity - Initial capacity (rounded up to power of 2)
+   */
+  constructor(initialCapacity: number = 16) {
+    const capacity = nextPowerOf2(initialCapacity);
+    this.buffer = new Array(capacity);
+    this.mask = capacity - 1;
+  }
+
+  /**
+   * Current number of elements in the buffer
+   */
+  get size(): number {
+    return this._size;
+  }
+
+  /**
+   * Current capacity of the buffer
+   */
+  get capacity(): number {
+    return this.buffer.length;
+  }
+
+  /**
+   * Check if buffer is empty
+   */
+  get isEmpty(): boolean {
+    return this._size === 0;
+  }
+
+  /**
+   * Add an element to the buffer (amortized O(1))
+   *
+   * If buffer is full, it automatically doubles in size.
+   *
+   * @param item - Element to add
+   */
+  push(item: T): void {
+    if (this._size === this.buffer.length) {
+      this.grow();
+    }
+    this.buffer[this.tail] = item;
+    this.tail = (this.tail + 1) & this.mask;
+    this._size++;
+  }
+
+  /**
+   * Remove and return the oldest element (O(1))
+   * @returns Oldest element or undefined if empty
+   */
+  shift(): T | undefined {
+    if (this._size === 0) return undefined;
+
+    const item = this.buffer[this.head];
+    this.buffer[this.head] = undefined; // Allow GC
+    this.head = (this.head + 1) & this.mask;
+    this._size--;
+
+    return item;
+  }
+
+  /**
+   * Get the oldest element without removing it (O(1))
+   * @returns Oldest element or undefined if empty
+   */
+  peek(): T | undefined {
+    if (this._size === 0) return undefined;
+    return this.buffer[this.head];
+  }
+
+  /**
+   * Get the newest element without removing it (O(1))
+   * @returns Newest element or undefined if empty
+   */
+  peekLast(): T | undefined {
+    if (this._size === 0) return undefined;
+    const index = (this.tail - 1 + this.buffer.length) & this.mask;
+    return this.buffer[index];
+  }
+
+  /**
+   * Get element at index (0 = oldest, size-1 = newest) (O(1))
+   * @param index - Index from oldest element
+   * @returns Element at index or undefined if out of bounds
+   */
+  at(index: number): T | undefined {
+    if (index < 0 || index >= this._size) return undefined;
+    return this.buffer[(this.head + index) & this.mask];
+  }
+
+  /**
+   * Check if buffer contains an element (O(n))
+   * @param item - Element to search for
+   * @returns true if found
+   */
+  contains(item: T): boolean {
+    for (let i = 0; i < this._size; i++) {
+      if (this.buffer[(this.head + i) & this.mask] === item) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Clear all elements
+   */
+  clear(): void {
+    this.buffer.fill(undefined);
+    this.head = 0;
+    this.tail = 0;
+    this._size = 0;
+  }
+
+  /**
+   * Convert to array (oldest to newest order) (O(n))
+   * @returns Array copy of all elements
+   */
+  toArray(): T[] {
+    const result: T[] = new Array(this._size);
+    for (let i = 0; i < this._size; i++) {
+      result[i] = this.buffer[(this.head + i) & this.mask] as T;
+    }
+    return result;
+  }
+
+  /**
+   * Drain all elements from the buffer, returning them as an array
+   * More efficient than repeated shift() calls
+   * @returns Array of all elements (oldest to newest)
+   */
+  drain(): T[] {
+    const result = this.toArray();
+    this.clear();
+    return result;
+  }
+
+  /**
+   * Iterator support
+   */
+  *[Symbol.iterator](): Iterator<T> {
+    for (let i = 0; i < this._size; i++) {
+      yield this.buffer[(this.head + i) & this.mask] as T;
+    }
+  }
+
+  /**
+   * Double the buffer size when full (O(n))
+   */
+  private grow(): void {
+    const oldCapacity = this.buffer.length;
+    const newCapacity = oldCapacity * 2;
+    const newBuffer = new Array<T | undefined>(newCapacity);
+
+    // Copy elements in order
+    for (let i = 0; i < this._size; i++) {
+      newBuffer[i] = this.buffer[(this.head + i) & this.mask];
+    }
+
+    this.buffer = newBuffer;
+    this.head = 0;
+    this.tail = this._size;
+    this.mask = newCapacity - 1;
+  }
+}
+
+/**
+ * Round up to the next power of 2
+ */
+function nextPowerOf2(n: number): number {
+  if (n <= 0) return 1;
+  n--;
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+  n |= n >> 8;
+  n |= n >> 16;
+  return n + 1;
+}
+
 export default CircularBuffer;
