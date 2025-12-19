@@ -27,7 +27,33 @@ import { Pool } from './core/Pool';
 import { add as workerAdd, emit as workerEmit } from './workers/worker';
 import { WorkerpoolPromise } from './core/Promise';
 import Transfer from './platform/transfer';
-import { platform, isMainThread, cpus } from './platform/environment';
+import {
+  platform,
+  isMainThread,
+  cpus,
+  isNode,
+  getPlatformInfo,
+  hasWorkerThreads,
+  hasSharedArrayBuffer as hasSharedArrayBufferEnv,
+  hasAtomics as hasAtomicsEnv,
+  isBun,
+  bunVersion,
+  recommendedWorkerType,
+  getWorkerTypeSupport,
+  isWorkerTypeSupported,
+} from './platform/environment';
+import type { PlatformInfo, WorkerTypeSupport } from './types/internal';
+
+// Import circular buffer utilities
+import {
+  CircularBuffer,
+  GrowableCircularBuffer,
+  TimeWindowBuffer,
+} from './core/circular-buffer';
+import type { TimestampedValue } from './core/circular-buffer';
+
+// Import queue implementations
+import { FIFOQueue, LIFOQueue } from './core/TaskQueue';
 
 // ============================================================================
 // Core APIs (same as minimal)
@@ -58,6 +84,72 @@ export { Transfer };
 
 // Platform detection - re-export
 export { platform, isMainThread, cpus };
+
+// ============================================================================
+// Extended Platform Detection
+// ============================================================================
+
+// Platform detection utilities
+export {
+  isNode,
+  getPlatformInfo,
+  hasWorkerThreads,
+};
+
+// Re-export environment hasSharedArrayBuffer/hasAtomics with unique names
+// (wasm module also exports these, so we alias them)
+export { hasSharedArrayBufferEnv, hasAtomicsEnv };
+
+// Bun compatibility utilities
+export {
+  isBun,
+  bunVersion,
+  recommendedWorkerType,
+  getWorkerTypeSupport,
+  isWorkerTypeSupported,
+};
+
+// Platform types
+export type { PlatformInfo, WorkerTypeSupport };
+
+// ============================================================================
+// Data Structures
+// ============================================================================
+
+/**
+ * High-performance O(1) circular buffer with automatic eviction.
+ * Use for metrics collection, sliding windows, and fixed-size queues.
+ */
+export { CircularBuffer };
+
+/**
+ * Growable circular buffer that doubles in size instead of evicting.
+ * Ideal for task queues where no data should be lost.
+ */
+export { GrowableCircularBuffer };
+
+/**
+ * Time-windowed buffer for metrics collection.
+ * Automatically filters values outside the time window.
+ */
+export { TimeWindowBuffer };
+
+// Circular buffer types
+export type { TimestampedValue };
+
+// ============================================================================
+// Queue Implementations
+// ============================================================================
+
+/**
+ * FIFO (First-In-First-Out) task queue implementation.
+ */
+export { FIFOQueue };
+
+/**
+ * LIFO (Last-In-First-Out) task queue implementation.
+ */
+export { LIFOQueue };
 
 // ============================================================================
 // Transfer Helpers
@@ -270,6 +362,18 @@ export type {
   WorkerArg,
   WebWorkerOptions,
   WorkerRegisterOptions,
+  // Batch types
+  BatchOptions,
+  BatchProgress,
+  BatchResult,
+  BatchTaskResult,
+  BatchTask,
+  MapOptions,
+  MapProgress,
+  BatchPromise,
+  ExecOptionsWithAffinity,
+  PoolOptionsExtended,
+  PoolMetricsSnapshot,
 } from './types/index';
 
 // ============================================================================
@@ -353,6 +457,57 @@ export type {
  */
 export function enhancedPool(script?: string | Record<string, unknown>, options?: Record<string, unknown>): Pool {
   return new Pool(script as string | undefined, options);
+}
+
+/**
+ * Create a pool with optimal settings for the current runtime
+ *
+ * Automatically selects the best worker type for the platform:
+ * - Bun: Uses 'thread' (worker_threads) due to IPC issues with child_process
+ * - Node.js: Uses 'auto' (will select thread or process based on availability)
+ * - Browser: Uses 'web' (Web Workers)
+ */
+export function optimalPool(script?: string | Record<string, unknown>, options?: Record<string, unknown>): Pool {
+  const baseOptions = typeof script === 'object' ? script : (options || {});
+  const scriptPath = typeof script === 'string' ? script : undefined;
+
+  const optimalOptions = {
+    ...baseOptions,
+    workerType: recommendedWorkerType,
+    maxWorkers: (baseOptions as { maxWorkers?: number }).maxWorkers ?? Math.max((cpus || 4) - 1, 1),
+  };
+
+  return new Pool(scriptPath, optimalOptions);
+}
+
+/**
+ * Get runtime information for diagnostics
+ */
+export function getRuntimeInfo(): {
+  runtime: 'bun' | 'node' | 'browser';
+  version: string | null;
+  recommendedWorkerType: string;
+  workerTypeSupport: WorkerTypeSupport;
+} {
+  let runtime: 'bun' | 'node' | 'browser';
+  let version: string | null = null;
+
+  if (platform === 'browser') {
+    runtime = 'browser';
+  } else if (isBun) {
+    runtime = 'bun';
+    version = bunVersion;
+  } else {
+    runtime = 'node';
+    version = typeof process !== 'undefined' ? process.version : null;
+  }
+
+  return {
+    runtime,
+    version,
+    recommendedWorkerType,
+    workerTypeSupport: getWorkerTypeSupport(),
+  };
 }
 
 // ============================================================================

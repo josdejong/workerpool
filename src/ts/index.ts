@@ -10,13 +10,18 @@ import {
   platform,
   isMainThread,
   cpus,
+  isNode,
+  getPlatformInfo,
+  hasWorkerThreads,
+  hasSharedArrayBuffer,
+  hasAtomics,
   isBun,
   bunVersion,
   recommendedWorkerType,
   getWorkerTypeSupport,
   isWorkerTypeSupported,
 } from './platform/environment';
-import type { WorkerTypeSupport } from './types/internal';
+import type { PlatformInfo, WorkerTypeSupport } from './types/internal';
 import {
   Pool,
   PoolEnhanced,
@@ -30,6 +35,7 @@ import type {
   EnhancedExecOptions,
   EnhancedPoolStats,
   PoolEvents,
+  PoolEventListener,
   CircuitBreakerOptions,
   RetryOptions,
   MemoryOptions,
@@ -42,16 +48,51 @@ import { capabilities, getCapabilities, canUseOptimalTransfer, canUseZeroCopy, g
 import { resolveWorkerUrl, createWorkerBlobUrl, revokeWorkerBlobUrl, getWorkerConfig, supportsWorkerModules } from './platform/worker-url';
 import { serializeBinary, deserializeBinary, shouldUseBinarySerialization, estimateBinarySize } from './core/binary-serializer';
 
+// Import circular buffer utilities
+import {
+  CircularBuffer,
+  GrowableCircularBuffer,
+  TimeWindowBuffer,
+} from './core/circular-buffer';
+
+// Import queue implementations
+import { FIFOQueue, LIFOQueue } from './core/TaskQueue';
+
+// Import transfer detection utilities
+import {
+  isTransferable,
+  detectTransferables,
+  getTransferableType,
+  validateTransferables,
+  TransferableType,
+} from './platform/transfer-detection';
+
+// Import metrics collector
+import { MetricsCollector } from './core/metrics';
+
 import type { PoolOptions, ExecOptions, PoolStats, WorkerProxy } from './types/index';
 import type { Capabilities } from './platform/capabilities';
 import type { BinarySerializedData } from './core/binary-serializer';
 import type { WorkerConfig, WorkerConfigOptions } from './platform/worker-url';
+import type { TimestampedValue } from './core/circular-buffer';
+import type {
+  PoolMetrics,
+  LatencyHistogram,
+  WorkerUtilization,
+  QueueMetrics,
+  ErrorMetrics,
+  MetricsCollectorOptions,
+} from './core/metrics';
 
 // Backwards compatibility alias
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Proxy<T extends Record<string, (...args: any[]) => any>> = WorkerProxy<T>;
 import type { WorkerRegisterOptions } from './workers/worker';
 import type { WorkerType } from './core/WorkerHandler';
+
+// ============================================================================
+// Core APIs
+// ============================================================================
 
 /**
  * Create a new worker pool
@@ -122,14 +163,34 @@ export { CancellationError, TimeoutError };
 // Export Transfer utility
 export { Transfer };
 
-// Export platform info
+// ============================================================================
+// Platform Detection
+// ============================================================================
+
+// Basic platform info
 export { platform, isMainThread, cpus };
 
-// Export Bun compatibility utilities
+// Extended platform detection
+export {
+  isNode,
+  getPlatformInfo,
+  hasWorkerThreads,
+  hasSharedArrayBuffer,
+  hasAtomics,
+};
+
+// Bun compatibility utilities
 export { isBun, bunVersion, recommendedWorkerType, getWorkerTypeSupport, isWorkerTypeSupported };
 
-// Export error types
+// ============================================================================
+// Error Types
+// ============================================================================
+
 export { TerminateError };
+
+// ============================================================================
+// Pool Classes and Utilities
+// ============================================================================
 
 // Export Pool classes for direct instantiation
 export { Pool, PoolEnhanced };
@@ -137,16 +198,125 @@ export { Pool, PoolEnhanced };
 // Export shared pool utilities
 export { getSharedPool, terminateSharedPool, hasSharedPool };
 
-// Export capabilities API (Issue 8.1)
+// ============================================================================
+// Capabilities API
+// ============================================================================
+
 export { capabilities, getCapabilities, canUseOptimalTransfer, canUseZeroCopy, getCapabilityReport };
 
-// Export worker URL utilities (Issue 4.2)
+// ============================================================================
+// Worker URL Utilities
+// ============================================================================
+
 export { resolveWorkerUrl, createWorkerBlobUrl, revokeWorkerBlobUrl, getWorkerConfig, supportsWorkerModules };
 
-// Export binary serialization (Issue 1.3)
+// ============================================================================
+// Binary Serialization
+// ============================================================================
+
 export { serializeBinary, deserializeBinary, shouldUseBinarySerialization, estimateBinarySize };
 
-// Re-export types
+// ============================================================================
+// Transfer Detection Utilities
+// ============================================================================
+
+/**
+ * Check if a value can be transferred (zero-copy) to a worker
+ *
+ * @param value - Value to check
+ * @returns True if the value is transferable
+ *
+ * @example
+ * ```typescript
+ * const buffer = new ArrayBuffer(1024);
+ * if (isTransferable(buffer)) {
+ *   pool.exec('process', [buffer], { transfer: [buffer] });
+ * }
+ * ```
+ */
+export { isTransferable };
+
+/**
+ * Detect all transferable objects within a value (recursively)
+ *
+ * @param value - Value to scan for transferables
+ * @returns Array of transferable objects found
+ *
+ * @example
+ * ```typescript
+ * const data = { buffer: new ArrayBuffer(1024), name: 'test' };
+ * const transferables = detectTransferables(data);
+ * pool.exec('process', [data], { transfer: transferables });
+ * ```
+ */
+export { detectTransferables };
+
+/**
+ * Get the type of a transferable object
+ */
+export { getTransferableType };
+
+/**
+ * Validate a list of transferable objects
+ */
+export { validateTransferables };
+
+/**
+ * Enum of transferable object types
+ */
+export type { TransferableType };
+
+// ============================================================================
+// Data Structures
+// ============================================================================
+
+/**
+ * High-performance O(1) circular buffer with automatic eviction.
+ * Use for metrics collection, sliding windows, and fixed-size queues.
+ */
+export { CircularBuffer };
+
+/**
+ * Growable circular buffer that doubles in size instead of evicting.
+ * Ideal for task queues where no data should be lost.
+ */
+export { GrowableCircularBuffer };
+
+/**
+ * Time-windowed buffer for metrics collection.
+ * Automatically filters values outside the time window.
+ */
+export { TimeWindowBuffer };
+
+// ============================================================================
+// Queue Implementations
+// ============================================================================
+
+/**
+ * FIFO (First-In-First-Out) task queue implementation.
+ */
+export { FIFOQueue };
+
+/**
+ * LIFO (Last-In-First-Out) task queue implementation.
+ */
+export { LIFOQueue };
+
+// ============================================================================
+// Metrics
+// ============================================================================
+
+/**
+ * Pool metrics collector for monitoring performance.
+ * Collects latency histograms, worker utilization, queue depths, and error rates.
+ */
+export { MetricsCollector };
+
+// ============================================================================
+// Type Exports
+// ============================================================================
+
+// Re-export core types
 export type {
   PoolOptions,
   ExecOptions,
@@ -155,12 +325,13 @@ export type {
   WorkerType,
   WorkerRegisterOptions,
   Proxy,
-  // New types
+  // Enhanced pool types
   Capabilities,
   EnhancedPoolOptions,
   EnhancedExecOptions,
   EnhancedPoolStats,
   PoolEvents,
+  PoolEventListener,
   CircuitBreakerOptions,
   RetryOptions,
   MemoryOptions,
@@ -168,9 +339,46 @@ export type {
   BinarySerializedData,
   WorkerConfig,
   WorkerConfigOptions,
-  // Bun compatibility types
+  // Platform types
+  PlatformInfo,
   WorkerTypeSupport,
+  // Circular buffer types
+  TimestampedValue,
+  // Metrics types
+  PoolMetrics,
+  LatencyHistogram,
+  WorkerUtilization,
+  QueueMetrics,
+  ErrorMetrics,
+  MetricsCollectorOptions,
 };
+
+// Re-export batch types
+export type {
+  BatchOptions,
+  BatchProgress,
+  BatchResult,
+  BatchTaskResult,
+  BatchTask,
+  MapOptions,
+  MapProgress,
+  BatchPromise,
+  AffinityHint,
+  ExecOptionsWithAffinity,
+  PoolOptionsExtended,
+  PoolMetricsSnapshot,
+  Task,
+  TaskQueue,
+  Resolver,
+  TransferDescriptor,
+  WorkerArg,
+  WebWorkerOptions,
+  QueueStrategy,
+} from './types/index';
+
+// ============================================================================
+// Enhanced Pool Factory Functions
+// ============================================================================
 
 /**
  * Create an enhanced pool with advanced features
@@ -278,6 +486,24 @@ export function getRuntimeInfo(): {
   };
 }
 
+// ============================================================================
+// Metadata
+// ============================================================================
+
+/**
+ * Package version
+ */
+export const VERSION = '__VERSION__';
+
+/**
+ * Build type identifier
+ */
+export const BUILD_TYPE = 'modern' as const;
+
+// ============================================================================
+// Default Export
+// ============================================================================
+
 // Default export for CommonJS compatibility
 export default {
   pool,
@@ -314,6 +540,12 @@ export default {
   deserializeBinary,
   shouldUseBinarySerialization,
   estimateBinarySize,
+  // Platform detection
+  isNode,
+  getPlatformInfo,
+  hasWorkerThreads,
+  hasSharedArrayBuffer,
+  hasAtomics,
   // Bun compatibility
   isBun,
   bunVersion,
@@ -321,4 +553,21 @@ export default {
   getWorkerTypeSupport,
   isWorkerTypeSupported,
   getRuntimeInfo,
+  // Transfer detection
+  isTransferable,
+  detectTransferables,
+  getTransferableType,
+  validateTransferables,
+  // Data structures
+  CircularBuffer,
+  GrowableCircularBuffer,
+  TimeWindowBuffer,
+  // Queue implementations
+  FIFOQueue,
+  LIFOQueue,
+  // Metrics
+  MetricsCollector,
+  // Metadata
+  VERSION,
+  BUILD_TYPE,
 };
