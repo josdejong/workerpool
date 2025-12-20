@@ -100,6 +100,41 @@ import {
 // Import session manager
 import { SessionManager } from './core/session-manager';
 
+// Import advanced pool with worker choice strategies and work stealing
+import {
+  AdvancedPool,
+  advancedPool,
+  cpuIntensivePool,
+  ioIntensivePool,
+  mixedWorkloadPool,
+} from './core/AdvancedPool';
+
+// Import worker choice strategies
+import {
+  RoundRobinStrategy,
+  LeastBusyStrategy,
+  LeastUsedStrategy,
+  FairShareStrategy,
+  WeightedRoundRobinStrategy,
+  InterleavedWeightedRoundRobinStrategy,
+  WorkerChoiceStrategyManager,
+  createStrategy,
+} from './core/worker-choice-strategies';
+
+// Import work stealing
+import {
+  WorkStealingDeque,
+  WorkStealingScheduler,
+  rebalanceTasks,
+} from './core/work-stealing';
+
+// Import task affinity
+import {
+  TaskAffinityRouter,
+  createAffinityKey,
+  objectAffinityKey,
+} from './core/task-affinity';
+
 import type { PoolOptions, ExecOptions, PoolStats, WorkerProxy } from './types/index';
 import type { Capabilities } from './platform/capabilities';
 import type { BinarySerializedData } from './core/binary-serializer';
@@ -149,6 +184,36 @@ import type {
   SessionExecOptions,
   WorkerSessionAPI,
 } from './types/session';
+
+// Import types for advanced features
+import type {
+  AdvancedPoolOptions,
+  AdvancedExecOptions,
+  AdvancedPoolStats,
+} from './core/AdvancedPool';
+import type {
+  WorkerChoiceStrategy,
+  WorkerSelectionOptions,
+  WorkerSelectionResult,
+  WorkerStats,
+} from './core/worker-choice-strategies';
+import type {
+  StealableTask,
+  StealingPolicy,
+  WorkStealingStats,
+  WorkStealingDequeStats,
+  TaskSubmitOptions,
+} from './core/work-stealing';
+import type {
+  AffinityKey,
+  RoutingDecision,
+  RoutingReason,
+  AffinityRouterOptions,
+  AffinityRouterStats,
+  WorkerProfile,
+  TaskTypeProfile,
+  RoutingOptions,
+} from './core/task-affinity';
 
 // Backwards compatibility alias
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -415,6 +480,45 @@ export { mainThreadExecutor };
 export { SessionManager };
 
 // ============================================================================
+// Advanced Pool Features
+// ============================================================================
+
+/**
+ * AdvancedPool - Pool with intelligent worker scheduling.
+ * Includes worker choice strategies, work stealing, and task affinity.
+ */
+export { AdvancedPool };
+
+/**
+ * Factory functions for creating optimized pools
+ */
+export { advancedPool, cpuIntensivePool, ioIntensivePool, mixedWorkloadPool };
+
+/**
+ * Worker choice strategy classes for custom implementations
+ */
+export {
+  RoundRobinStrategy,
+  LeastBusyStrategy,
+  LeastUsedStrategy,
+  FairShareStrategy,
+  WeightedRoundRobinStrategy,
+  InterleavedWeightedRoundRobinStrategy,
+  WorkerChoiceStrategyManager,
+  createStrategy,
+};
+
+/**
+ * Work stealing components for custom task distribution
+ */
+export { WorkStealingDeque, WorkStealingScheduler, rebalanceTasks };
+
+/**
+ * Task affinity routing for cache locality optimization
+ */
+export { TaskAffinityRouter, createAffinityKey, objectAffinityKey };
+
+// ============================================================================
 // Parallel Processing Utilities
 // ============================================================================
 
@@ -513,6 +617,30 @@ export type {
   SessionState,
   SessionExecOptions,
   WorkerSessionAPI,
+  // Advanced pool types
+  AdvancedPoolOptions,
+  AdvancedExecOptions,
+  AdvancedPoolStats,
+  // Worker choice strategy types
+  WorkerChoiceStrategy,
+  WorkerSelectionOptions,
+  WorkerSelectionResult,
+  WorkerStats,
+  // Work stealing types
+  StealableTask,
+  StealingPolicy,
+  WorkStealingStats,
+  WorkStealingDequeStats,
+  TaskSubmitOptions,
+  // Task affinity types
+  AffinityKey,
+  RoutingDecision,
+  RoutingReason,
+  AffinityRouterOptions,
+  AffinityRouterStats,
+  WorkerProfile,
+  TaskTypeProfile,
+  RoutingOptions,
 };
 
 // Re-export batch types

@@ -395,6 +395,22 @@ export class GrowableCircularBuffer<T> {
   }
 
   /**
+   * Remove and return the newest element (O(1))
+   * This is LIFO behavior - useful for work-stealing deques
+   * @returns Newest element or undefined if empty
+   */
+  pop(): T | undefined {
+    if (this._size === 0) return undefined;
+
+    this.tail = (this.tail - 1 + this.buffer.length) & this.mask;
+    const item = this.buffer[this.tail];
+    this.buffer[this.tail] = undefined; // Allow GC
+    this._size--;
+
+    return item;
+  }
+
+  /**
    * Get element at index (0 = oldest, size-1 = newest) (O(1))
    * @param index - Index from oldest element
    * @returns Element at index or undefined if out of bounds

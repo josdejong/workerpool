@@ -783,3 +783,69 @@ import {
   SessionManager,
 } from 'workerpool/full';
 ```
+
+#### Advanced Pool (modern/full builds)
+```typescript
+import {
+  // AdvancedPool - Pool with intelligent scheduling
+  AdvancedPool,
+  advancedPool,           // Factory with optimal defaults
+  cpuIntensivePool,       // Optimized for CPU-bound tasks
+  ioIntensivePool,        // Optimized for I/O-bound tasks
+  mixedWorkloadPool,      // Optimized for mixed workloads
+
+  // Worker choice strategies
+  RoundRobinStrategy,
+  LeastBusyStrategy,
+  LeastUsedStrategy,
+  FairShareStrategy,
+  WeightedRoundRobinStrategy,
+  InterleavedWeightedRoundRobinStrategy,
+  WorkerChoiceStrategyManager,
+  createStrategy,
+
+  // Work stealing
+  WorkStealingDeque,
+  WorkStealingScheduler,
+  rebalanceTasks,
+
+  // Task affinity
+  TaskAffinityRouter,
+  createAffinityKey,
+  objectAffinityKey,
+
+  // Types
+  AdvancedPoolOptions,
+  AdvancedExecOptions,
+  AdvancedPoolStats,
+  WorkerChoiceStrategy,
+  WorkerSelectionOptions,
+  WorkerStats,
+  StealingPolicy,
+  WorkStealingStats,
+  AffinityKey,
+  RoutingDecision,
+  AffinityRouterOptions,
+} from 'workerpool/modern';
+
+// Usage example
+const pool = advancedPool('./worker.js', {
+  workerChoiceStrategy: 'least-busy',
+  enableWorkStealing: true,
+  stealingPolicy: 'busiest-first',
+  enableTaskAffinity: true,
+});
+
+// Execute with affinity (tasks with same key go to same worker)
+await pool.execWithAffinity('user-123', 'processData', [data]);
+
+// Execute with task type hint (routes to best performer)
+await pool.execWithType('image-processing', 'resize', [image]);
+
+// Change strategy at runtime
+pool.setWorkerChoiceStrategy('fair-share');
+
+// Get advanced statistics
+const stats = pool.stats();
+console.log(stats.workStealingStats?.totalSteals);
+```
