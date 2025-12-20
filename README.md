@@ -783,6 +783,66 @@ import {
 } from 'workerpool/minimal';
 ```
 
+#### Performance Optimization Utilities (workerpool/modern and /full)
+
+High-performance utilities for optimal parallel processing:
+
+```js
+import {
+  // Function Compilation Cache - avoid repeated eval() overhead
+  FunctionCache,        // LRU cache for compiled functions
+  compileCached,        // Cache function compilation
+  getGlobalFunctionCache,  // Access global cache
+  clearGlobalFunctionCache, // Clear the cache
+
+  // Worker Selection Bitmap - O(1) idle worker lookup
+  WorkerBitmap,         // Fast worker state tracking
+  SharedWorkerBitmap,   // Thread-safe version with Atomics
+
+  // K-Way Merge - O(n log k) merge for parallel results
+  kWayMerge,            // Generic k-way merge
+  kWayMergeIndexed,     // Merge indexed items
+  mergeFilterResults,   // Merge parallel filter results
+  mergePartitionResults, // Merge parallel partition results
+  twoWayMerge,          // Optimized 2-way merge
+  adaptiveMerge,        // Auto-selects best algorithm
+
+  // SIMD Operations - accelerated numeric processing
+  SIMDProcessor,        // Unified SIMD interface
+  hasSIMDSupport,       // Check SIMD availability
+  simdSumF32,           // SIMD sum for Float32Array
+  simdDotProductF32,    // SIMD dot product
+  createNumericReducer, // Factory for sum/product/min/max
+
+  // Auto-Transfer - zero-copy optimization
+  AutoTransfer,         // Reusable transfer optimizer
+  extractTransferables, // Find all transferable objects
+  autoDetectTransfer,   // Intelligent transfer decisions
+  wrapForTransfer,      // Prepare params with transfer list
+  createTransferableChunks, // Split arrays for parallel transfer
+} from 'workerpool/modern';
+
+// Example: SIMD-accelerated numeric operations
+const arr = new Float32Array(10000);
+const sum = simdSumF32(arr);        // SIMD-accelerated sum
+const dot = simdDotProductF32(a, b); // SIMD dot product
+
+// Example: Function compilation caching
+const cache = new FunctionCache({ maxEntries: 100, ttl: 60000 });
+const fn = compileCached('(x) => x * 2');  // Cached after first compile
+const fn2 = compileCached('(x) => x * 2'); // Returns cached version
+
+// Example: K-way merge for parallel results
+const merged = kWayMerge([sorted1, sorted2, sorted3], (a, b) => a - b);
+
+// Example: Auto-transfer optimization
+const autoTransfer = new AutoTransfer({ minTransferSize: 1024 });
+const result = autoTransfer.prepare(largeBuffer);
+if (result.shouldTransfer) {
+  pool.exec('process', [data], { transfer: result.transferables });
+}
+```
+
 #### Full Build Extras (workerpool/full)
 
 The full build includes additional utilities for advanced use cases:
