@@ -651,6 +651,70 @@ lifo.push(task1); lifo.push(task2);
 lifo.pop(); // Returns task2 (last in)
 ```
 
+#### Parallel Array Operations (workerpool/modern and /full)
+
+High-performance parallel array operations that distribute work across workers:
+
+```js
+import { pool } from 'workerpool/modern';
+
+// Basic operations (reduce, filter, find, etc.)
+const sum = await pool.reduce(
+  [1, 2, 3, 4, 5],
+  (acc, x) => acc + x,
+  (left, right) => left + right,
+  { initialValue: 0 }
+);
+
+const evens = await pool.filter([1, 2, 3, 4, 5], x => x % 2 === 0);
+// [2, 4]
+
+const found = await pool.find(items, x => x.matches);
+
+// Extended operations (count, partition, groupBy, etc.)
+const evenCount = await pool.count([1, 2, 3, 4, 5], x => x % 2 === 0);
+// 2
+
+const [evens, odds] = await pool.partition([1, 2, 3, 4, 5], x => x % 2 === 0);
+// evens = [2, 4], odds = [1, 3, 5]
+
+const groups = await pool.groupBy(items, item => item.type);
+// { typeA: [...], typeB: [...] }
+
+const flattened = await pool.flatMap([1, 2, 3], x => [x, x * 2]);
+// [1, 2, 2, 4, 3, 6]
+
+const unique = await pool.unique([1, 2, 2, 3, 3, 3]);
+// [1, 2, 3]
+
+const hasThree = await pool.includes([1, 2, 3, 4, 5], 3);
+// true
+
+const index = await pool.indexOf([1, 2, 3, 4, 5], 3);
+// 2
+```
+
+**Available parallel operations:**
+| Method | Description |
+|--------|-------------|
+| `reduce()` | Reduce array with parallel chunk processing |
+| `filter()` | Filter array with parallel predicate evaluation |
+| `find()` | Find first matching item (early exit) |
+| `findIndex()` | Find index of first matching item |
+| `some()` | Check if any item matches (early exit) |
+| `every()` | Check if all items match (early exit) |
+| `forEach()` | Execute function for each item |
+| `count()` | Count items matching predicate |
+| `partition()` | Split into [matches, non-matches] |
+| `groupBy()` | Group items by key function |
+| `flatMap()` | Map and flatten results |
+| `unique()` | Remove duplicates |
+| `includes()` | Check if value exists |
+| `indexOf()` | Find index of value |
+| `reduceRight()` | Reduce from right to left |
+
+All operations support cancellation, pause/resume, and chunked execution for optimal parallelization.
+
 #### Metrics Collection (workerpool/modern and /full)
 
 ```js
@@ -700,7 +764,8 @@ import {
 ## Roadmap
 
 - ~~Implement functions for parallel processing: `map`, `reduce`, `forEach`,
-  `filter`, `some`, `every`, ...~~ ✅ **Completed** - Available in TypeScript API (`workerpool/modern`)
+  `filter`, `some`, `every`, `count`, `partition`, `groupBy`, `flatMap`,
+  `unique`, `includes`, `indexOf`, `reduceRight`~~ ✅ **Completed** - Available in TypeScript API (`workerpool/modern`)
 - ~~Implement graceful degradation on old browsers not supporting webworkers:
   fallback to processing tasks in the main application.~~ ✅ **Completed** - `MainThreadExecutor` and `createPoolWithFallback()`
 - ~~Implement session support: be able to handle a series of related tasks by a

@@ -526,6 +526,37 @@ const found = await pool.find([1, 2, 3, 4, 5], (x) => x > 3);
 // Parallel some/every
 const hasEven = await pool.some([1, 2, 3], (x) => x % 2 === 0);
 const allPositive = await pool.every([1, 2, 3], (x) => x > 0);
+
+// Parallel count
+const evenCount = await pool.count([1, 2, 3, 4, 5], (x) => x % 2 === 0);
+
+// Parallel partition
+const [evens, odds] = await pool.partition([1, 2, 3, 4, 5], (x) => x % 2 === 0);
+// evens = [2, 4], odds = [1, 3, 5]
+
+// Parallel groupBy
+const groups = await pool.groupBy(items, (item) => item.type);
+// { typeA: [...], typeB: [...] }
+
+// Parallel flatMap
+const flattened = await pool.flatMap([1, 2, 3], (x) => [x, x * 2]);
+// [1, 2, 2, 4, 3, 6]
+
+// Parallel unique
+const unique = await pool.unique([1, 2, 2, 3, 3, 3]);
+// [1, 2, 3]
+
+// Parallel includes/indexOf
+const hasThree = await pool.includes([1, 2, 3, 4, 5], 3); // true
+const index = await pool.indexOf([1, 2, 3, 4, 5], 3); // 2
+
+// Parallel reduceRight
+const result = await pool.reduceRight(
+  ['a', 'b', 'c'],
+  (acc, x) => acc + x,
+  (left, right) => left + right,
+  { initialValue: '' }
+); // 'cba'
 ```
 
 ### Worker Registration
@@ -670,20 +701,33 @@ import {
 #### Parallel Processing (modern/full builds)
 ```typescript
 import {
-  // Parallel array operations (available on Pool)
-  // pool.reduce(), pool.filter(), pool.find(), etc.
+  // Parallel array operations available on Pool/MainThreadExecutor:
+  // pool.reduce(), pool.filter(), pool.find(), pool.findIndex(),
+  // pool.some(), pool.every(), pool.forEach(), pool.count(),
+  // pool.partition(), pool.groupBy(), pool.flatMap(), pool.unique(),
+  // pool.includes(), pool.indexOf(), pool.reduceRight()
 
   // Types
   ParallelOptions,
   ReduceOptions,
   FindOptions,
   PredicateOptions,
+  UniqueOptions,
+  GroupByOptions,
+  FlatMapOptions,
   ForEachResult,
+  CountResult,
+  PartitionResult,
+  GroupByResult,
+  UniqueResult,
   MapperFn,
   ReducerFn,
   CombinerFn,
   PredicateFn,
   ConsumerFn,
+  KeySelectorFn,
+  FlatMapFn,
+  EqualityFn,
 } from 'workerpool/modern';
 ```
 

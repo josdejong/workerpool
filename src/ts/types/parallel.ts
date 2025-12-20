@@ -8,6 +8,13 @@
 import type { ExecOptions, WorkerpoolPromise } from './core';
 import type { BatchOptions, BatchProgress } from './index';
 
+// Forward declare types used in options
+/**
+ * Equality function for unique operation
+ * @template T - Item type
+ */
+export type EqualityFn<T> = (a: T, b: T) => boolean;
+
 // =============================================================================
 // Parallel Processing Options
 // =============================================================================
@@ -71,6 +78,45 @@ export interface PredicateOptions extends ParallelOptions {
    * @default true
    */
   shortCircuit?: boolean;
+}
+
+/**
+ * Options for unique operation
+ */
+export interface UniqueOptions<T> extends ParallelOptions {
+  /**
+   * Custom equality function for comparing items.
+   * @default strict equality (===)
+   */
+  equals?: EqualityFn<T>;
+
+  /**
+   * Key selector function for determining uniqueness.
+   * If provided, items with the same key are considered duplicates.
+   */
+  keySelector?: (item: T) => unknown;
+}
+
+/**
+ * Options for groupBy operation
+ */
+export interface GroupByOptions extends ParallelOptions {
+  /**
+   * Whether to preserve original order within each group.
+   * @default true
+   */
+  preserveOrder?: boolean;
+}
+
+/**
+ * Options for flatMap operation
+ */
+export interface FlatMapOptions extends ParallelOptions {
+  /**
+   * Maximum depth to flatten (1 = single level).
+   * @default 1
+   */
+  depth?: number;
 }
 
 // =============================================================================
@@ -147,6 +193,58 @@ export interface ForEachResult {
   errors: Error[];
 }
 
+/**
+ * Result of a parallel count operation
+ */
+export interface CountResult {
+  /** The count of matching items */
+  count: number;
+  /** Total execution time in ms */
+  duration: number;
+  /** Whether operation was cancelled */
+  cancelled: boolean;
+}
+
+/**
+ * Result of a parallel partition operation
+ */
+export interface PartitionResult<T> {
+  /** Items that passed the predicate */
+  matches: T[];
+  /** Items that did not pass the predicate */
+  nonMatches: T[];
+  /** Total execution time in ms */
+  duration: number;
+  /** Whether operation was cancelled */
+  cancelled: boolean;
+}
+
+/**
+ * Result of a parallel groupBy operation
+ */
+export interface GroupByResult<T, K extends string | number> {
+  /** Grouped items by key */
+  groups: Record<K, T[]>;
+  /** Total execution time in ms */
+  duration: number;
+  /** Whether operation was cancelled */
+  cancelled: boolean;
+}
+
+/**
+ * Result of a parallel unique operation
+ */
+export interface UniqueResult<T> {
+  /** Unique items */
+  items: T[];
+  /** Number of duplicates removed */
+  duplicatesRemoved: number;
+  /** Total execution time in ms */
+  duration: number;
+  /** Whether operation was cancelled */
+  cancelled: boolean;
+}
+
 // =============================================================================
 // Parallel Promise Types
 // =============================================================================
@@ -213,6 +311,20 @@ export type PredicateFn<T> = (item: T, index: number, array?: T[]) => boolean;
  * @template T - Item type
  */
 export type ConsumerFn<T> = (item: T, index: number, array?: T[]) => void;
+
+/**
+ * Key selector function for groupBy (executed in worker)
+ * @template T - Item type
+ * @template K - Key type (must be string or number for object keys)
+ */
+export type KeySelectorFn<T, K extends string | number> = (item: T, index: number) => K;
+
+/**
+ * FlatMap function type (executed in worker)
+ * @template T - Input item type
+ * @template R - Output item type (before flattening)
+ */
+export type FlatMapFn<T, R> = (item: T, index: number) => R[];
 
 // =============================================================================
 // Parallel Interface
@@ -389,4 +501,169 @@ export interface ParallelArrayOperations {
     predicateFn: PredicateFn<T> | string,
     options?: FindOptions
   ): ParallelPromise<number>;
+
+  /**
+   * Parallel count: count items matching predicate
+   *
+   * @param items - Array of items to count
+   * @param predicateFn - Predicate function (executed in worker)
+   * @param options - Parallel options
+   * @returns Promise resolving to count of matching items
+   *
+   * @example
+   * ```typescript
+   * const evenCount = await pool.count([1,2,3,4,5], x => x % 2 === 0);
+   * // Returns 2
+   * ```
+   */
+  count<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: ParallelOptions
+  ): ParallelPromise<number>;
+
+  /**
+   * Parallel partition: split array into matching and non-matching items
+   *
+   * @param items - Array of items to partition
+   * @param predicateFn - Predicate function (executed in worker)
+   * @param options - Parallel options
+   * @returns Promise resolving to [matches, nonMatches] tuple
+   *
+   * @example
+   * ```typescript
+   * const [evens, odds] = await pool.partition([1,2,3,4,5], x => x % 2 === 0);
+   * // evens = [2, 4], odds = [1, 3, 5]
+   * ```
+   */
+  partition<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: ParallelOptions
+  ): ParallelPromise<[T[], T[]]>;
+
+  /**
+   * Parallel includes: check if value exists in array
+   *
+   * @param items - Array of items to search
+   * @param searchElement - Value to search for
+   * @param options - Predicate options
+   * @returns Promise resolving to true if element is found
+   *
+   * @example
+   * ```typescript
+   * const hasThree = await pool.includes([1,2,3,4,5], 3);
+   * // Returns true
+   * ```
+   */
+  includes<T>(
+    items: T[],
+    searchElement: T,
+    options?: PredicateOptions
+  ): ParallelPromise<boolean>;
+
+  /**
+   * Parallel indexOf: find first index of value
+   *
+   * @param items - Array of items to search
+   * @param searchElement - Value to search for
+   * @param options - Find options
+   * @returns Promise resolving to index or -1 if not found
+   *
+   * @example
+   * ```typescript
+   * const index = await pool.indexOf([1,2,3,4,5], 3);
+   * // Returns 2
+   * ```
+   */
+  indexOf<T>(
+    items: T[],
+    searchElement: T,
+    options?: FindOptions
+  ): ParallelPromise<number>;
+
+  /**
+   * Parallel groupBy: group items by key function
+   *
+   * @param items - Array of items to group
+   * @param keyFn - Key selector function (executed in worker)
+   * @param options - GroupBy options
+   * @returns Promise resolving to object with grouped items
+   *
+   * @example
+   * ```typescript
+   * const byType = await pool.groupBy(items, item => item.type);
+   * // Returns { typeA: [...], typeB: [...] }
+   * ```
+   */
+  groupBy<T, K extends string | number>(
+    items: T[],
+    keyFn: KeySelectorFn<T, K> | string,
+    options?: GroupByOptions
+  ): ParallelPromise<Record<K, T[]>>;
+
+  /**
+   * Parallel flatMap: map then flatten results
+   *
+   * @param items - Array of items to process
+   * @param mapFn - Map function that returns arrays (executed in worker)
+   * @param options - FlatMap options
+   * @returns Promise resolving to flattened array
+   *
+   * @example
+   * ```typescript
+   * const flattened = await pool.flatMap([1,2,3], x => [x, x*2]);
+   * // Returns [1, 2, 2, 4, 3, 6]
+   * ```
+   */
+  flatMap<T, R>(
+    items: T[],
+    mapFn: FlatMapFn<T, R> | string,
+    options?: FlatMapOptions
+  ): ParallelPromise<R[]>;
+
+  /**
+   * Parallel unique: remove duplicate items
+   *
+   * @param items - Array of items to deduplicate
+   * @param options - Unique options (including optional equality function)
+   * @returns Promise resolving to array with duplicates removed
+   *
+   * @example
+   * ```typescript
+   * const unique = await pool.unique([1,2,2,3,3,3]);
+   * // Returns [1, 2, 3]
+   * ```
+   */
+  unique<T>(
+    items: T[],
+    options?: UniqueOptions<T>
+  ): ParallelPromise<T[]>;
+
+  /**
+   * Parallel reduceRight: reduce array from right to left
+   *
+   * @param items - Array of items to reduce
+   * @param reducerFn - Reducer function (executed in worker)
+   * @param combinerFn - Function to combine partial results
+   * @param options - Reduce options with initial value
+   * @returns Promise resolving to the reduced value
+   *
+   * @example
+   * ```typescript
+   * const result = await pool.reduceRight(
+   *   ['a', 'b', 'c'],
+   *   (acc, x) => acc + x,
+   *   (left, right) => left + right,
+   *   { initialValue: '' }
+   * );
+   * // Returns 'cba'
+   * ```
+   */
+  reduceRight<T, A>(
+    items: T[],
+    reducerFn: ReducerFn<T, A> | string,
+    combinerFn: CombinerFn<A>,
+    options: ReduceOptions<A>
+  ): ParallelPromise<A>;
 }

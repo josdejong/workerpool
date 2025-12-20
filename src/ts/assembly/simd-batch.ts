@@ -526,3 +526,266 @@ export function copyToWasm(dest: usize, src: usize, length: i32): void {
 export function copyFromWasm(dest: usize, src: usize, length: i32): void {
   memory.copy(dest, src, length);
 }
+
+// ============================================================================
+// Parallel Processing SIMD Operations
+// ============================================================================
+
+/**
+ * SIMD-accelerated count: count occurrences of value in int32 array
+ *
+ * @param input - Input array pointer
+ * @param length - Array length
+ * @param value - Value to count
+ * @returns Count of matching elements
+ */
+export function simdCountI32(input: usize, length: i32, value: i32): i32 {
+  const valueVec = i32x4.splat(value);
+  const vecCount = length / I32_LANES;
+  const remainder = length % I32_LANES;
+
+  let count: i32 = 0;
+
+  // Process 4 elements at a time with SIMD
+  for (let i: i32 = 0; i < vecCount; i++) {
+    const offset = i * 16;
+    const vec = v128.load(input + offset);
+    const cmp = i32x4.eq(vec, valueVec);
+    // Count matching lanes (-1 for match, 0 for non-match)
+    count -= i32x4.extract_lane(cmp, 0);
+    count -= i32x4.extract_lane(cmp, 1);
+    count -= i32x4.extract_lane(cmp, 2);
+    count -= i32x4.extract_lane(cmp, 3);
+  }
+
+  // Handle remainder scalar
+  const remainderOffset = vecCount * I32_LANES;
+  for (let i: i32 = 0; i < remainder; i++) {
+    const idx = remainderOffset + i;
+    if (load<i32>(input + idx * 4) === value) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * SIMD-accelerated count: count occurrences of value in float32 array
+ */
+export function simdCountF32(input: usize, length: i32, value: f32): i32 {
+  const valueVec = f32x4.splat(value);
+  const vecCount = length / F32_LANES;
+  const remainder = length % F32_LANES;
+
+  let count: i32 = 0;
+
+  for (let i: i32 = 0; i < vecCount; i++) {
+    const offset = i * 16;
+    const vec = v128.load(input + offset);
+    const cmp = f32x4.eq(vec, valueVec);
+    // Extract comparison results as integers
+    count -= i32x4.extract_lane(cmp, 0);
+    count -= i32x4.extract_lane(cmp, 1);
+    count -= i32x4.extract_lane(cmp, 2);
+    count -= i32x4.extract_lane(cmp, 3);
+  }
+
+  const remainderOffset = vecCount * F32_LANES;
+  for (let i: i32 = 0; i < remainder; i++) {
+    const idx = remainderOffset + i;
+    if (load<f32>(input + idx * 4) === value) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * SIMD-accelerated indexOf: find first index of value in int32 array
+ *
+ * @param input - Input array pointer
+ * @param length - Array length
+ * @param value - Value to find
+ * @returns Index of first occurrence, or -1 if not found
+ */
+export function simdIndexOfI32(input: usize, length: i32, value: i32): i32 {
+  const valueVec = i32x4.splat(value);
+  const vecCount = length / I32_LANES;
+  const remainder = length % I32_LANES;
+
+  // Process 4 elements at a time with SIMD
+  for (let i: i32 = 0; i < vecCount; i++) {
+    const offset = i * 16;
+    const vec = v128.load(input + offset);
+    const cmp = i32x4.eq(vec, valueVec);
+
+    // Check each lane
+    if (i32x4.extract_lane(cmp, 0) !== 0) return i * I32_LANES + 0;
+    if (i32x4.extract_lane(cmp, 1) !== 0) return i * I32_LANES + 1;
+    if (i32x4.extract_lane(cmp, 2) !== 0) return i * I32_LANES + 2;
+    if (i32x4.extract_lane(cmp, 3) !== 0) return i * I32_LANES + 3;
+  }
+
+  // Handle remainder scalar
+  const remainderOffset = vecCount * I32_LANES;
+  for (let i: i32 = 0; i < remainder; i++) {
+    const idx = remainderOffset + i;
+    if (load<i32>(input + idx * 4) === value) {
+      return idx;
+    }
+  }
+
+  return -1;
+}
+
+/**
+ * SIMD-accelerated indexOf: find first index of value in float32 array
+ */
+export function simdIndexOfF32(input: usize, length: i32, value: f32): i32 {
+  const valueVec = f32x4.splat(value);
+  const vecCount = length / F32_LANES;
+  const remainder = length % F32_LANES;
+
+  for (let i: i32 = 0; i < vecCount; i++) {
+    const offset = i * 16;
+    const vec = v128.load(input + offset);
+    const cmp = f32x4.eq(vec, valueVec);
+
+    if (i32x4.extract_lane(cmp, 0) !== 0) return i * F32_LANES + 0;
+    if (i32x4.extract_lane(cmp, 1) !== 0) return i * F32_LANES + 1;
+    if (i32x4.extract_lane(cmp, 2) !== 0) return i * F32_LANES + 2;
+    if (i32x4.extract_lane(cmp, 3) !== 0) return i * F32_LANES + 3;
+  }
+
+  const remainderOffset = vecCount * F32_LANES;
+  for (let i: i32 = 0; i < remainder; i++) {
+    const idx = remainderOffset + i;
+    if (load<f32>(input + idx * 4) === value) {
+      return idx;
+    }
+  }
+
+  return -1;
+}
+
+/**
+ * SIMD-accelerated includes: check if value exists in int32 array
+ *
+ * @param input - Input array pointer
+ * @param length - Array length
+ * @param value - Value to find
+ * @returns 1 if found, 0 if not found
+ */
+export function simdIncludesI32(input: usize, length: i32, value: i32): i32 {
+  return simdIndexOfI32(input, length, value) >= 0 ? 1 : 0;
+}
+
+/**
+ * SIMD-accelerated includes: check if value exists in float32 array
+ */
+export function simdIncludesF32(input: usize, length: i32, value: f32): i32 {
+  return simdIndexOfF32(input, length, value) >= 0 ? 1 : 0;
+}
+
+/**
+ * SIMD-accelerated filter: count elements greater than threshold
+ *
+ * @param input - Input array pointer
+ * @param length - Array length
+ * @param threshold - Threshold value
+ * @returns Count of elements greater than threshold
+ */
+export function simdCountGreaterThanF32(input: usize, length: i32, threshold: f32): i32 {
+  const thresholdVec = f32x4.splat(threshold);
+  const vecCount = length / F32_LANES;
+  const remainder = length % F32_LANES;
+
+  let count: i32 = 0;
+
+  for (let i: i32 = 0; i < vecCount; i++) {
+    const offset = i * 16;
+    const vec = v128.load(input + offset);
+    const cmp = f32x4.gt(vec, thresholdVec);
+    count -= i32x4.extract_lane(cmp, 0);
+    count -= i32x4.extract_lane(cmp, 1);
+    count -= i32x4.extract_lane(cmp, 2);
+    count -= i32x4.extract_lane(cmp, 3);
+  }
+
+  const remainderOffset = vecCount * F32_LANES;
+  for (let i: i32 = 0; i < remainder; i++) {
+    const idx = remainderOffset + i;
+    if (load<f32>(input + idx * 4) > threshold) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * SIMD-accelerated filter: count elements less than threshold
+ */
+export function simdCountLessThanF32(input: usize, length: i32, threshold: f32): i32 {
+  const thresholdVec = f32x4.splat(threshold);
+  const vecCount = length / F32_LANES;
+  const remainder = length % F32_LANES;
+
+  let count: i32 = 0;
+
+  for (let i: i32 = 0; i < vecCount; i++) {
+    const offset = i * 16;
+    const vec = v128.load(input + offset);
+    const cmp = f32x4.lt(vec, thresholdVec);
+    count -= i32x4.extract_lane(cmp, 0);
+    count -= i32x4.extract_lane(cmp, 1);
+    count -= i32x4.extract_lane(cmp, 2);
+    count -= i32x4.extract_lane(cmp, 3);
+  }
+
+  const remainderOffset = vecCount * F32_LANES;
+  for (let i: i32 = 0; i < remainder; i++) {
+    const idx = remainderOffset + i;
+    if (load<f32>(input + idx * 4) < threshold) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * SIMD-accelerated partition: separate elements into two arrays based on threshold
+ *
+ * @param input - Input array pointer
+ * @param length - Array length
+ * @param threshold - Threshold value
+ * @param outputLess - Output array for elements < threshold
+ * @param outputGreaterOrEqual - Output array for elements >= threshold
+ * @returns Count of elements less than threshold
+ */
+export function simdPartitionF32(
+  input: usize,
+  length: i32,
+  threshold: f32,
+  outputLess: usize,
+  outputGreaterOrEqual: usize
+): i32 {
+  let lessCount: i32 = 0;
+  let greaterOrEqualCount: i32 = 0;
+
+  for (let i: i32 = 0; i < length; i++) {
+    const val = load<f32>(input + i * 4);
+    if (val < threshold) {
+      store<f32>(outputLess + lessCount * 4, val);
+      lessCount++;
+    } else {
+      store<f32>(outputGreaterOrEqual + greaterOrEqualCount * 4, val);
+      greaterOrEqualCount++;
+    }
+  }
+
+  return lessCount;
+}

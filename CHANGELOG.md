@@ -10,6 +10,36 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ## [Unreleased]
 
 ### Added
+- **Extended Parallel Processing Functions** (TypeScript API):
+  - `pool.count()` - Count elements matching a predicate
+  - `pool.partition()` - Split array into [matches, non-matches] tuple
+  - `pool.includes()` - Check if value exists (with early exit)
+  - `pool.indexOf()` - Find first index of value (with early exit)
+  - `pool.groupBy()` - Group items by key function
+  - `pool.flatMap()` - Map then flatten results
+  - `pool.unique()` - Remove duplicate items (supports custom key selector)
+  - `pool.reduceRight()` - Reduce array from right to left
+  - All new functions support cancellation, pause/resume, and chunked parallel execution
+
+- **SIMD-Accelerated WASM Operations** for numeric arrays:
+  - `simdCountI32()` / `simdCountF32()` - SIMD count matching values
+  - `simdIndexOfI32()` / `simdIndexOfF32()` - SIMD search for index
+  - `simdIncludesI32()` / `simdIncludesF32()` - SIMD existence check
+  - `simdCountGreaterThanF32()` / `simdCountLessThanF32()` - SIMD threshold counting
+  - `simdPartitionF32()` - SIMD array partitioning
+  - Pure TypeScript stubs for testing without WASM compilation
+
+- **34 new tests** for extended parallel processing:
+  - count: 4 tests
+  - partition: 4 tests
+  - includes: 5 tests
+  - indexOf: 4 tests
+  - groupBy: 4 tests
+  - flatMap: 4 tests
+  - unique: 5 tests
+  - reduceRight: 4 tests
+  - Total TypeScript test count: 832 tests (up from 798)
+
 - **Parallel Processing Functions** (TypeScript API):
   - `pool.reduce()` - Parallel reduce with chunked execution and proper initialValue handling
   - `pool.forEach()` - Parallel iteration with progress tracking
