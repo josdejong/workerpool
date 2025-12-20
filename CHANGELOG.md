@@ -73,6 +73,11 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - test/ts/session-manager.vitest.ts: 37 tests for session management
   - Total TypeScript test count: 798 tests (up from 724)
 
+- **Complete TypeScript API Exports** for extended parallel processing:
+  - Functions: `createParallelCount`, `createParallelPartition`, `createParallelIncludes`, `createParallelIndexOf`, `createParallelGroupBy`, `createParallelFlatMap`, `createParallelUnique`, `createParallelReduceRight`
+  - Types: `KeySelectorFn`, `FlatMapFn`, `EqualityFn`, `UniqueOptions`, `GroupByOptions`, `FlatMapOptions`, `CountResult`, `PartitionResult`, `GroupByResult`, `UniqueResult`
+  - All exports available from `workerpool/modern`, `workerpool/minimal`, and `workerpool/full`
+
 - **Expanded TypeScript API Exports** for better developer integration:
   - **Platform Detection** (all builds): `isNode()`, `getPlatformInfo()`, `hasWorkerThreads`, `hasSharedArrayBuffer`, `hasAtomics`
   - **Bun Compatibility** (all builds): `isBun`, `bunVersion`, `recommendedWorkerType`, `getWorkerTypeSupport()`, `isWorkerTypeSupported()`

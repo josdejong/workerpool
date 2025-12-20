@@ -707,6 +707,23 @@ import {
   // pool.partition(), pool.groupBy(), pool.flatMap(), pool.unique(),
   // pool.includes(), pool.indexOf(), pool.reduceRight()
 
+  // Factory functions for creating parallel operations
+  createParallelReduce,
+  createParallelForEach,
+  createParallelFilter,
+  createParallelSome,
+  createParallelEvery,
+  createParallelFind,
+  createParallelFindIndex,
+  createParallelCount,
+  createParallelPartition,
+  createParallelIncludes,
+  createParallelIndexOf,
+  createParallelGroupBy,
+  createParallelFlatMap,
+  createParallelUnique,
+  createParallelReduceRight,
+
   // Types
   ParallelOptions,
   ReduceOptions,
