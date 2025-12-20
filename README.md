@@ -19,7 +19,8 @@
 - Handles crashed workers
 - Small: 9 kB minified and gzipped (JS build)
 - Supports transferable objects (only for web workers and worker_threads)
-- **TypeScript + WASM build** with up to 34% faster concurrent task processing
+- **TypeScript + WASM build** with up to 4.5x faster pool creation and 1.6x faster queue throughput
+- **AdvancedPool** with intelligent worker scheduling (worker choice strategies, work stealing, task affinity)
 - **Bun compatible** with automatic runtime detection and optimal configuration
 
 ## Why
@@ -595,6 +596,51 @@ The TypeScript builds include Bun runtime detection:
 - **isWorkerTypeSupported(type)**: Check if a specific worker type is fully supported
 - **optimalPool([script], [options])**: Create a pool with optimal settings for the current runtime
 - **getRuntimeInfo()**: Returns `{ runtime, version, recommendedWorkerType, workerTypeSupport }`
+
+#### AdvancedPool (workerpool/modern and /full)
+
+AdvancedPool provides intelligent worker scheduling with multiple worker choice strategies, work stealing, and task affinity:
+
+```js
+import {
+  advancedPool,           // Create pool with advanced scheduling
+  cpuIntensivePool,       // Optimized for CPU-bound tasks
+  ioIntensivePool,        // Optimized for I/O-bound tasks
+  mixedWorkloadPool,      // Balanced for mixed workloads
+} from 'workerpool/full';
+
+// Create an advanced pool with intelligent scheduling
+const pool = advancedPool('./worker.js', {
+  workerChoiceStrategy: 'least-busy',  // or 'round-robin', 'least-used', 'fair-share'
+  enableWorkStealing: true,
+  enableTaskAffinity: true,
+});
+
+// Execute with task affinity (tasks with same key go to same worker)
+await pool.execWithAffinity('user-123', 'processData', [data]);
+
+// Execute with task type hint (routes to best performer)
+await pool.execWithType('image-processing', 'resize', [image]);
+
+// Change strategy at runtime
+pool.setWorkerChoiceStrategy('fair-share');
+
+// Get advanced statistics
+const stats = pool.stats();
+console.log(stats.workStealingStats?.totalSteals);
+```
+
+**Worker Choice Strategies:**
+- `round-robin` - Even distribution in rotation
+- `least-busy` - Worker with fewest active tasks (best for I/O-bound)
+- `least-used` - Worker with fewest completed tasks
+- `fair-share` - Balances by total execution time (best for mixed workloads)
+- `weighted-round-robin` - Configurable worker weights
+- `interleaved-weighted-round-robin` - Smoother weighted distribution
+
+**Work Stealing:** Automatically rebalances tasks from busy workers to idle ones.
+
+**Task Affinity:** Routes related tasks to the same worker for cache locality.
 
 #### Transfer Detection (workerpool/modern and /full)
 

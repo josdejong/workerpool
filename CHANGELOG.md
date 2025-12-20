@@ -42,6 +42,20 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - Task affinity: 17 tests
   - Updated TypeScript test count: 888 tests
 
+- **Comprehensive Benchmark Suite** for advanced features:
+  - AdvancedPool vs JS vs TS+WASM comparison across 9 benchmarks
+  - Worker choice strategy comparison (round-robin, least-busy, least-used, fair-share)
+  - Work stealing impact measurement for imbalanced workloads
+  - Task affinity performance testing
+  - Factory function benchmarks (cpuIntensivePool, ioIntensivePool, mixedWorkloadPool)
+  - Internal data structure performance (GrowableCircularBuffer, WorkStealingDeque)
+
+- **AdvancedPool exports from workerpool/full**:
+  - All advanced scheduling classes and factory functions
+  - Worker choice strategy classes and manager
+  - Work stealing components (WorkStealingDeque, WorkStealingScheduler)
+  - Task affinity components (TaskAffinityRouter, createAffinityKey, objectAffinityKey)
+
 - **Extended Parallel Processing Functions** (TypeScript API):
   - `pool.count()` - Count elements matching a predicate
   - `pool.partition()` - Split array into [matches, non-matches] tuple
@@ -125,6 +139,22 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
   - Total TypeScript test count: 724 tests (up from 625)
 
 ### Performance
+- **AdvancedPool Benchmark Results** (with WASM enabled):
+  - **Node.js**: AdvancedPool wins 3/4 benchmarks
+    - Pool creation: TS+WASM 4.46x faster than JS
+    - Task execution: AdvancedPool 7% faster than JS
+    - Concurrent tasks: AdvancedPool 1.5x faster than JS
+    - Queue throughput: AdvancedPool 1.6x faster than JS
+    - Best strategy: `least-busy`
+    - Work stealing: 4% faster for imbalanced workloads
+  - **Bun**: TS+WASM wins 3/4 benchmarks
+    - Pool creation: TS+WASM 2.12x faster than JS
+    - Task execution: TS+WASM 1.17x faster than JS
+    - Concurrent tasks: TS+WASM 1.31x faster than JS
+    - Queue throughput: AdvancedPool 1.96x faster than JS
+    - Best strategy: `round-robin`
+    - Work stealing: 24% faster for imbalanced workloads
+
 - **O(1) Circular Buffer Optimizations**:
   - CircularBuffer: Fixed-size buffer with automatic eviction for metrics (O(1) push vs O(n) shift)
   - GrowableCircularBuffer: Power-of-2 sizing with bitwise AND for fast modulo operations
