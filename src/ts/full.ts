@@ -712,6 +712,74 @@ export type {
 } from './types/session';
 
 // ============================================================================
+// Advanced Pool & Scheduling
+// ============================================================================
+
+export {
+  AdvancedPool,
+  advancedPool,
+  cpuIntensivePool,
+  ioIntensivePool,
+  mixedWorkloadPool,
+} from './core/AdvancedPool';
+
+export type {
+  AdvancedPoolOptions,
+  AdvancedExecOptions,
+  AdvancedPoolStats,
+} from './core/AdvancedPool';
+
+// Worker Choice Strategies
+export {
+  RoundRobinStrategy,
+  LeastBusyStrategy,
+  LeastUsedStrategy,
+  FairShareStrategy,
+  WeightedRoundRobinStrategy,
+  InterleavedWeightedRoundRobinStrategy,
+  WorkerChoiceStrategyManager,
+  createStrategy,
+} from './core/worker-choice-strategies';
+
+export type {
+  WorkerChoiceStrategy,
+  WorkerStats,
+  WorkerSelectionResult,
+  WorkerSelectionOptions,
+} from './core/worker-choice-strategies';
+
+// Work Stealing
+export {
+  WorkStealingDeque,
+  WorkStealingScheduler,
+  rebalanceTasks,
+} from './core/work-stealing';
+
+export type {
+  StealingPolicy,
+  WorkStealingStats,
+  WorkStealingSchedulerOptions,
+} from './core/work-stealing';
+
+// Task Affinity
+export {
+  TaskAffinityRouter,
+  createAffinityKey,
+  objectAffinityKey,
+} from './core/task-affinity';
+
+export type {
+  AffinityKey,
+  RoutingDecision,
+  RoutingReason,
+  RoutingOptions,
+  AffinityRouterOptions,
+  AffinityRouterStats,
+  TaskTypeProfile,
+  WorkerProfile,
+} from './core/task-affinity';
+
+// ============================================================================
 // Parallel Processing Utilities
 // ============================================================================
 
