@@ -79,6 +79,14 @@ import {
   createParallelEvery,
   createParallelFind,
   createParallelFindIndex,
+  createParallelCount,
+  createParallelPartition,
+  createParallelIncludes,
+  createParallelIndexOf,
+  createParallelGroupBy,
+  createParallelFlatMap,
+  createParallelUnique,
+  createParallelReduceRight,
 } from './core/parallel-processing';
 
 // Import main thread executor for graceful degradation
@@ -122,6 +130,16 @@ import type {
   CombinerFn,
   PredicateFn,
   ConsumerFn,
+  KeySelectorFn,
+  FlatMapFn,
+  EqualityFn,
+  UniqueOptions,
+  GroupByOptions,
+  FlatMapOptions,
+  CountResult,
+  PartitionResult,
+  GroupByResult,
+  UniqueResult,
 } from './types/parallel';
 import type {
   Session,
@@ -411,6 +429,14 @@ export {
   createParallelEvery,
   createParallelFind,
   createParallelFindIndex,
+  createParallelCount,
+  createParallelPartition,
+  createParallelIncludes,
+  createParallelIndexOf,
+  createParallelGroupBy,
+  createParallelFlatMap,
+  createParallelUnique,
+  createParallelReduceRight,
 };
 
 // ============================================================================
@@ -470,6 +496,16 @@ export type {
   CombinerFn,
   PredicateFn,
   ConsumerFn,
+  KeySelectorFn,
+  FlatMapFn,
+  EqualityFn,
+  UniqueOptions,
+  GroupByOptions,
+  FlatMapOptions,
+  CountResult,
+  PartitionResult,
+  GroupByResult,
+  UniqueResult,
   // Session types
   Session,
   SessionOptions,
@@ -708,6 +744,14 @@ export default {
   createParallelEvery,
   createParallelFind,
   createParallelFindIndex,
+  createParallelCount,
+  createParallelPartition,
+  createParallelIncludes,
+  createParallelIndexOf,
+  createParallelGroupBy,
+  createParallelFlatMap,
+  createParallelUnique,
+  createParallelReduceRight,
   // Metadata
   VERSION,
   BUILD_TYPE,
