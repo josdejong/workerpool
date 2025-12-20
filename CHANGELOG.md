@@ -10,6 +10,61 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ## [Unreleased]
 
 ### Added
+- **Performance Optimizations** (TypeScript API):
+  - **Function Compilation Cache** (`function-cache.ts`):
+    - LRU cache for compiled functions to avoid repeated `eval()`/`new Function()` overhead
+    - `FunctionCache` class with configurable max entries, max size, and TTL
+    - `compileCached()` for automatic caching of function strings
+    - Pre-compiled chunk processor templates: `CACHED_CHUNK_REDUCER`, `CACHED_CHUNK_FILTER`, `CACHED_CHUNK_MAPPER`
+    - Statistics tracking: hits, misses, evictions, hit rate
+  - **Worker Selection Bitmap** (`worker-bitmap.ts`):
+    - O(1) idle worker lookup using bit manipulation
+    - `WorkerBitmap` class with support for up to 256 workers
+    - `SharedWorkerBitmap` using SharedArrayBuffer with Atomics for thread-safe access
+    - Uses popcount and find-first-set operations for efficient worker selection
+  - **K-Way Merge Algorithm** (`k-way-merge.ts`):
+    - O(n log k) time complexity for merging parallel results
+    - Min-heap based implementation for efficient sorted merging
+    - Specialized functions: `kWayMergeIndexed`, `mergeFilterResults`, `mergePartitionResults`, `mergeGroupByResults`, `mergeUniqueResults`
+    - Optimized `twoWayMerge` for k=2 special case
+    - `adaptiveMerge` that chooses best algorithm based on k
+  - **SIMD Processor Integration** (`simd-processor.ts`):
+    - Type detection: `isNumericArray`, `isFloat32Array`, `isFloat64Array`, `isInt32Array`
+    - Float32 SIMD operations: `simdSumF32`, `simdMinF32`, `simdMaxF32`, `simdMultiplyF32`, `simdAddF32`, `simdSquareF32`, `simdSqrtF32`, `simdDotProductF32`
+    - Search operations: `simdCountF32`, `simdIndexOfF32`, `simdIncludesF32`, `simdCountGreaterThanF32`, `simdCountLessThanF32`
+    - Int32 SIMD operations: `simdSumI32`, `simdCountI32`, `simdIndexOfI32`
+    - `SIMDProcessor` class with unified interface and automatic threshold detection
+    - `createNumericReducer` factory for sum/product/min/max operations
+  - **Auto-Transfer Utilities** (`auto-transfer.ts`):
+    - Automatic detection of transferable objects (ArrayBuffer, TypedArray, SharedArrayBuffer)
+    - `extractTransferables()` with depth limiting and circular reference handling
+    - `autoDetectTransfer()` for intelligent transfer decisions based on size thresholds
+    - `wrapForTransfer()` for preparing parameters with transfer lists
+    - `createTransferableChunks()` for splitting large arrays across workers
+    - `prepareNumericArrayForParallel()` with view vs copy options
+    - `AutoTransfer` class for reusable transfer optimization
+
+- **AssemblyScript WASM Modules**:
+  - **Hash Map** (`assembly/hash-map.ts`):
+    - Lock-free hash map with FNV-1a 64-bit hash function
+    - Linear probing for collision resolution
+    - `HashMapLRU` extension with linked list for LRU eviction
+    - Pure TypeScript stub for testing without WASM compilation
+  - **K-Way Merge** (`assembly/k-way-merge.ts`):
+    - WASM-accelerated k-way merge for Int32Array and Float32Array
+    - Min-heap implementation in AssemblyScript
+    - `kWayMergeI32`, `kWayMergeF32`, `twoWayMergeI32`, `twoWayMergeF32`
+    - `kWayMergeIndexed` for preserving original indices
+    - Pure TypeScript stub for testing without WASM compilation
+
+- **166 new tests** for optimization features:
+  - test/ts/function-cache.vitest.ts: 20 tests for function caching
+  - test/ts/worker-bitmap.vitest.ts: 24 tests for bitmap operations
+  - test/ts/k-way-merge.vitest.ts: 42 tests for merge algorithms
+  - test/ts/simd-processor.vitest.ts: 48 tests for SIMD operations
+  - test/ts/auto-transfer.vitest.ts: 32 tests for auto-transfer utilities
+  - Total TypeScript test count: 1054 tests (up from 888)
+
 - **Advanced Pool with Intelligent Scheduling** (TypeScript API):
   - `AdvancedPool` - Enhanced pool with worker choice strategies, work stealing, and task affinity
   - Factory functions: `advancedPool()`, `cpuIntensivePool()`, `ioIntensivePool()`, `mixedWorkloadPool()`

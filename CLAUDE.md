@@ -125,7 +125,12 @@ src/
 │   │   ├── debug-port-allocator.ts # Debug port management
 │   │   ├── parallel-processing.ts # Parallel array operations (reduce, filter, etc.)
 │   │   ├── main-thread-executor.ts # Graceful degradation fallback
-│   │   └── session-manager.ts # Worker session management
+│   │   ├── session-manager.ts # Worker session management
+│   │   ├── function-cache.ts  # LRU function compilation cache
+│   │   ├── worker-bitmap.ts   # O(1) worker selection bitmap
+│   │   ├── k-way-merge.ts     # K-way merge for parallel results
+│   │   ├── simd-processor.ts  # SIMD operations for numeric arrays
+│   │   └── auto-transfer.ts   # Zero-copy transferables detection
 │   │
 │   ├── platform/          # Platform abstraction layer
 │   │   ├── environment.ts     # Node.js vs browser vs Bun detection
@@ -169,6 +174,8 @@ src/
 │   │   ├── histogram.ts       # Histogram implementation
 │   │   ├── circular-buffer.ts # O(1) circular buffer
 │   │   ├── simd-batch.ts      # SIMD batch operations
+│   │   ├── hash-map.ts        # Lock-free hash map with FNV-1a hash
+│   │   ├── k-way-merge.ts     # K-way merge for sorted arrays
 │   │   ├── tsconfig.json      # AssemblyScript config
 │   │   └── stubs/             # Pure TS stubs for testing
 │   │       ├── index.ts
@@ -181,7 +188,9 @@ src/
 │   │       ├── errors.ts
 │   │       ├── histogram.ts
 │   │       ├── circular-buffer.ts
-│   │       └── simd-batch.ts
+│   │       ├── simd-batch.ts
+│   │       ├── hash-map.ts        # TS stub for hash map testing
+│   │       └── k-way-merge.ts     # TS stub for k-way merge testing
 │   │
 │   ├── types/             # TypeScript type definitions
 │   │   ├── index.ts           # Core types export
@@ -245,6 +254,11 @@ test/
     ├── parallel-processing.vitest.ts # Parallel array operations tests
     ├── main-thread-executor.vitest.ts # Graceful degradation tests
     ├── session-manager.vitest.ts # Session management tests
+    ├── function-cache.vitest.ts # Function compilation cache tests
+    ├── worker-bitmap.vitest.ts  # Worker selection bitmap tests
+    ├── k-way-merge.vitest.ts    # K-way merge algorithm tests
+    ├── simd-processor.vitest.ts # SIMD processor tests
+    ├── auto-transfer.vitest.ts  # Auto-transfer utilities tests
     └── assembly/              # AssemblyScript module tests
         ├── priority-queue.vitest.ts
         ├── ring-buffer.vitest.ts
