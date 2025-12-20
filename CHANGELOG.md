@@ -10,6 +10,38 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ## [Unreleased]
 
 ### Added
+- **Advanced Pool with Intelligent Scheduling** (TypeScript API):
+  - `AdvancedPool` - Enhanced pool with worker choice strategies, work stealing, and task affinity
+  - Factory functions: `advancedPool()`, `cpuIntensivePool()`, `ioIntensivePool()`, `mixedWorkloadPool()`
+  - Worker choice strategies:
+    - `round-robin` - Even distribution in rotation
+    - `least-busy` - Fewest active tasks (best for I/O-bound)
+    - `least-used` - Fewest total completed tasks
+    - `fair-share` - Balances by total execution time (best for mixed workloads)
+    - `weighted-round-robin` - Configurable worker weights
+    - `interleaved-weighted-round-robin` - Smoother weighted distribution
+  - Work-stealing task distribution for automatic load balancing
+  - Task affinity routing for cache locality optimization
+  - Performance-aware worker routing based on historical task execution
+
+- **Work-Stealing Components**:
+  - `WorkStealingDeque` - Double-ended queue with LIFO local ops, FIFO stealing
+  - `WorkStealingScheduler` - Coordinates work stealing across workers
+  - Stealing policies: `random`, `round-robin`, `busiest-first`, `neighbor`
+  - Automatic rebalancing when load imbalance exceeds threshold
+
+- **Task Affinity System**:
+  - `TaskAffinityRouter` - Routes tasks based on affinity keys, types, and performance
+  - `createAffinityKey()` / `objectAffinityKey()` - Helper functions for affinity keys
+  - Performance tracking by task type with exponential moving averages
+  - TTL-based affinity cache with automatic eviction
+
+- **56 new tests** for advanced pool features:
+  - Worker choice strategies: 20 tests
+  - Work stealing: 19 tests
+  - Task affinity: 17 tests
+  - Updated TypeScript test count: 888 tests
+
 - **Extended Parallel Processing Functions** (TypeScript API):
   - `pool.count()` - Count elements matching a predicate
   - `pool.partition()` - Split array into [matches, non-matches] tuple
