@@ -31,6 +31,11 @@ import type {
   CombinerFn,
   PredicateFn,
   ConsumerFn,
+  KeySelectorFn,
+  FlatMapFn,
+  UniqueOptions,
+  GroupByOptions,
+  FlatMapOptions,
 } from '../types/index';
 import type { PoolEvents, PoolEventListener, EnhancedPoolStats } from './Pool';
 import { createBatchExecutor, type TaskExecutor } from './batch-executor';
@@ -42,6 +47,14 @@ import {
   createParallelEvery,
   createParallelFind,
   createParallelFindIndex,
+  createParallelCount,
+  createParallelPartition,
+  createParallelIncludes,
+  createParallelIndexOf,
+  createParallelGroupBy,
+  createParallelFlatMap,
+  createParallelUnique,
+  createParallelReduceRight,
 } from './parallel-processing';
 
 // =============================================================================
@@ -446,6 +459,156 @@ export class MainThreadExecutor {
     };
 
     return createParallelFindIndex<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel count (sequential on main thread)
+   */
+  count<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: ParallelOptions
+  ): ParallelPromise<number> {
+    const executor: TaskExecutor<number> = (method, params, execOptions) => {
+      return this.exec<number>(method as string, params, execOptions);
+    };
+
+    return createParallelCount<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel partition (sequential on main thread)
+   */
+  partition<T>(
+    items: T[],
+    predicateFn: PredicateFn<T> | string,
+    options?: ParallelOptions
+  ): ParallelPromise<[T[], T[]]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method as string, params, execOptions);
+    };
+
+    return createParallelPartition<T>(items, predicateFn, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel includes (sequential on main thread)
+   */
+  includes<T>(
+    items: T[],
+    searchElement: T,
+    options?: PredicateOptions
+  ): ParallelPromise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method as string, params, execOptions);
+    };
+
+    return createParallelIncludes<T>(items, searchElement, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel indexOf (sequential on main thread)
+   */
+  indexOf<T>(
+    items: T[],
+    searchElement: T,
+    options?: FindOptions
+  ): ParallelPromise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method as string, params, execOptions);
+    };
+
+    return createParallelIndexOf<T>(items, searchElement, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel groupBy (sequential on main thread)
+   */
+  groupBy<T, K extends string | number>(
+    items: T[],
+    keyFn: KeySelectorFn<T, K> | string,
+    options?: GroupByOptions
+  ): ParallelPromise<Record<K, T[]>> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method as string, params, execOptions);
+    };
+
+    return createParallelGroupBy<T, K>(items, keyFn, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel flatMap (sequential on main thread)
+   */
+  flatMap<T, R>(
+    items: T[],
+    mapFn: FlatMapFn<T, R> | string,
+    options?: FlatMapOptions
+  ): ParallelPromise<R[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method as string, params, execOptions);
+    };
+
+    return createParallelFlatMap<T, R>(items, mapFn, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel unique (sequential on main thread)
+   */
+  unique<T>(
+    items: T[],
+    options?: UniqueOptions<T>
+  ): ParallelPromise<T[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const executor: TaskExecutor<any> = (method, params, execOptions) => {
+      return this.exec(method as string, params, execOptions);
+    };
+
+    return createParallelUnique<T>(items, executor, {
+      ...options,
+      concurrency: 1,
+    });
+  }
+
+  /**
+   * Parallel reduceRight (sequential on main thread)
+   */
+  reduceRight<T, A>(
+    items: T[],
+    reducerFn: ReducerFn<T, A> | string,
+    combinerFn: CombinerFn<A>,
+    options: ReduceOptions<A>
+  ): ParallelPromise<A> {
+    const executor: TaskExecutor<A> = (method, params, execOptions) => {
+      return this.exec<A>(method as string, params, execOptions);
+    };
+
+    return createParallelReduceRight<T, A>(items, reducerFn, combinerFn, executor, {
       ...options,
       concurrency: 1,
     });

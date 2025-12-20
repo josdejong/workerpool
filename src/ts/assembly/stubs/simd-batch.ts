@@ -400,3 +400,145 @@ export function simdReduceSumI32(input: number, length: number): number {
   }
   return sum;
 }
+
+// ============================================================================
+// Parallel Processing SIMD Operations (scalar implementations)
+// ============================================================================
+
+/**
+ * Count: count occurrences of value in int32 array
+ */
+export function simdCountI32(input: number, length: number, value: number): number {
+  const inputArr = _memoryI32.get(input);
+  if (!inputArr) return 0;
+
+  let count = 0;
+  for (let i = 0; i < length; i++) {
+    if (inputArr[i] === value) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * Count: count occurrences of value in float32 array
+ */
+export function simdCountF32(input: number, length: number, value: number): number {
+  const inputArr = _memoryF32.get(input);
+  if (!inputArr) return 0;
+
+  let count = 0;
+  for (let i = 0; i < length; i++) {
+    if (inputArr[i] === value) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * IndexOf: find first index of value in int32 array
+ */
+export function simdIndexOfI32(input: number, length: number, value: number): number {
+  const inputArr = _memoryI32.get(input);
+  if (!inputArr) return -1;
+
+  for (let i = 0; i < length; i++) {
+    if (inputArr[i] === value) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * IndexOf: find first index of value in float32 array
+ */
+export function simdIndexOfF32(input: number, length: number, value: number): number {
+  const inputArr = _memoryF32.get(input);
+  if (!inputArr) return -1;
+
+  for (let i = 0; i < length; i++) {
+    if (inputArr[i] === value) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Includes: check if value exists in int32 array
+ */
+export function simdIncludesI32(input: number, length: number, value: number): number {
+  return simdIndexOfI32(input, length, value) >= 0 ? 1 : 0;
+}
+
+/**
+ * Includes: check if value exists in float32 array
+ */
+export function simdIncludesF32(input: number, length: number, value: number): number {
+  return simdIndexOfF32(input, length, value) >= 0 ? 1 : 0;
+}
+
+/**
+ * Count: count elements greater than threshold in float32 array
+ */
+export function simdCountGreaterThanF32(input: number, length: number, threshold: number): number {
+  const inputArr = _memoryF32.get(input);
+  if (!inputArr) return 0;
+
+  let count = 0;
+  for (let i = 0; i < length; i++) {
+    if (inputArr[i] > threshold) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * Count: count elements less than threshold in float32 array
+ */
+export function simdCountLessThanF32(input: number, length: number, threshold: number): number {
+  const inputArr = _memoryF32.get(input);
+  if (!inputArr) return 0;
+
+  let count = 0;
+  for (let i = 0; i < length; i++) {
+    if (inputArr[i] < threshold) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * Partition: separate elements into two arrays based on threshold
+ */
+export function simdPartitionF32(
+  input: number,
+  length: number,
+  threshold: number,
+  outputLess: number,
+  outputGreaterOrEqual: number
+): number {
+  const inputArr = _memoryF32.get(input);
+  if (!inputArr) return 0;
+
+  const lessArr: number[] = [];
+  const greaterOrEqualArr: number[] = [];
+
+  for (let i = 0; i < length; i++) {
+    if (inputArr[i] < threshold) {
+      lessArr.push(inputArr[i]);
+    } else {
+      greaterOrEqualArr.push(inputArr[i]);
+    }
+  }
+
+  _memoryF32.set(outputLess, new Float32Array(lessArr));
+  _memoryF32.set(outputGreaterOrEqual, new Float32Array(greaterOrEqualArr));
+
+  return lessArr.length;
+}
