@@ -864,6 +864,29 @@ import {
   AdaptiveScaler,
   HealthMonitor,
   WorkerCache,
+
+  // Protocol v2 - Error codes
+  WorkerErrorCode,    // 1xxx: worker crashes, pool terminated
+  ProtocolErrorCode,  // 2xxx: invalid messages, version mismatch
+  TaskErrorCode,      // 3xxx: method not found, timeout, cancelled
+  ResourceErrorCode,  // 4xxx: out of memory, SAB unavailable
+  CommunicationErrorCode, // 5xxx: connection lost, channel closed
+  getErrorMessage,
+  isRetryableError,
+
+  // Protocol v2 - Message priority
+  MessagePriority,    // LOW=0, NORMAL=1, HIGH=2, CRITICAL=3
+  PROTOCOL_VERSION,   // Current: 2
+
+  // Heartbeat mechanism
+  HeartbeatMonitor,
+  createHeartbeatRequest,
+  createHeartbeatResponse,
+
+  // Binary protocol (WASM-ready)
+  encodeTaskRequest,
+  encodeHeartbeatResponse,
+  validateHeader,
 } from 'workerpool/full';
 ```
 
