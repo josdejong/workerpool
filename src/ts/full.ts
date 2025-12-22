@@ -912,7 +912,7 @@ export type {
 
 // Binary protocol for WASM (TypeScript stubs for testing)
 export {
-  MAGIC as BINARY_MAGIC,
+  MAGIC,
   VERSION as BINARY_VERSION,
   MSG_TASK_REQUEST,
   MSG_TASK_RESPONSE,
@@ -926,6 +926,13 @@ export {
   PRIORITY_NORMAL,
   PRIORITY_HIGH,
   PRIORITY_CRITICAL,
+  ERR_METHOD_NOT_FOUND,
+  ERR_TIMEOUT,
+  ERR_CANCELLED,
+  resetSequence,
+  nextSequence,
+  writeHeader,
+  readHeader,
   encodeTaskRequest,
   decodeTaskRequest,
   encodeTaskResponse,
@@ -936,9 +943,13 @@ export {
   decodeHeartbeatResponse,
   encodeBatchHeader,
   validateHeader,
-  getMessageType as getBinaryMessageType,
-  getMessageId as getBinaryMessageId,
+  getPayload,
+  getMessageType,
+  getMessageId,
   getMessagePriority as getBinaryMessagePriority,
+  getMessageSequence,
+  hasTransferFlag,
+  isCompressed,
   getHeaderSize,
   calculateChecksum,
 } from './assembly/stubs/binary-protocol';
