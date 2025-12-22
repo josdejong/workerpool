@@ -127,6 +127,7 @@ src/
 │   │   ├── main-thread-executor.ts # Graceful degradation fallback
 │   │   ├── session-manager.ts # Worker session management
 │   │   ├── function-cache.ts  # LRU function compilation cache
+│   │   ├── heartbeat.ts       # Worker health monitoring
 │   │   ├── worker-bitmap.ts   # O(1) worker selection bitmap
 │   │   ├── k-way-merge.ts     # K-way merge for parallel results
 │   │   ├── simd-processor.ts  # SIMD operations for numeric arrays
@@ -176,6 +177,7 @@ src/
 │   │   ├── simd-batch.ts      # SIMD batch operations
 │   │   ├── hash-map.ts        # Lock-free hash map with FNV-1a hash
 │   │   ├── k-way-merge.ts     # K-way merge for sorted arrays
+│   │   ├── binary-protocol.ts # Binary message protocol for WASM
 │   │   ├── tsconfig.json      # AssemblyScript config
 │   │   └── stubs/             # Pure TS stubs for testing
 │   │       ├── index.ts
@@ -190,13 +192,15 @@ src/
 │   │       ├── circular-buffer.ts
 │   │       ├── simd-batch.ts
 │   │       ├── hash-map.ts        # TS stub for hash map testing
-│   │       └── k-way-merge.ts     # TS stub for k-way merge testing
+│   │       ├── k-way-merge.ts     # TS stub for k-way merge testing
+│   │       └── binary-protocol.ts # TS stub for binary protocol testing
 │   │
 │   ├── types/             # TypeScript type definitions
 │   │   ├── index.ts           # Core types export
 │   │   ├── core.ts            # Shared types (ExecOptions, WorkerpoolPromise)
 │   │   ├── internal.ts        # Internal types
-│   │   ├── messages.ts        # Message protocol types
+│   │   ├── messages.ts        # Message protocol types (v2 with priority, versioning)
+│   │   ├── error-codes.ts     # Standardized error codes (1xxx-5xxx)
 │   │   ├── worker-methods.ts  # Worker method types
 │   │   ├── parallel.ts        # Parallel processing types (MapperFn, ReducerFn, etc.)
 │   │   └── session.ts         # Session types (Session, SessionOptions, etc.)
@@ -259,6 +263,9 @@ test/
     ├── k-way-merge.vitest.ts    # K-way merge algorithm tests
     ├── simd-processor.vitest.ts # SIMD processor tests
     ├── auto-transfer.vitest.ts  # Auto-transfer utilities tests
+    ├── error-codes.vitest.ts    # Standardized error codes tests
+    ├── messages.vitest.ts       # Protocol v2 messages tests
+    ├── heartbeat.vitest.ts      # Heartbeat mechanism tests
     └── assembly/              # AssemblyScript module tests
         ├── priority-queue.vitest.ts
         ├── ring-buffer.vitest.ts
@@ -269,7 +276,8 @@ test/
         ├── circular-buffer.vitest.ts
         ├── simd-batch.vitest.ts
         ├── atomics.vitest.ts
-        └── stats.vitest.ts
+        ├── stats.vitest.ts
+        └── binary-protocol.vitest.ts # Binary protocol tests
 ```
 
 ### Worker Types
@@ -282,9 +290,29 @@ The `workerType` option controls which backend is used:
 
 ### Message Protocol
 
-Workers communicate via JSON-RPC style messages with `id`, `method`, `params`, `result`, `error` fields. Special method IDs:
+Workers communicate via JSON-RPC style messages with `id`, `method`, `params`, `result`, `error` fields.
+
+**Protocol Version 2** (TypeScript API) adds:
+- `v` - Protocol version (2)
+- `seq` - Sequence number for ordering
+- `ack` - Last acknowledged sequence
+- `priority` - Message priority (0=LOW, 1=NORMAL, 2=HIGH, 3=CRITICAL)
+- `ts` - Timestamp when message was created
+- `code` - Standardized error code (SerializedError)
+
+Special method IDs:
 - `__workerpool-terminate__` - Signals worker to exit
 - `__workerpool-cleanup__` - Triggers abort listeners before potential termination
+- `__workerpool-heartbeat__` - Health check ping/pong
+
+**Error Code Categories:**
+- 1xxx: Worker/Pool errors (WORKER_CRASHED, POOL_TERMINATED, etc.)
+- 2xxx: Protocol errors (INVALID_MESSAGE, VERSION_MISMATCH, etc.)
+- 3xxx: Task errors (METHOD_NOT_FOUND, TIMEOUT, CANCELLED, etc.)
+- 4xxx: Resource errors (OUT_OF_MEMORY, SAB_UNAVAILABLE, etc.)
+- 5xxx: Communication errors (CONNECTION_LOST, CHANNEL_CLOSED, etc.)
+
+**Binary Protocol** (WASM): 20-byte header with magic (0x5750), version, type, flags, id, length, sequence, priority.
 
 ### Key Patterns
 

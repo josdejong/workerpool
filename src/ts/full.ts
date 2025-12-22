@@ -833,3 +833,112 @@ export function hasWasmSupport(): boolean {
 export function hasFullWasmSupport(): boolean {
   return _canUseWasmThreads();
 }
+
+// ============================================================================
+// Protocol & Error Codes (Messaging Protocol v2)
+// ============================================================================
+
+// Error codes for standardized error identification
+export {
+  WorkerErrorCode,
+  ProtocolErrorCode,
+  TaskErrorCode,
+  ResourceErrorCode,
+  CommunicationErrorCode,
+  getErrorMessage,
+  isWorkerError,
+  isProtocolError,
+  isTaskError,
+  isResourceError,
+  isCommunicationError,
+  getErrorCategory,
+  isRetryableError,
+  isFatalError,
+  ErrorMessages,
+} from './types/error-codes';
+
+export type { ErrorCode } from './types/error-codes';
+
+// Protocol versioning and message types
+export {
+  PROTOCOL_VERSION,
+  MIN_PROTOCOL_VERSION,
+  MessagePriority,
+  TERMINATE_METHOD_ID,
+  CLEANUP_METHOD_ID,
+  HEARTBEAT_METHOD_ID,
+  isTaskRequest,
+  isCleanupRequest,
+  isTaskSuccessResponse,
+  isTaskErrorResponse,
+  isWorkerEvent,
+  isCleanupResponse,
+  isHeartbeatRequest,
+  isHeartbeatResponse,
+  createMessage,
+  isValidProtocolVersion,
+  getMessagePriority,
+  compareByPriority,
+} from './types/messages';
+
+export type {
+  MessageHeader,
+  TaskRequest,
+  CleanupRequest,
+  HeartbeatRequest,
+  HeartbeatResponse,
+  TaskSuccessResponse,
+  TaskErrorResponse,
+  CleanupResponse,
+  WorkerEvent,
+  SerializedError,
+  WorkerRequest,
+  WorkerResponse,
+} from './types/messages';
+
+// Heartbeat mechanism for worker health monitoring
+export {
+  HeartbeatMonitor,
+  createHeartbeatRequest,
+  createHeartbeatResponse,
+  handleHeartbeatInWorker,
+  HeartbeatErrorCodes,
+} from './core/heartbeat';
+
+export type {
+  HeartbeatConfig,
+  HeartbeatStats,
+} from './core/heartbeat';
+
+// Binary protocol for WASM (TypeScript stubs for testing)
+export {
+  MAGIC as BINARY_MAGIC,
+  VERSION as BINARY_VERSION,
+  MSG_TASK_REQUEST,
+  MSG_TASK_RESPONSE,
+  MSG_TASK_ERROR,
+  MSG_HEARTBEAT_REQ,
+  MSG_HEARTBEAT_RES,
+  MSG_BATCH,
+  FLAG_HAS_TRANSFER,
+  FLAG_COMPRESSED,
+  PRIORITY_LOW,
+  PRIORITY_NORMAL,
+  PRIORITY_HIGH,
+  PRIORITY_CRITICAL,
+  encodeTaskRequest,
+  decodeTaskRequest,
+  encodeTaskResponse,
+  encodeErrorResponse,
+  decodeErrorResponse,
+  encodeHeartbeatRequest,
+  encodeHeartbeatResponse,
+  decodeHeartbeatResponse,
+  encodeBatchHeader,
+  validateHeader,
+  getMessageType as getBinaryMessageType,
+  getMessageId as getBinaryMessageId,
+  getMessagePriority as getBinaryMessagePriority,
+  getHeaderSize,
+  calculateChecksum,
+} from './assembly/stubs/binary-protocol';

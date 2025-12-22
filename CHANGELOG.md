@@ -10,6 +10,41 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 ## [Unreleased]
 
 ### Added
+- **Messaging Protocol v2** (TypeScript API):
+  - **Protocol Versioning** (`types/messages.ts`):
+    - Added `PROTOCOL_VERSION` (v2) and `MIN_PROTOCOL_VERSION` (v1) constants
+    - `MessageHeader` interface with `v`, `seq`, `ack`, `priority`, `ts` fields
+    - `isValidProtocolVersion()` for version compatibility checks
+    - `createMessage()` helper for constructing versioned messages
+    - Backward compatible with v1 messages (no version field defaults to v1)
+  - **Message Priority** (`types/messages.ts`):
+    - `MessagePriority` enum: `LOW`, `NORMAL`, `HIGH`, `CRITICAL`
+    - `getMessagePriority()` and `compareByPriority()` helpers
+    - All message interfaces extended with optional priority field
+  - **Standardized Error Codes** (`types/error-codes.ts`):
+    - `WorkerErrorCode` (1xxx): Worker crashes, init failures, unresponsive, pool terminated
+    - `ProtocolErrorCode` (2xxx): Invalid messages, version mismatch, serialization errors
+    - `TaskErrorCode` (3xxx): Method not found, invalid params, timeout, cancelled
+    - `ResourceErrorCode` (4xxx): Out of memory, SAB/WASM unavailable, buffer overflow
+    - `CommunicationErrorCode` (5xxx): Connection failures, channel closed, backpressure
+    - Helper functions: `getErrorMessage()`, `getErrorCategory()`, `isRetryableError()`, `isFatalError()`
+  - **Heartbeat Mechanism** (`core/heartbeat.ts`):
+    - `HeartbeatMonitor` class for worker health monitoring
+    - Configurable interval, timeout, and max missed heartbeats
+    - `HEARTBEAT_METHOD_ID` for protocol-level heartbeat messages
+    - `HeartbeatRequest` and `HeartbeatResponse` message types
+    - Callbacks: `onUnresponsive`, `onRecovered`, `onHeartbeat`
+    - Statistics: latency tracking, success/missed counts, responsive state
+    - Worker-side handler: `handleHeartbeatInWorker()`
+  - **Binary Protocol** (`assembly/binary-protocol.ts`):
+    - Compact 20-byte header format for efficient wire transfer
+    - Magic number (0x5750 = 'WP') and version validation
+    - Message types: TASK_REQUEST, TASK_RESPONSE, TASK_ERROR, HEARTBEAT, BATCH, etc.
+    - Flags: HAS_TRANSFER, COMPRESSED, ENCRYPTED, FINAL, ACK_REQUIRED
+    - Sequence numbers for message ordering
+    - TypeScript stubs for testing without WASM compilation
+    - Functions: `encodeTaskRequest`, `encodeHeartbeatResponse`, `validateHeader`, etc.
+
 - **Performance Optimizations** (TypeScript API):
   - **Function Compilation Cache** (`function-cache.ts`):
     - LRU cache for compiled functions to avoid repeated `eval()`/`new Function()` overhead
