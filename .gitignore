@@ -32,3 +32,5 @@ node_modules
 
 # Compiled executables
 *.exe
+.claude/settings.local.json
+/.claude
