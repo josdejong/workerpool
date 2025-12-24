@@ -1,0 +1,5330 @@
+metadata:
+  name: "@danielsimonjr/workerpool"
+  version: 10.0.1
+  lastUpdated: "2025-12-24"
+  totalFiles: 91
+  totalModules: 1
+  totalExports: 1453
+entryPoints: []
+modules:
+  ts:
+    src/ts/assembly/atomics.ts:
+      description: Atomic Utilities Module
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MAX_CAS_RETRIES
+        - tryLock
+        - acquireLock
+        - releaseLock
+        - atomicIncrement
+        - atomicDecrement
+        - atomicIncrement64
+        - atomicDecrement64
+        - atomicCompareExchange32
+        - atomicCompareExchange64
+        - atomicLoad32
+        - atomicLoad64
+        - atomicStore32
+        - atomicStore64
+        - atomicMax32
+        - atomicMin32
+        - memoryFence
+        - seqlockWriteBegin
+        - seqlockWriteEnd
+        - seqlockReadBegin
+        - seqlockReadValidate
+      functions:
+        - tryLock
+        - acquireLock
+        - releaseLock
+        - atomicIncrement
+        - atomicDecrement
+        - atomicIncrement64
+        - atomicDecrement64
+        - atomicCompareExchange32
+        - atomicCompareExchange64
+        - atomicLoad32
+        - atomicLoad64
+        - atomicStore32
+        - atomicStore64
+        - atomicMax32
+        - atomicMin32
+        - memoryFence
+        - seqlockWriteBegin
+        - seqlockWriteEnd
+        - seqlockReadBegin
+        - seqlockReadValidate
+      constants:
+        - MAX_CAS_RETRIES
+    src/ts/assembly/binary-protocol.ts:
+      description: Binary Protocol for AssemblyScript/WASM
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MAGIC
+        - VERSION
+        - MSG_TASK_REQUEST
+        - MSG_TASK_RESPONSE
+        - MSG_TASK_ERROR
+        - MSG_EVENT
+        - MSG_HEARTBEAT_REQ
+        - MSG_HEARTBEAT_RES
+        - MSG_CLEANUP_REQ
+        - MSG_CLEANUP_RES
+        - MSG_TERMINATE
+        - MSG_BATCH
+        - MSG_STREAM_CHUNK
+        - FLAG_HAS_TRANSFER
+        - FLAG_COMPRESSED
+        - FLAG_ENCRYPTED
+        - FLAG_FINAL
+        - FLAG_ACK_REQUIRED
+        - PRIORITY_LOW
+        - PRIORITY_NORMAL
+        - PRIORITY_HIGH
+        - PRIORITY_CRITICAL
+        - ERR_WORKER_CRASHED
+        - ERR_WORKER_UNRESPONSIVE
+        - ERR_METHOD_NOT_FOUND
+        - ERR_INVALID_PARAMS
+        - ERR_EXECUTION_FAILED
+        - ERR_CANCELLED
+        - ERR_TIMEOUT
+        - nextSequence
+        - resetSequence
+        - writeHeader
+        - readHeader
+        - validateHeader
+        - getPayload
+        - encodeTaskRequest
+        - decodeTaskRequest
+        - encodeTaskResponse
+        - encodeErrorResponse
+        - encodeHeartbeatRequest
+        - encodeHeartbeatResponse
+        - decodeHeartbeatResponse
+        - encodeBatchHeader
+        - getMessageType
+        - getMessageId
+        - getMessagePriority
+        - getMessageSequence
+        - hasTransferFlag
+        - isCompressed
+        - getHeaderSize
+        - calculateChecksum
+      functions:
+        - nextSequence
+        - resetSequence
+        - writeHeader
+        - readHeader
+        - validateHeader
+        - getPayload
+        - encodeTaskRequest
+        - decodeTaskRequest
+        - encodeTaskResponse
+        - encodeErrorResponse
+        - encodeHeartbeatRequest
+        - encodeHeartbeatResponse
+        - decodeHeartbeatResponse
+        - encodeBatchHeader
+        - getMessageType
+        - getMessageId
+        - getMessagePriority
+        - getMessageSequence
+        - hasTransferFlag
+        - isCompressed
+        - getHeaderSize
+        - calculateChecksum
+      constants:
+        - MAGIC
+        - VERSION
+        - MSG_TASK_REQUEST
+        - MSG_TASK_RESPONSE
+        - MSG_TASK_ERROR
+        - MSG_EVENT
+        - MSG_HEARTBEAT_REQ
+        - MSG_HEARTBEAT_RES
+        - MSG_CLEANUP_REQ
+        - MSG_CLEANUP_RES
+        - MSG_TERMINATE
+        - MSG_BATCH
+        - MSG_STREAM_CHUNK
+        - FLAG_HAS_TRANSFER
+        - FLAG_COMPRESSED
+        - FLAG_ENCRYPTED
+        - FLAG_FINAL
+        - FLAG_ACK_REQUIRED
+        - PRIORITY_LOW
+        - PRIORITY_NORMAL
+        - PRIORITY_HIGH
+        - PRIORITY_CRITICAL
+        - ERR_WORKER_CRASHED
+        - ERR_WORKER_UNRESPONSIVE
+        - ERR_METHOD_NOT_FOUND
+        - ERR_INVALID_PARAMS
+        - ERR_EXECUTION_FAILED
+        - ERR_CANCELLED
+        - ERR_TIMEOUT
+    src/ts/assembly/circular-buffer.ts:
+      description: Circular Buffer Implementation for AssemblyScript
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - HEADER_SIZE
+            - getCapacity
+            - getMask
+            - validateMemory
+      exports:
+        - initBuffer
+        - getBufferCapacity
+        - getBufferSize
+        - isEmpty
+        - isFull
+        - pushGrowable
+        - pushWithEviction
+        - shift
+        - peekHead
+        - peekTail
+        - at
+        - clear
+        - drain
+        - getStats
+        - logicalToPhysical
+        - getHead
+        - getTail
+        - getBufferMask
+      functions:
+        - initBuffer
+        - getBufferCapacity
+        - getBufferSize
+        - isEmpty
+        - isFull
+        - pushGrowable
+        - pushWithEviction
+        - shift
+        - peekHead
+        - peekTail
+        - at
+        - clear
+        - drain
+        - getStats
+        - logicalToPhysical
+        - getHead
+        - getTail
+        - getBufferMask
+    src/ts/assembly/errors.ts:
+      description: Error Codes for WASM Module
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - SUCCESS
+        - ERR_MEMORY_NOT_INITIALIZED
+        - ERR_MEMORY_VALIDATION_FAILED
+        - ERR_OUT_OF_MEMORY
+        - ERR_INVALID_ADDRESS
+        - ERR_MEMORY_ALREADY_INITIALIZED
+        - ERR_QUEUE_FULL
+        - ERR_QUEUE_EMPTY
+        - ERR_QUEUE_OP_FAILED
+        - ERR_INVALID_CAPACITY
+        - ERR_NO_FREE_SLOTS
+        - ERR_INVALID_SLOT_INDEX
+        - ERR_SLOT_ALREADY_FREE
+        - ERR_SLOT_NOT_ALLOCATED
+        - ERR_CAS_FAILED
+        - ERR_DEADLOCK
+        - ERR_MAX_RETRIES
+        - INVALID_SLOT
+        - INVALID_ENTRY
+        - packResult
+        - unpackErrorCode
+        - unpackValue
+        - isSuccess
+        - successResult
+        - errorResult
+      functions:
+        - packResult
+        - unpackErrorCode
+        - unpackValue
+        - isSuccess
+        - successResult
+        - errorResult
+      constants:
+        - SUCCESS
+        - ERR_MEMORY_NOT_INITIALIZED
+        - ERR_MEMORY_VALIDATION_FAILED
+        - ERR_OUT_OF_MEMORY
+        - ERR_INVALID_ADDRESS
+        - ERR_MEMORY_ALREADY_INITIALIZED
+        - ERR_QUEUE_FULL
+        - ERR_QUEUE_EMPTY
+        - ERR_QUEUE_OP_FAILED
+        - ERR_INVALID_CAPACITY
+        - ERR_NO_FREE_SLOTS
+        - ERR_INVALID_SLOT_INDEX
+        - ERR_SLOT_ALREADY_FREE
+        - ERR_SLOT_NOT_ALLOCATED
+        - ERR_CAS_FAILED
+        - ERR_DEADLOCK
+        - ERR_MAX_RETRIES
+        - INVALID_SLOT
+        - INVALID_ENTRY
+    src/ts/assembly/hash-map.ts:
+      description: Hash Map Implementation in AssemblyScript
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - fnv1a64
+        - hashStringKey
+        - initHashMap
+        - getHashMapCapacity
+        - getHashMapSize
+        - hashMapPut
+        - hashMapGet
+        - hashMapContains
+        - hashMapRemove
+        - hashMapClear
+        - getLoadFactor
+        - needsResize
+        - getHashMapStats
+        - initLRUCache
+        - lruCachePut
+        - lruCacheGet
+        - getLRUCacheSize
+        - lruCacheClear
+      functions:
+        - fnv1a64
+        - hashStringKey
+        - initHashMap
+        - getHashMapCapacity
+        - getHashMapSize
+        - hashMapPut
+        - hashMapGet
+        - hashMapContains
+        - hashMapRemove
+        - hashMapClear
+        - getLoadFactor
+        - needsResize
+        - getHashMapStats
+        - initLRUCache
+        - lruCachePut
+        - lruCacheGet
+        - getLRUCacheSize
+        - lruCacheClear
+    src/ts/assembly/histogram.ts:
+      description: Histogram Module (AssemblyScript)
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MAX_HISTOGRAM_BUCKETS
+        - initHistogram
+        - initHistogramWithBuckets
+        - setBucketBoundary
+        - getBucketBoundary
+        - recordValue
+        - getBucketCount
+        - getTotalCount
+        - getSum
+        - getMin
+        - getMax
+        - getAverage
+        - getHistogramBucketCount
+        - calculatePercentile
+        - getP50
+        - getP90
+        - getP95
+        - getP99
+        - resetHistogram
+        - isHistogramInitialized
+        - recordValuesBatch
+      functions:
+        - initHistogram
+        - initHistogramWithBuckets
+        - setBucketBoundary
+        - getBucketBoundary
+        - recordValue
+        - getBucketCount
+        - getTotalCount
+        - getSum
+        - getMin
+        - getMax
+        - getAverage
+        - getHistogramBucketCount
+        - calculatePercentile
+        - getP50
+        - getP90
+        - getP95
+        - getP99
+        - resetHistogram
+        - isHistogramInitialized
+        - recordValuesBatch
+      constants:
+        - MAX_HISTOGRAM_BUCKETS
+    src/ts/assembly/index.ts:
+      description: WorkerPool WASM Module Entry Point
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - "*"
+          reExport: true
+        - file: ./ring-buffer
+          imports:
+            - "*"
+          reExport: true
+        - file: ./task-slots
+          imports:
+            - "*"
+          reExport: true
+        - file: ./priority-queue
+          imports:
+            - "*"
+          reExport: true
+        - file: ./circular-buffer
+          imports:
+            - "*"
+          reExport: true
+        - file: ./errors
+          imports:
+            - "*"
+          reExport: true
+        - file: ./stats
+          imports:
+            - "*"
+          reExport: true
+        - file: ./atomics
+          imports:
+            - "*"
+          reExport: true
+        - file: ./histogram
+          imports:
+            - "*"
+          reExport: true
+        - file: ./simd-batch
+          imports:
+            - "*"
+          reExport: true
+      exports: []
+      reExported:
+        - "* from ./memory"
+        - "* from ./ring-buffer"
+        - "* from ./task-slots"
+        - "* from ./priority-queue"
+        - "* from ./circular-buffer"
+        - "* from ./errors"
+        - "* from ./stats"
+        - "* from ./atomics"
+        - "* from ./histogram"
+        - "* from ./simd-batch"
+    src/ts/assembly/k-way-merge.ts:
+      description: K-Way Merge Implementation in AssemblyScript
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - initKWayMerge
+        - setArrayInfo
+        - buildInitialHeap
+        - extractMin
+        - kWayMergeToBuffer
+        - getMergedCount
+        - mergeI32Arrays
+        - mergeF32Arrays
+        - getTotalSize
+        - twoWayMergeI32
+      functions:
+        - initKWayMerge
+        - setArrayInfo
+        - buildInitialHeap
+        - extractMin
+        - kWayMergeToBuffer
+        - getMergedCount
+        - mergeI32Arrays
+        - mergeF32Arrays
+        - getTotalSize
+        - twoWayMergeI32
+    src/ts/assembly/memory.ts:
+      description: WASM Memory Management Utilities
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - HEADER_SIZE
+        - SLOT_SIZE
+        - DEFAULT_CAPACITY
+        - CACHE_LINE_SIZE
+        - HEADER_MAGIC_OFFSET
+        - HEADER_VERSION_OFFSET
+        - HEADER_HEAD_OFFSET
+        - HEADER_TAIL_OFFSET
+        - HEADER_CAPACITY_OFFSET
+        - HEADER_MASK_OFFSET
+        - HEADER_ALLOCATED_OFFSET
+        - HEADER_SLOTS_BASE_OFFSET
+        - MAGIC_NUMBER
+        - VERSION
+        - isPowerOf2
+        - nextPowerOf2
+        - calculateMemorySize
+        - initMemory
+        - validateMemory
+        - getCapacity
+        - getMask
+        - getSlotsBase
+        - getHead
+        - getTail
+        - getSlotAddress
+      functions:
+        - isPowerOf2
+        - nextPowerOf2
+        - calculateMemorySize
+        - initMemory
+        - validateMemory
+        - getCapacity
+        - getMask
+        - getSlotsBase
+        - getHead
+        - getTail
+        - getSlotAddress
+      constants:
+        - HEADER_SIZE
+        - SLOT_SIZE
+        - DEFAULT_CAPACITY
+        - CACHE_LINE_SIZE
+        - HEADER_MAGIC_OFFSET
+        - HEADER_VERSION_OFFSET
+        - HEADER_HEAD_OFFSET
+        - HEADER_TAIL_OFFSET
+        - HEADER_CAPACITY_OFFSET
+        - HEADER_MASK_OFFSET
+        - HEADER_ALLOCATED_OFFSET
+        - HEADER_SLOTS_BASE_OFFSET
+        - MAGIC_NUMBER
+        - VERSION
+    src/ts/assembly/priority-queue.ts:
+      description: Priority Queue Implementation in AssemblyScript
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - HEADER_SIZE
+            - SLOT_SIZE
+            - getCapacity
+            - getSlotsBase
+            - validateMemory
+      exports:
+        - initPriorityQueue
+        - getPriorityQueueSize
+        - isPriorityQueueEmpty
+        - priorityQueuePush
+        - priorityQueuePop
+        - priorityQueuePeek
+        - priorityQueuePeekPriority
+        - priorityQueueClear
+        - isPriorityQueueFull
+      functions:
+        - initPriorityQueue
+        - getPriorityQueueSize
+        - isPriorityQueueEmpty
+        - priorityQueuePush
+        - priorityQueuePop
+        - priorityQueuePeek
+        - priorityQueuePeekPriority
+        - priorityQueueClear
+        - isPriorityQueueFull
+    src/ts/assembly/ring-buffer.ts:
+      description: Lock-Free Ring Buffer Implementation
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - HEADER_SIZE
+            - HEADER_HEAD_OFFSET
+            - HEADER_TAIL_OFFSET
+            - getCapacity
+            - getMask
+            - validateMemory
+      exports:
+        - packEntry
+        - unpackSlotIndex
+        - unpackPriority
+        - push
+        - pop
+        - size
+        - isEmpty
+        - isFull
+        - clear
+        - contains
+      functions:
+        - packEntry
+        - unpackSlotIndex
+        - unpackPriority
+        - push
+        - pop
+        - size
+        - isEmpty
+        - isFull
+        - clear
+        - contains
+    src/ts/assembly/simd-batch.ts:
+      description: SIMD Batch Processor (AssemblyScript)
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - simdMapMultiplyF32
+        - simdMapAddF32
+        - simdMapSquareF32
+        - simdMapSqrtF32
+        - simdReduceSumF32
+        - simdReduceMinF32
+        - simdReduceMaxF32
+        - simdDotProductF32
+        - simdAddArraysF32
+        - simdMultiplyArraysF32
+        - simdMapAbsF32
+        - simdMapNegateF32
+        - simdMapClampF32
+        - simdMapMultiplyF64
+        - simdReduceSumF64
+        - simdMapMultiplyI32
+        - simdReduceSumI32
+        - allocateAligned
+        - freeAligned
+        - copyToWasm
+        - copyFromWasm
+        - simdCountI32
+        - simdCountF32
+        - simdIndexOfI32
+        - simdIndexOfF32
+        - simdIncludesI32
+        - simdIncludesF32
+        - simdCountGreaterThanF32
+        - simdCountLessThanF32
+        - simdPartitionF32
+      functions:
+        - simdMapMultiplyF32
+        - simdMapAddF32
+        - simdMapSquareF32
+        - simdMapSqrtF32
+        - simdReduceSumF32
+        - simdReduceMinF32
+        - simdReduceMaxF32
+        - simdDotProductF32
+        - simdAddArraysF32
+        - simdMultiplyArraysF32
+        - simdMapAbsF32
+        - simdMapNegateF32
+        - simdMapClampF32
+        - simdMapMultiplyF64
+        - simdReduceSumF64
+        - simdMapMultiplyI32
+        - simdReduceSumI32
+        - allocateAligned
+        - freeAligned
+        - copyToWasm
+        - copyFromWasm
+        - simdCountI32
+        - simdCountF32
+        - simdIndexOfI32
+        - simdIndexOfF32
+        - simdIncludesI32
+        - simdIncludesF32
+        - simdCountGreaterThanF32
+        - simdCountLessThanF32
+        - simdPartitionF32
+    src/ts/assembly/stats.ts:
+      description: Statistics and Diagnostics Module
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - validateMemory
+            - HEADER_SIZE
+      exports:
+        - initStats
+        - recordPush
+        - recordPop
+        - recordPushFailure
+        - recordPopFailure
+        - recordCASRetry
+        - recordAllocation
+        - recordFree
+        - updatePeakSize
+        - updatePeakAllocated
+        - getPushCount
+        - getPopCount
+        - getPushFailures
+        - getPopFailures
+        - getCASRetries
+        - getAllocationCount
+        - getFreeCount
+        - getPeakSize
+        - getPeakAllocated
+        - resetStats
+      functions:
+        - initStats
+        - recordPush
+        - recordPop
+        - recordPushFailure
+        - recordPopFailure
+        - recordCASRetry
+        - recordAllocation
+        - recordFree
+        - updatePeakSize
+        - updatePeakAllocated
+        - getPushCount
+        - getPopCount
+        - getPushFailures
+        - getPopFailures
+        - getCASRetries
+        - getAllocationCount
+        - getFreeCount
+        - getPeakSize
+        - getPeakAllocated
+        - resetStats
+    src/ts/assembly/stubs/atomics.ts:
+      description: Atomics Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MAX_CAS_RETRIES
+        - tryLock
+        - acquireLock
+        - releaseLock
+        - atomicIncrement
+        - atomicDecrement
+        - atomicIncrement64
+        - atomicDecrement64
+        - atomicCompareExchange32
+        - atomicCompareExchange64
+        - atomicLoad32
+        - atomicLoad64
+        - atomicStore32
+        - atomicStore64
+        - atomicMax32
+        - atomicMin32
+        - memoryFence
+        - seqlockWriteBegin
+        - seqlockWriteEnd
+        - seqlockReadBegin
+        - seqlockReadValidate
+        - _resetAtomics
+      functions:
+        - tryLock
+        - acquireLock
+        - releaseLock
+        - atomicIncrement
+        - atomicDecrement
+        - atomicIncrement64
+        - atomicDecrement64
+        - atomicCompareExchange32
+        - atomicCompareExchange64
+        - atomicLoad32
+        - atomicLoad64
+        - atomicStore32
+        - atomicStore64
+        - atomicMax32
+        - atomicMin32
+        - memoryFence
+        - seqlockWriteBegin
+        - seqlockWriteEnd
+        - seqlockReadBegin
+        - seqlockReadValidate
+        - _resetAtomics
+      constants:
+        - MAX_CAS_RETRIES
+    src/ts/assembly/stubs/binary-protocol.ts:
+      description: Binary Protocol Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MAGIC
+        - VERSION
+        - MSG_TASK_REQUEST
+        - MSG_TASK_RESPONSE
+        - MSG_TASK_ERROR
+        - MSG_EVENT
+        - MSG_HEARTBEAT_REQ
+        - MSG_HEARTBEAT_RES
+        - MSG_CLEANUP_REQ
+        - MSG_CLEANUP_RES
+        - MSG_TERMINATE
+        - MSG_BATCH
+        - MSG_STREAM_CHUNK
+        - FLAG_HAS_TRANSFER
+        - FLAG_COMPRESSED
+        - FLAG_ENCRYPTED
+        - FLAG_FINAL
+        - FLAG_ACK_REQUIRED
+        - PRIORITY_LOW
+        - PRIORITY_NORMAL
+        - PRIORITY_HIGH
+        - PRIORITY_CRITICAL
+        - ERR_WORKER_CRASHED
+        - ERR_WORKER_UNRESPONSIVE
+        - ERR_METHOD_NOT_FOUND
+        - ERR_INVALID_PARAMS
+        - ERR_EXECUTION_FAILED
+        - ERR_CANCELLED
+        - ERR_TIMEOUT
+        - nextSequence
+        - resetSequence
+        - writeHeader
+        - readHeader
+        - validateHeader
+        - getPayload
+        - encodeTaskRequest
+        - decodeTaskRequest
+        - encodeTaskResponse
+        - encodeErrorResponse
+        - decodeErrorResponse
+        - encodeHeartbeatRequest
+        - encodeHeartbeatResponse
+        - decodeHeartbeatResponse
+        - encodeBatchHeader
+        - getMessageType
+        - getMessageId
+        - getMessagePriority
+        - getMessageSequence
+        - hasTransferFlag
+        - isCompressed
+        - getHeaderSize
+        - calculateChecksum
+      functions:
+        - nextSequence
+        - resetSequence
+        - writeHeader
+        - readHeader
+        - validateHeader
+        - getPayload
+        - encodeTaskRequest
+        - decodeTaskRequest
+        - encodeTaskResponse
+        - encodeErrorResponse
+        - decodeErrorResponse
+        - encodeHeartbeatRequest
+        - encodeHeartbeatResponse
+        - decodeHeartbeatResponse
+        - encodeBatchHeader
+        - getMessageType
+        - getMessageId
+        - getMessagePriority
+        - getMessageSequence
+        - hasTransferFlag
+        - isCompressed
+        - getHeaderSize
+        - calculateChecksum
+      constants:
+        - MAGIC
+        - VERSION
+        - MSG_TASK_REQUEST
+        - MSG_TASK_RESPONSE
+        - MSG_TASK_ERROR
+        - MSG_EVENT
+        - MSG_HEARTBEAT_REQ
+        - MSG_HEARTBEAT_RES
+        - MSG_CLEANUP_REQ
+        - MSG_CLEANUP_RES
+        - MSG_TERMINATE
+        - MSG_BATCH
+        - MSG_STREAM_CHUNK
+        - FLAG_HAS_TRANSFER
+        - FLAG_COMPRESSED
+        - FLAG_ENCRYPTED
+        - FLAG_FINAL
+        - FLAG_ACK_REQUIRED
+        - PRIORITY_LOW
+        - PRIORITY_NORMAL
+        - PRIORITY_HIGH
+        - PRIORITY_CRITICAL
+        - ERR_WORKER_CRASHED
+        - ERR_WORKER_UNRESPONSIVE
+        - ERR_METHOD_NOT_FOUND
+        - ERR_INVALID_PARAMS
+        - ERR_EXECUTION_FAILED
+        - ERR_CANCELLED
+        - ERR_TIMEOUT
+    src/ts/assembly/stubs/circular-buffer.ts:
+      description: Circular Buffer Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - initBuffer
+        - getBufferCapacity
+        - getBufferSize
+        - isEmpty
+        - isFull
+        - pushGrowable
+        - pushWithEviction
+        - shift
+        - peekHead
+        - peekTail
+        - at
+        - clear
+        - drain
+        - getStats
+        - logicalToPhysical
+        - getHead
+        - getTail
+        - getBufferMask
+        - _getDataAt
+        - _setDataAt
+        - _reset
+      functions:
+        - initBuffer
+        - getBufferCapacity
+        - getBufferSize
+        - isEmpty
+        - isFull
+        - pushGrowable
+        - pushWithEviction
+        - shift
+        - peekHead
+        - peekTail
+        - at
+        - clear
+        - drain
+        - getStats
+        - logicalToPhysical
+        - getHead
+        - getTail
+        - getBufferMask
+        - _getDataAt
+        - _setDataAt
+        - _reset
+    src/ts/assembly/stubs/errors.ts:
+      description: Error Codes Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - SUCCESS
+        - ERR_MEMORY_NOT_INITIALIZED
+        - ERR_MEMORY_VALIDATION_FAILED
+        - ERR_OUT_OF_MEMORY
+        - ERR_INVALID_ADDRESS
+        - ERR_MEMORY_ALREADY_INITIALIZED
+        - ERR_QUEUE_FULL
+        - ERR_QUEUE_EMPTY
+        - ERR_QUEUE_OP_FAILED
+        - ERR_INVALID_CAPACITY
+        - ERR_NO_FREE_SLOTS
+        - ERR_INVALID_SLOT_INDEX
+        - ERR_SLOT_ALREADY_FREE
+        - ERR_SLOT_NOT_ALLOCATED
+        - ERR_CAS_FAILED
+        - ERR_DEADLOCK
+        - ERR_MAX_RETRIES
+        - INVALID_SLOT
+        - INVALID_ENTRY
+        - packResult
+        - unpackErrorCode
+        - unpackValue
+        - isSuccess
+        - successResult
+        - errorResult
+      functions:
+        - packResult
+        - unpackErrorCode
+        - unpackValue
+        - isSuccess
+        - successResult
+        - errorResult
+      constants:
+        - SUCCESS
+        - ERR_MEMORY_NOT_INITIALIZED
+        - ERR_MEMORY_VALIDATION_FAILED
+        - ERR_OUT_OF_MEMORY
+        - ERR_INVALID_ADDRESS
+        - ERR_MEMORY_ALREADY_INITIALIZED
+        - ERR_QUEUE_FULL
+        - ERR_QUEUE_EMPTY
+        - ERR_QUEUE_OP_FAILED
+        - ERR_INVALID_CAPACITY
+        - ERR_NO_FREE_SLOTS
+        - ERR_INVALID_SLOT_INDEX
+        - ERR_SLOT_ALREADY_FREE
+        - ERR_SLOT_NOT_ALLOCATED
+        - ERR_CAS_FAILED
+        - ERR_DEADLOCK
+        - ERR_MAX_RETRIES
+        - INVALID_SLOT
+        - INVALID_ENTRY
+    src/ts/assembly/stubs/hash-map.ts:
+      description: Pure TypeScript stub for hash-map.ts
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - fnv1a64
+        - hashStringKey
+        - initHashMap
+        - getHashMapCapacity
+        - getHashMapSize
+        - hashMapPut
+        - hashMapGet
+        - hashMapContains
+        - hashMapRemove
+        - hashMapClear
+        - getLoadFactor
+        - needsResize
+        - getHashMapStats
+        - initLRUCache
+        - lruCachePut
+        - lruCacheGet
+        - getLRUCacheSize
+        - lruCacheClear
+      functions:
+        - fnv1a64
+        - hashStringKey
+        - initHashMap
+        - getHashMapCapacity
+        - getHashMapSize
+        - hashMapPut
+        - hashMapGet
+        - hashMapContains
+        - hashMapRemove
+        - hashMapClear
+        - getLoadFactor
+        - needsResize
+        - getHashMapStats
+        - initLRUCache
+        - lruCachePut
+        - lruCacheGet
+        - getLRUCacheSize
+        - lruCacheClear
+    src/ts/assembly/stubs/histogram.ts:
+      description: Histogram Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MAX_HISTOGRAM_BUCKETS
+        - initHistogram
+        - initHistogramWithBuckets
+        - setBucketBoundary
+        - getBucketBoundary
+        - recordValue
+        - getBucketCount
+        - getTotalCount
+        - getSum
+        - getMin
+        - getMax
+        - getAverage
+        - getHistogramBucketCount
+        - calculatePercentile
+        - getP50
+        - getP90
+        - getP95
+        - getP99
+        - resetHistogram
+        - isHistogramInitialized
+        - recordValuesBatch
+        - _resetHistogram
+      functions:
+        - initHistogram
+        - initHistogramWithBuckets
+        - setBucketBoundary
+        - getBucketBoundary
+        - recordValue
+        - getBucketCount
+        - getTotalCount
+        - getSum
+        - getMin
+        - getMax
+        - getAverage
+        - getHistogramBucketCount
+        - calculatePercentile
+        - getP50
+        - getP90
+        - getP95
+        - getP99
+        - resetHistogram
+        - isHistogramInitialized
+        - recordValuesBatch
+        - _resetHistogram
+      constants:
+        - MAX_HISTOGRAM_BUCKETS
+    src/ts/assembly/stubs/index.ts:
+      description: WorkerPool WASM Module Stubs Entry Point
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - _resetMemory
+        - file: ./task-slots
+          imports:
+            - _resetSlots
+        - file: ./priority-queue
+          imports:
+            - _resetPriorityQueue
+        - file: ./circular-buffer
+          imports:
+            - _reset
+        - file: ./stats
+          imports:
+            - _resetStats
+        - file: ./atomics
+          imports:
+            - _resetAtomics
+        - file: ./simd-batch
+          imports:
+            - _resetSimd
+        - file: ./histogram
+          imports:
+            - _resetHistogram
+        - file: ./memory
+          imports:
+            - "*"
+          reExport: true
+        - file: ./ring-buffer
+          imports:
+            - "*"
+          reExport: true
+        - file: ./task-slots
+          imports:
+            - "*"
+          reExport: true
+        - file: ./priority-queue
+          imports:
+            - "*"
+          reExport: true
+        - file: ./circular-buffer
+          imports:
+            - "*"
+          reExport: true
+        - file: ./errors
+          imports:
+            - "*"
+          reExport: true
+        - file: ./stats
+          imports:
+            - "*"
+          reExport: true
+        - file: ./atomics
+          imports:
+            - "*"
+          reExport: true
+        - file: ./simd-batch
+          imports:
+            - "*"
+          reExport: true
+        - file: ./histogram
+          imports:
+            - "*"
+          reExport: true
+      exports:
+        - _resetAll
+      reExported:
+        - "* from ./memory"
+        - "* from ./ring-buffer"
+        - "* from ./task-slots"
+        - "* from ./priority-queue"
+        - "* from ./circular-buffer"
+        - "* from ./errors"
+        - "* from ./stats"
+        - "* from ./atomics"
+        - "* from ./simd-batch"
+        - "* from ./histogram"
+      functions:
+        - _resetAll
+    src/ts/assembly/stubs/k-way-merge.ts:
+      description: Pure TypeScript stub for k-way-merge.ts
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - initKWayMerge
+        - setArrayInfo
+        - getTotalSize
+        - kWayMergeI32
+        - kWayMergeF32
+        - getMergedCount
+        - twoWayMergeI32
+        - twoWayMergeF32
+        - kWayMergeIndexed
+      interfaces:
+        - IndexedItem
+      functions:
+        - initKWayMerge
+        - setArrayInfo
+        - getTotalSize
+        - kWayMergeI32
+        - kWayMergeF32
+        - getMergedCount
+        - twoWayMergeI32
+        - twoWayMergeF32
+        - kWayMergeIndexed
+    src/ts/assembly/stubs/memory.ts:
+      description: Memory Management Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - HEADER_SIZE
+        - SLOT_SIZE
+        - DEFAULT_CAPACITY
+        - CACHE_LINE_SIZE
+        - HEADER_MAGIC_OFFSET
+        - HEADER_VERSION_OFFSET
+        - HEADER_HEAD_OFFSET
+        - HEADER_TAIL_OFFSET
+        - HEADER_CAPACITY_OFFSET
+        - HEADER_MASK_OFFSET
+        - HEADER_ALLOCATED_OFFSET
+        - HEADER_SLOTS_BASE_OFFSET
+        - MAGIC_NUMBER
+        - VERSION
+        - isPowerOf2
+        - nextPowerOf2
+        - calculateMemorySize
+        - initMemory
+        - validateMemory
+        - getCapacity
+        - getMask
+        - getSlotsBase
+        - getHead
+        - getTail
+        - getSlotAddress
+        - _setHead
+        - _setTail
+        - _setAllocated
+        - _getAllocated
+        - _getEntries
+        - _setEntry
+        - _getEntry
+        - _resetMemory
+      functions:
+        - isPowerOf2
+        - nextPowerOf2
+        - calculateMemorySize
+        - initMemory
+        - validateMemory
+        - getCapacity
+        - getMask
+        - getSlotsBase
+        - getHead
+        - getTail
+        - getSlotAddress
+        - _setHead
+        - _setTail
+        - _setAllocated
+        - _getAllocated
+        - _getEntries
+        - _setEntry
+        - _getEntry
+        - _resetMemory
+      constants:
+        - HEADER_SIZE
+        - SLOT_SIZE
+        - DEFAULT_CAPACITY
+        - CACHE_LINE_SIZE
+        - HEADER_MAGIC_OFFSET
+        - HEADER_VERSION_OFFSET
+        - HEADER_HEAD_OFFSET
+        - HEADER_TAIL_OFFSET
+        - HEADER_CAPACITY_OFFSET
+        - HEADER_MASK_OFFSET
+        - HEADER_ALLOCATED_OFFSET
+        - HEADER_SLOTS_BASE_OFFSET
+        - MAGIC_NUMBER
+        - VERSION
+    src/ts/assembly/stubs/priority-queue.ts:
+      description: Priority Queue Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - getCapacity
+            - validateMemory
+      exports:
+        - initPriorityQueue
+        - getPriorityQueueSize
+        - isPriorityQueueEmpty
+        - priorityQueuePush
+        - priorityQueuePop
+        - priorityQueuePeek
+        - priorityQueuePeekPriority
+        - priorityQueueClear
+        - isPriorityQueueFull
+        - _resetPriorityQueue
+      functions:
+        - initPriorityQueue
+        - getPriorityQueueSize
+        - isPriorityQueueEmpty
+        - priorityQueuePush
+        - priorityQueuePop
+        - priorityQueuePeek
+        - priorityQueuePeekPriority
+        - priorityQueueClear
+        - isPriorityQueueFull
+        - _resetPriorityQueue
+    src/ts/assembly/stubs/ring-buffer.ts:
+      description: Ring Buffer Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - HEADER_SIZE
+            - getCapacity
+            - getMask
+            - validateMemory
+            - getHead
+            - getTail
+            - _setHead
+            - _setTail
+            - _getEntries
+            - _setEntry
+            - _getEntry
+      exports:
+        - packEntry
+        - unpackSlotIndex
+        - unpackPriority
+        - push
+        - pop
+        - size
+        - isEmpty
+        - isFull
+        - clear
+        - contains
+      functions:
+        - packEntry
+        - unpackSlotIndex
+        - unpackPriority
+        - push
+        - pop
+        - size
+        - isEmpty
+        - isFull
+        - clear
+        - contains
+    src/ts/assembly/stubs/simd-batch.ts:
+      description: SIMD Batch Processor Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - _resetSimd
+        - allocateAligned
+        - freeAligned
+        - copyToWasm
+        - copyFromWasm
+        - _setFloat32Array
+        - _getFloat32Array
+        - _setFloat64Array
+        - _getFloat64Array
+        - _setInt32Array
+        - _getInt32Array
+        - simdMapMultiplyF32
+        - simdMapAddF32
+        - simdMapSquareF32
+        - simdMapSqrtF32
+        - simdReduceSumF32
+        - simdReduceMinF32
+        - simdReduceMaxF32
+        - simdDotProductF32
+        - simdAddArraysF32
+        - simdMultiplyArraysF32
+        - simdMapAbsF32
+        - simdMapNegateF32
+        - simdMapClampF32
+        - simdMapMultiplyF64
+        - simdReduceSumF64
+        - simdMapMultiplyI32
+        - simdReduceSumI32
+        - simdCountI32
+        - simdCountF32
+        - simdIndexOfI32
+        - simdIndexOfF32
+        - simdIncludesI32
+        - simdIncludesF32
+        - simdCountGreaterThanF32
+        - simdCountLessThanF32
+        - simdPartitionF32
+      functions:
+        - _resetSimd
+        - allocateAligned
+        - freeAligned
+        - copyToWasm
+        - copyFromWasm
+        - _setFloat32Array
+        - _getFloat32Array
+        - _setFloat64Array
+        - _getFloat64Array
+        - _setInt32Array
+        - _getInt32Array
+        - simdMapMultiplyF32
+        - simdMapAddF32
+        - simdMapSquareF32
+        - simdMapSqrtF32
+        - simdReduceSumF32
+        - simdReduceMinF32
+        - simdReduceMaxF32
+        - simdDotProductF32
+        - simdAddArraysF32
+        - simdMultiplyArraysF32
+        - simdMapAbsF32
+        - simdMapNegateF32
+        - simdMapClampF32
+        - simdMapMultiplyF64
+        - simdReduceSumF64
+        - simdMapMultiplyI32
+        - simdReduceSumI32
+        - simdCountI32
+        - simdCountF32
+        - simdIndexOfI32
+        - simdIndexOfF32
+        - simdIncludesI32
+        - simdIncludesF32
+        - simdCountGreaterThanF32
+        - simdCountLessThanF32
+        - simdPartitionF32
+    src/ts/assembly/stubs/stats.ts:
+      description: Statistics Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - validateMemory
+      exports:
+        - initStats
+        - recordPush
+        - recordPop
+        - recordPushFailure
+        - recordPopFailure
+        - recordCASRetry
+        - recordAllocation
+        - recordFree
+        - updatePeakSize
+        - updatePeakAllocated
+        - getPushCount
+        - getPopCount
+        - getPushFailures
+        - getPopFailures
+        - getCASRetries
+        - getAllocationCount
+        - getFreeCount
+        - getPeakSize
+        - getPeakAllocated
+        - resetStats
+        - _resetStats
+      functions:
+        - initStats
+        - recordPush
+        - recordPop
+        - recordPushFailure
+        - recordPopFailure
+        - recordCASRetry
+        - recordAllocation
+        - recordFree
+        - updatePeakSize
+        - updatePeakAllocated
+        - getPushCount
+        - getPopCount
+        - getPushFailures
+        - getPopFailures
+        - getCASRetries
+        - getAllocationCount
+        - getFreeCount
+        - getPeakSize
+        - getPeakAllocated
+        - resetStats
+        - _resetStats
+    src/ts/assembly/stubs/task-slots.ts:
+      description: Task Slots Stubs for TypeScript Testing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - SLOT_SIZE
+            - getSlotsBase
+            - getCapacity
+            - validateMemory
+            - _getAllocated
+            - _setAllocated
+      exports:
+        - initTaskSlots
+        - allocateSlot
+        - freeSlot
+        - setTaskId
+        - getTaskId
+        - setPriority
+        - getPriority
+        - setTimestamp
+        - getTimestamp
+        - setMethodId
+        - getMethodId
+        - addRef
+        - release
+        - getRefCount
+        - getAllocatedCount
+        - isAllocated
+        - _resetSlots
+      functions:
+        - initTaskSlots
+        - allocateSlot
+        - freeSlot
+        - setTaskId
+        - getTaskId
+        - setPriority
+        - getPriority
+        - setTimestamp
+        - getTimestamp
+        - setMethodId
+        - getMethodId
+        - addRef
+        - release
+        - getRefCount
+        - getAllocatedCount
+        - isAllocated
+        - _resetSlots
+    src/ts/assembly/task-slots.ts:
+      description: Task Slot Allocator
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./memory
+          imports:
+            - SLOT_SIZE
+            - HEADER_ALLOCATED_OFFSET
+            - getSlotsBase
+            - getCapacity
+            - validateMemory
+      exports:
+        - initTaskSlots
+        - allocateSlot
+        - freeSlot
+        - setTaskId
+        - getTaskId
+        - setPriority
+        - getPriority
+        - setTimestamp
+        - getTimestamp
+        - setMethodId
+        - getMethodId
+        - addRef
+        - release
+        - getRefCount
+        - getAllocatedCount
+        - isAllocated
+      functions:
+        - initTaskSlots
+        - allocateSlot
+        - freeSlot
+        - setTaskId
+        - getTaskId
+        - setPriority
+        - getPriority
+        - setTimestamp
+        - getTimestamp
+        - setMethodId
+        - getMethodId
+        - addRef
+        - release
+        - getRefCount
+        - getAllocatedCount
+        - isAllocated
+    src/ts/core/AdvancedPool.ts:
+      description: AdvancedPool - Enhanced worker pool with intelligent scheduling
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./Pool
+          imports:
+            - Pool
+            - EnhancedPoolOptions
+            - PoolEvents
+            - PoolEventListener
+        - file: ./Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ./worker-choice-strategies
+          imports:
+            - WorkerChoiceStrategyManager
+            - WorkerChoiceStrategy
+            - WorkerSelectionOptions
+            - WorkerStats
+        - file: ./work-stealing
+          imports:
+            - WorkStealingScheduler
+            - StealingPolicy
+            - WorkStealingStats
+            - StealableTask
+            - rebalanceTasks
+        - file: ./task-affinity
+          imports:
+            - TaskAffinityRouter
+            - AffinityKey
+            - RoutingDecision
+            - AffinityRouterOptions
+            - AffinityRouterStats
+            - createAffinityKey
+            - objectAffinityKey
+        - file: ../types/index
+          imports:
+            - ExecOptions
+          typeOnly: true
+      exports:
+        - WorkerChoiceStrategy
+        - WorkerSelectionOptions
+        - WorkerStats
+        - StealingPolicy
+        - WorkStealingStats
+        - AffinityKey
+        - RoutingDecision
+        - AffinityRouterOptions
+        - AffinityRouterStats
+        - createAffinityKey
+        - objectAffinityKey
+        - advancedPool
+        - cpuIntensivePool
+        - ioIntensivePool
+        - mixedWorkloadPool
+        - AdvancedPool
+      classes:
+        - AdvancedPool
+      interfaces:
+        - AdvancedPoolOptions
+        - AdvancedExecOptions
+        - AdvancedPoolStats
+      functions:
+        - advancedPool
+        - cpuIntensivePool
+        - ioIntensivePool
+        - mixedWorkloadPool
+    src/ts/core/auto-transfer.ts:
+      description: Auto-Transfer Utilities
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../platform/transfer-detection
+          imports:
+            - isTransferable
+            - detectTransferables
+            - getTransferableType
+      exports:
+        - defaultAutoTransfer
+        - extractTransferables
+        - autoDetectTransfer
+        - wrapForTransfer
+        - isWorthTransferring
+        - getTransferableSize
+        - createTransferableChunks
+        - copyChunkForTransfer
+        - prepareNumericArrayForParallel
+        - optimizeForTransfer
+        - AutoTransfer
+      classes:
+        - AutoTransfer
+      interfaces:
+        - TransferResult
+        - AutoTransferOptions
+      functions:
+        - extractTransferables
+        - autoDetectTransfer
+        - wrapForTransfer
+        - isWorthTransferring
+        - getTransferableSize
+        - createTransferableChunks
+        - copyChunkForTransfer
+        - prepareNumericArrayForParallel
+        - optimizeForTransfer
+      constants:
+        - defaultAutoTransfer
+    src/ts/core/batch-executor.ts:
+      description: Batch Executor
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types
+          imports:
+            - BatchOptions
+            - BatchProgress
+            - BatchResult
+            - BatchTaskResult
+            - BatchTask
+            - BatchPromise
+            - ExecOptions
+          typeOnly: true
+        - file: ./Promise
+          imports:
+            - WorkerpoolPromise
+      exports:
+        - createBatchExecutor
+        - createMapExecutor
+        - executeBatchSimple
+      functions:
+        - createBatchExecutor
+        - createMapExecutor
+        - executeBatchSimple
+    src/ts/core/batch-serializer.ts:
+      description: Batch Serializer
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types
+          imports:
+            - BatchTask
+            - ExecOptions
+          typeOnly: true
+      exports:
+        - generateBatchId
+        - serializeFunction
+        - serializeBatch
+        - deserializeBatch
+        - serializeTaskResult
+        - deserializeTaskResults
+        - estimateBatchSize
+        - collectTransferables
+        - createBatchAggregator
+      interfaces:
+        - SerializedTask
+        - SerializedBatch
+        - SerializedTaskResult
+        - SerializedBatchResult
+        - SerializerConfig
+      functions:
+        - generateBatchId
+        - serializeFunction
+        - serializeBatch
+        - deserializeBatch
+        - serializeTaskResult
+        - deserializeTaskResults
+        - estimateBatchSize
+        - collectTransferables
+        - createBatchAggregator
+    src/ts/core/binary-serializer.ts:
+      description: Binary Serializer
+      externalDependencies:
+        - package: "@danielsimonjr/workerpool"
+          imports:
+            - serializeBinary
+            - deserializeBinary
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - serializeBinary
+        - deserializeBinary
+        - shouldUseBinarySerialization
+        - estimateBinarySize
+      interfaces:
+        - BinarySerializedData
+      functions:
+        - serializeBinary
+        - deserializeBinary
+        - shouldUseBinarySerialization
+        - estimateBinarySize
+    src/ts/core/circular-buffer.ts:
+      description: CircularBuffer - O(1) fixed-size buffer with automatic eviction
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - CircularBuffer
+        - TimeWindowBuffer
+        - GrowableCircularBuffer
+      classes:
+        - CircularBuffer
+        - TimeWindowBuffer
+        - GrowableCircularBuffer
+      interfaces:
+        - TimestampedValue
+    src/ts/core/debug-port-allocator.ts:
+      description: Debug Port Allocator for workerpool
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - DebugPortAllocator
+      classes:
+        - DebugPortAllocator
+    src/ts/core/function-cache.ts:
+      description: Function Compilation Cache
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - CACHED_CHUNK_REDUCER
+        - CACHED_CHUNK_FILTER
+        - CACHED_CHUNK_MAPPER
+        - CACHED_CHUNK_FOREACH
+        - CACHED_CHUNK_FIND
+        - CACHED_CHUNK_COUNTER
+        - createFunctionKey
+        - serializeFunction
+        - getGlobalFunctionCache
+        - clearGlobalFunctionCache
+        - compileCached
+        - createCachedChunkProcessor
+        - FunctionCache
+      classes:
+        - FunctionCache
+      interfaces:
+        - FunctionCacheOptions
+        - FunctionCacheStats
+      functions:
+        - createFunctionKey
+        - serializeFunction
+        - getGlobalFunctionCache
+        - clearGlobalFunctionCache
+        - compileCached
+        - createCachedChunkProcessor
+      constants:
+        - CACHED_CHUNK_REDUCER
+        - CACHED_CHUNK_FILTER
+        - CACHED_CHUNK_MAPPER
+        - CACHED_CHUNK_FOREACH
+        - CACHED_CHUNK_FIND
+        - CACHED_CHUNK_COUNTER
+    src/ts/core/heartbeat.ts:
+      description: Heartbeat Mechanism
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/messages
+          imports:
+            - HEARTBEAT_METHOD_ID
+            - HeartbeatRequest
+            - HeartbeatResponse
+            - PROTOCOL_VERSION
+            - MessagePriority
+        - file: ../types/error-codes
+          imports:
+            - WorkerErrorCode
+      exports:
+        - HeartbeatErrorCodes
+        - createHeartbeatRequest
+        - createHeartbeatResponse
+        - handleHeartbeatInWorker
+        - HeartbeatMonitor
+      classes:
+        - HeartbeatMonitor
+      interfaces:
+        - HeartbeatConfig
+        - HeartbeatStats
+      functions:
+        - createHeartbeatRequest
+        - createHeartbeatResponse
+        - handleHeartbeatInWorker
+      constants:
+        - HeartbeatErrorCodes
+    src/ts/core/k-way-merge.ts:
+      description: K-Way Merge Algorithm
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - kWayMergeIndexed
+        - kWayMerge
+        - extractInOrder
+        - mergeFilterResults
+        - mergePartitionResults
+        - mergeGroupByResults
+        - mergeUniqueResults
+        - twoWayMerge
+        - mergeSmall
+        - adaptiveMerge
+      interfaces:
+        - IndexedItem
+      functions:
+        - kWayMergeIndexed
+        - kWayMerge
+        - extractInOrder
+        - mergeFilterResults
+        - mergePartitionResults
+        - mergeGroupByResults
+        - mergeUniqueResults
+        - twoWayMerge
+        - mergeSmall
+        - adaptiveMerge
+    src/ts/core/main-thread-executor.ts:
+      description: Main Thread Executor
+      externalDependencies:
+        - package: workerpool/modern
+          imports:
+            - createPoolWithFallback
+            - pool
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ../types/index
+          imports:
+            - ExecOptions
+            - PoolStats
+            - WorkerProxy
+            - BatchTask
+            - BatchOptions
+            - BatchResult
+            - BatchPromise
+            - ParallelOptions
+            - ReduceOptions
+            - FindOptions
+            - PredicateOptions
+            - ForEachResult
+            - ParallelPromise
+            - ReducerFn
+            - CombinerFn
+            - PredicateFn
+            - ConsumerFn
+            - KeySelectorFn
+            - FlatMapFn
+            - UniqueOptions
+            - GroupByOptions
+            - FlatMapOptions
+          typeOnly: true
+        - file: ./Pool
+          imports:
+            - PoolEvents
+            - PoolEventListener
+            - EnhancedPoolStats
+          typeOnly: true
+        - file: ./batch-executor
+          imports:
+            - createBatchExecutor
+            - TaskExecutor
+        - file: ./parallel-processing
+          imports:
+            - createParallelReduce
+            - createParallelForEach
+            - createParallelFilter
+            - createParallelSome
+            - createParallelEvery
+            - createParallelFind
+            - createParallelFindIndex
+            - createParallelCount
+            - createParallelPartition
+            - createParallelIncludes
+            - createParallelIndexOf
+            - createParallelGroupBy
+            - createParallelFlatMap
+            - createParallelUnique
+            - createParallelReduceRight
+      exports:
+        - hasWorkerSupport
+        - createPoolWithFallback
+        - mainThreadExecutor
+        - MainThreadExecutor
+      classes:
+        - MainThreadExecutor
+      interfaces:
+        - MainThreadExecutorOptions
+      functions:
+        - hasWorkerSupport
+        - createPoolWithFallback
+        - mainThreadExecutor
+    src/ts/core/metrics.ts:
+      description: MetricsCollector - Comprehensive metrics collection for workerpool
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/internal
+          imports:
+            - WorkerInfo
+            - WorkerState
+          typeOnly: true
+        - file: ./circular-buffer
+          imports:
+            - CircularBuffer
+            - TimeWindowBuffer
+      exports:
+        - MetricsCollector
+      classes:
+        - MetricsCollector
+      interfaces:
+        - HistogramBucket
+        - LatencyHistogram
+        - WorkerUtilization
+        - QueueMetrics
+        - ErrorMetrics
+        - PoolMetrics
+        - MetricsCollectorOptions
+    src/ts/core/parallel-processing.ts:
+      description: Parallel Processing Functions
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/parallel
+          imports:
+            - ParallelOptions
+            - ReduceOptions
+            - FindOptions
+            - PredicateOptions
+            - ForEachResult
+            - ParallelPromise
+            - ReducerFn
+            - CombinerFn
+            - PredicateFn
+            - ConsumerFn
+            - KeySelectorFn
+            - FlatMapFn
+            - UniqueOptions
+            - GroupByOptions
+            - FlatMapOptions
+          typeOnly: true
+        - file: ../types/index
+          imports:
+            - BatchTask
+            - BatchResult
+          typeOnly: true
+        - file: ./Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ./batch-executor
+          imports:
+            - TaskExecutor
+          typeOnly: true
+        - file: ./batch-executor
+          imports:
+            - createBatchExecutor
+      exports:
+        - createParallelReduce
+        - createParallelForEach
+        - createParallelFilter
+        - createParallelSome
+        - createParallelEvery
+        - createParallelFind
+        - createParallelFindIndex
+        - createParallelCount
+        - createParallelPartition
+        - createParallelIncludes
+        - createParallelIndexOf
+        - createParallelGroupBy
+        - createParallelFlatMap
+        - createParallelUnique
+        - createParallelReduceRight
+      functions:
+        - createParallelReduce
+        - createParallelForEach
+        - createParallelFilter
+        - createParallelSome
+        - createParallelEvery
+        - createParallelFind
+        - createParallelFindIndex
+        - createParallelCount
+        - createParallelPartition
+        - createParallelIncludes
+        - createParallelIndexOf
+        - createParallelGroupBy
+        - createParallelFlatMap
+        - createParallelUnique
+        - createParallelReduceRight
+    src/ts/core/Pool.ts:
+      description: Pool - Worker pool manager with enhanced features
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ./WorkerHandler
+          imports:
+            - WorkerHandler
+            - ensureWorkerThreads
+            - TerminateError
+        - file: ./WorkerHandler
+          imports:
+            - WorkerHandlerOptions
+            - WorkerType
+          typeOnly: true
+        - file: ../platform/environment
+          imports:
+            - cpus
+        - file: ./TaskQueue
+          imports:
+            - FIFOQueue
+            - LIFOQueue
+            - createQueue
+        - file: ./debug-port-allocator
+          imports:
+            - DebugPortAllocator
+        - file: ../types/index
+          imports:
+            - PoolOptions
+            - ExecOptions
+            - PoolStats
+            - Task
+            - Resolver
+            - TaskQueue
+            - QueueStrategy
+            - WorkerProxy
+            - WorkerArg
+            - BatchTask
+            - BatchOptions
+            - BatchResult
+            - BatchPromise
+            - BatchProgress
+            - MapOptions
+            - ParallelOptions
+            - ReduceOptions
+            - FindOptions
+            - PredicateOptions
+            - ForEachResult
+            - ParallelPromise
+            - ReducerFn
+            - CombinerFn
+            - PredicateFn
+            - ConsumerFn
+          typeOnly: true
+        - file: ./batch-executor
+          imports:
+            - createBatchExecutor
+            - createMapExecutor
+            - TaskExecutor
+        - file: ./parallel-processing
+          imports:
+            - createParallelReduce
+            - createParallelForEach
+            - createParallelFilter
+            - createParallelSome
+            - createParallelEvery
+            - createParallelFind
+            - createParallelFindIndex
+        - file: ./session-manager
+          imports:
+            - SessionManager
+            - SessionManagerPool
+        - file: ../types/session
+          imports:
+            - Session
+            - SessionOptions
+          typeOnly: true
+      exports:
+        - TerminateError
+        - PoolEnhanced
+        - getSharedPool
+        - terminateSharedPool
+        - hasSharedPool
+        - Pool
+      classes:
+        - Pool
+      interfaces:
+        - PoolEvents
+        - CircuitBreakerOptions
+        - RetryOptions
+        - MemoryOptions
+        - HealthCheckOptions
+        - EnhancedExecOptions
+        - EnhancedPoolOptions
+        - EnhancedPoolStats
+      functions:
+        - getSharedPool
+        - terminateSharedPool
+        - hasSharedPool
+      constants:
+        - PoolEnhanced
+    src/ts/core/Promise.ts:
+      description: WorkerpoolPromise - Custom Promise implementation with cancel and timeout support
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/index
+          imports:
+            - Resolver
+            - WorkerpoolPromise
+          typeOnly: true
+      exports:
+        - CancellationError
+        - TimeoutError
+        - WorkerpoolPromise
+      classes:
+        - CancellationError
+        - TimeoutError
+        - WorkerpoolPromise
+    src/ts/core/session-manager.ts:
+      description: Session Manager
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ./WorkerHandler
+          imports:
+            - WorkerHandler
+          typeOnly: true
+        - file: ../types/session
+          imports:
+            - Session
+            - SessionOptions
+            - SessionStats
+            - SessionExecOptions
+            - SessionState
+            - WorkerSessionAPI
+          typeOnly: true
+        - file: ../types/core
+          imports:
+            - ExecOptions
+          typeOnly: true
+      exports:
+        - SessionManager
+      classes:
+        - SessionManager
+      interfaces:
+        - SessionManagerPool
+    src/ts/core/simd-processor.ts:
+      description: SIMD Processor Integration
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../wasm/feature-detection
+          imports:
+            - canUseWasm
+            - hasWASMThreads
+      exports:
+        - defaultSIMDProcessor
+        - isNumericArray
+        - isFloat32Array
+        - isFloat64Array
+        - isInt32Array
+        - hasSIMDSupport
+        - simdSumF32
+        - simdMinF32
+        - simdMaxF32
+        - simdMultiplyF32
+        - simdAddF32
+        - simdSquareF32
+        - simdSqrtF32
+        - simdDotProductF32
+        - simdCountF32
+        - simdIndexOfF32
+        - simdIncludesF32
+        - simdCountGreaterThanF32
+        - simdCountLessThanF32
+        - simdSumI32
+        - simdCountI32
+        - simdIndexOfI32
+        - createNumericReducer
+        - SIMDProcessor
+      classes:
+        - SIMDProcessor
+      interfaces:
+        - SIMDProcessorOptions
+      functions:
+        - isNumericArray
+        - isFloat32Array
+        - isFloat64Array
+        - isInt32Array
+        - hasSIMDSupport
+        - simdSumF32
+        - simdMinF32
+        - simdMaxF32
+        - simdMultiplyF32
+        - simdAddF32
+        - simdSquareF32
+        - simdSqrtF32
+        - simdDotProductF32
+        - simdCountF32
+        - simdIndexOfF32
+        - simdIncludesF32
+        - simdCountGreaterThanF32
+        - simdCountLessThanF32
+        - simdSumI32
+        - simdCountI32
+        - simdIndexOfI32
+        - createNumericReducer
+      constants:
+        - defaultSIMDProcessor
+    src/ts/core/task-affinity.ts:
+      description: Task Affinity and Intelligent Routing
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - createAffinityKey
+        - objectAffinityKey
+        - TaskAffinityRouter
+      classes:
+        - TaskAffinityRouter
+      interfaces:
+        - RoutingDecision
+        - TaskTypeProfile
+        - WorkerProfile
+        - AffinityRouterOptions
+        - RoutingOptions
+        - AffinityRouterStats
+      functions:
+        - createAffinityKey
+        - objectAffinityKey
+    src/ts/core/TaskQueue.ts:
+      description: Task Queue Implementations for workerpool
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/index
+          imports:
+            - Task
+            - TaskQueue
+            - QueueStrategy
+          typeOnly: true
+        - file: ./circular-buffer
+          imports:
+            - GrowableCircularBuffer
+      exports:
+        - createQueue
+        - FIFOQueue
+        - LIFOQueue
+        - PriorityQueue
+      classes:
+        - FIFOQueue
+        - LIFOQueue
+        - PriorityQueue
+      functions:
+        - createQueue
+    src/ts/core/validateOptions.ts:
+      description: Option validation utilities for workerpool
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - workerOptsNames
+        - forkOptsNames
+        - workerThreadOptsNames
+        - poolOptsNames
+        - execOptsNames
+        - validateOptions
+        - validatePoolOptions
+        - validateForkOptions
+        - validateWorkerThreadOptions
+        - validateWorkerOptions
+        - validateExecOptions
+      functions:
+        - validateOptions
+        - validatePoolOptions
+        - validateForkOptions
+        - validateWorkerThreadOptions
+        - validateWorkerOptions
+        - validateExecOptions
+      constants:
+        - workerOptsNames
+        - forkOptsNames
+        - workerThreadOptsNames
+        - poolOptsNames
+        - execOptsNames
+    src/ts/core/work-stealing.ts:
+      description: Work-Stealing Task Distribution
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./circular-buffer
+          imports:
+            - GrowableCircularBuffer
+      exports:
+        - rebalanceTasks
+        - WorkStealingDeque
+        - WorkStealingScheduler
+      classes:
+        - WorkStealingDeque
+        - WorkStealingScheduler
+      interfaces:
+        - StealableTask
+        - WorkStealingDequeStats
+        - WorkStealingSchedulerOptions
+        - TaskSubmitOptions
+        - WorkStealingStats
+      functions:
+        - rebalanceTasks
+    src/ts/core/worker-bitmap.ts:
+      description: Worker Bitmap
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MAX_BITMAP_WORKERS
+        - WorkerBitmap
+        - SharedWorkerBitmap
+        - WorkerState
+      classes:
+        - WorkerBitmap
+        - SharedWorkerBitmap
+      enums:
+        - WorkerState
+      constants:
+        - MAX_BITMAP_WORKERS
+    src/ts/core/worker-choice-strategies.ts:
+      description: Worker Choice Strategies
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./WorkerHandler
+          imports:
+            - WorkerHandler
+          typeOnly: true
+      exports:
+        - createStrategy
+        - RoundRobinStrategy
+        - LeastBusyStrategy
+        - LeastUsedStrategy
+        - FairShareStrategy
+        - WeightedRoundRobinStrategy
+        - InterleavedWeightedRoundRobinStrategy
+        - WorkerChoiceStrategyManager
+      classes:
+        - RoundRobinStrategy
+        - LeastBusyStrategy
+        - LeastUsedStrategy
+        - FairShareStrategy
+        - WeightedRoundRobinStrategy
+        - InterleavedWeightedRoundRobinStrategy
+        - WorkerChoiceStrategyManager
+      interfaces:
+        - WorkerStats
+        - WorkerSelectionOptions
+        - WorkerSelectionResult
+      functions:
+        - createStrategy
+    src/ts/core/WorkerHandler.ts:
+      description: WorkerHandler - Controls a single worker process/thread
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./Promise
+          imports:
+            - WorkerpoolPromise
+            - CancellationError
+            - TimeoutError
+        - file: ../types/index
+          imports:
+            - Resolver
+            - ExecOptions
+          typeOnly: true
+        - file: ../types/messages
+          imports:
+            - TaskRequest
+            - TaskSuccessResponse
+            - TaskErrorResponse
+            - CleanupResponse
+            - WorkerEvent
+            - SerializedError
+          typeOnly: true
+        - file: ./validateOptions
+          imports:
+            - validateOptions
+            - forkOptsNames
+            - workerThreadOptsNames
+            - workerOptsNames
+        - file: ../platform/environment
+          imports:
+            - platform
+            - isBun
+            - recommendedWorkerType
+        - file: ./circular-buffer
+          imports:
+            - GrowableCircularBuffer
+      exports:
+        - TERMINATE_METHOD_ID
+        - CLEANUP_METHOD_ID
+        - _tryRequireWorkerThreads
+        - _setupProcessWorker
+        - _setupBrowserWorker
+        - _setupWorkerThreadWorker
+        - ensureWorkerThreads
+        - TerminateError
+        - WorkerHandler
+      classes:
+        - TerminateError
+        - WorkerHandler
+      interfaces:
+        - WorkerHandlerOptions
+      functions:
+        - ensureWorkerThreads
+      constants:
+        - TERMINATE_METHOD_ID
+        - CLEANUP_METHOD_ID
+        - _tryRequireWorkerThreads
+        - _setupProcessWorker
+        - _setupBrowserWorker
+        - _setupWorkerThreadWorker
+    src/ts/debug.ts:
+      description: Debug/Verbose Mode Logging
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - poolLog
+        - workerLog
+        - taskLog
+        - queueLog
+        - wasmLog
+        - transferLog
+        - perfLog
+        - enableDebug
+        - disableDebug
+        - getDebugConfig
+        - isDebugEnabled
+        - isCategoryEnabled
+        - perfStart
+        - perfEnd
+        - getPerfEntries
+        - clearPerfEntries
+        - getPerfSummary
+        - traced
+        - logDispatch
+        - logQueueOp
+        - logWorkerEvent
+        - logPoolEvent
+        - LogLevel
+        - LogCategory
+      interfaces:
+        - DebugConfig
+        - PerfEntry
+      functions:
+        - enableDebug
+        - disableDebug
+        - getDebugConfig
+        - isDebugEnabled
+        - isCategoryEnabled
+        - perfStart
+        - perfEnd
+        - getPerfEntries
+        - clearPerfEntries
+        - getPerfSummary
+        - traced
+        - logDispatch
+        - logQueueOp
+        - logWorkerEvent
+        - logPoolEvent
+      enums:
+        - LogLevel
+        - LogCategory
+      constants:
+        - poolLog
+        - workerLog
+        - taskLog
+        - queueLog
+        - wasmLog
+        - transferLog
+        - perfLog
+    src/ts/errors.ts:
+      description: Workerpool Error Classes
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - TypeGuards
+        - getErrorTypeName
+        - wrapError
+        - assertType
+        - CancellationError
+        - TimeoutError
+        - TerminationError
+        - QueueFullError
+        - QueueEmptyError
+        - WasmNotAvailableError
+        - SharedMemoryNotAvailableError
+        - WasmInitializationError
+        - WasmNotInitializedError
+        - WasmMemoryError
+        - TypeMismatchError
+        - ValidationError
+        - WorkerCreationError
+        - NoWorkersAvailableError
+        - MethodNotFoundError
+      classes:
+        - CancellationError
+        - TimeoutError
+        - TerminationError
+        - QueueFullError
+        - QueueEmptyError
+        - WasmNotAvailableError
+        - SharedMemoryNotAvailableError
+        - WasmInitializationError
+        - WasmNotInitializedError
+        - WasmMemoryError
+        - TypeMismatchError
+        - ValidationError
+        - WorkerCreationError
+        - NoWorkersAvailableError
+        - MethodNotFoundError
+      functions:
+        - getErrorTypeName
+        - wrapError
+        - assertType
+      constants:
+        - TypeGuards
+    src/ts/full.ts:
+      description: Workerpool Full Build Entry Point
+      externalDependencies:
+        - package: workerpool/full
+          imports:
+            - workerpool
+        - package: workerpool/full
+          imports:
+            - pool
+            - canUseWasm
+            - WasmBridge
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./core/Pool
+          imports:
+            - Pool
+        - file: ./workers/worker
+          imports:
+            - add
+            - emit
+        - file: ./core/Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ./platform/transfer
+          imports:
+            - Transfer
+        - file: ./platform/environment
+          imports:
+            - platform
+            - isMainThread
+            - cpus
+            - isNode
+            - getPlatformInfo
+            - hasWorkerThreads
+            - hasSharedArrayBuffer
+            - hasAtomics
+            - isBun
+            - bunVersion
+            - recommendedWorkerType
+            - getWorkerTypeSupport
+            - isWorkerTypeSupported
+        - file: ./types/internal
+          imports:
+            - PlatformInfo
+            - WorkerTypeSupport
+          typeOnly: true
+        - file: ./core/circular-buffer
+          imports:
+            - CircularBuffer
+            - GrowableCircularBuffer
+            - TimeWindowBuffer
+        - file: ./core/circular-buffer
+          imports:
+            - TimestampedValue
+          typeOnly: true
+        - file: ./core/TaskQueue
+          imports:
+            - FIFOQueue
+            - LIFOQueue
+        - file: ./wasm
+          imports:
+            - canUseWasm
+            - canUseWasmThreads
+        - file: ./platform/transfer
+          imports:
+            - transferFloat64
+            - transferFloat32
+            - transferInt32
+            - transferUint32
+            - transferInt16
+            - transferUint16
+            - transferInt8
+            - transferUint8
+            - transferUint8Clamped
+            - transferBigInt64
+            - transferBigUint64
+            - transferTypedArray
+            - transferArrayBuffer
+            - transferArrayBuffers
+            - transferObject
+            - transferImageData
+          reExport: true
+        - file: ./wasm
+          imports:
+            - "// Feature detection\r\n  canUseWasm"
+            - canUseSharedMemory
+            - canUseWasmThreads
+            - getFeatureStatus
+            - clearFeatureCache
+            - detectWASMFeatures
+            - getRecommendedQueueType
+            - warnIfWASMUnavailable
+            - hasWebAssembly
+            - hasSharedArrayBuffer
+            - hasAtomics
+            - hasWASMThreads
+            - isSecureContext
+            - getFeatureReport
+            - "// WASM Bridge\r\n  WasmBridge"
+            - isSharedMemorySupported
+            - calculateMemoryPages
+            - loadWasm
+            - loadWasmFromBytes
+            - loadWasmSync
+            - "// WASM Queue\r\n  WASMTaskQueue"
+            - WasmTaskQueue
+            - createWASMQueue
+            - "// Embedded WASM\r\n  setEmbeddedWasm"
+            - hasEmbeddedWasm
+            - getEmbeddedWasmBytes
+            - loadEmbeddedWasm
+            - loadEmbeddedWasmSync
+            - WasmFeatures
+            - "// Worker Template\r\n  initWasmWorker"
+            - initWasmWorkerSync
+            - getWasmBridge
+            - getWasmExports
+            - getSharedBuffer
+            - isWasmInitialized
+            - isUsingSharedMemory
+            - wasmMethod
+            - wasmMethodWithInit
+            - createWasmWorker
+          reExport: true
+        - file: ./errors
+          imports:
+            - WorkerpoolError
+            - CancellationError
+            - TimeoutError
+            - TerminationError
+            - QueueFullError
+            - QueueEmptyError
+            - WasmNotAvailableError
+            - SharedMemoryNotAvailableError
+            - WasmInitializationError
+            - WasmNotInitializedError
+            - WasmMemoryError
+            - TypeMismatchError
+            - ValidationError
+            - WorkerCreationError
+            - NoWorkersAvailableError
+            - MethodNotFoundError
+            - getErrorTypeName
+            - wrapError
+            - assertType
+            - TypeGuards
+          reExport: true
+        - file: ./debug
+          imports:
+            - LogLevel
+            - LogCategory
+            - enableDebug
+            - disableDebug
+            - getDebugConfig
+            - isDebugEnabled
+            - isCategoryEnabled
+            - poolLog
+            - workerLog
+            - taskLog
+            - queueLog
+            - wasmLog
+            - transferLog
+            - perfLog
+            - perfStart
+            - perfEnd
+            - getPerfEntries
+            - clearPerfEntries
+            - getPerfSummary
+            - traced
+            - logDispatch
+            - logQueueOp
+            - logWorkerEvent
+            - logPoolEvent
+          reExport: true
+        - file: ./types/worker-methods
+          imports:
+            - defineWorkerMethods
+            - createTypedProxy
+            - typedMethod
+            - asyncMethod
+            - syncMethod
+            - isMethodName
+            - validateWorkerMethods
+            - createMethodValidator
+          reExport: true
+        - file: ./core/Pool
+          imports:
+            - PoolEnhanced
+            - getSharedPool
+            - terminateSharedPool
+            - hasSharedPool
+          reExport: true
+        - file: ./platform/capabilities
+          imports:
+            - capabilities
+            - getCapabilities
+            - getCachedCapabilities
+            - clearCapabilitiesCache
+            - canUseOptimalTransfer
+            - canUseZeroCopy
+            - getCapabilityReport
+          reExport: true
+        - file: ./platform/worker-url
+          imports:
+            - resolveWorkerUrl
+            - createWorkerBlobUrl
+            - revokeWorkerBlobUrl
+            - getCurrentModuleUrl
+            - createWorkerDataUrl
+            - supportsWorkerModules
+            - getWorkerConfig
+          reExport: true
+        - file: ./core/binary-serializer
+          imports:
+            - serializeBinary
+            - deserializeBinary
+            - shouldUseBinarySerialization
+            - estimateBinarySize
+          reExport: true
+        - file: ./core/metrics
+          imports:
+            - MetricsCollector
+          reExport: true
+        - file: ./workers/adaptive-scaler
+          imports:
+            - AdaptiveScaler
+            - ScaleAction
+          reExport: true
+        - file: ./workers/health-monitor
+          imports:
+            - HealthMonitor
+            - HealthStatus
+          reExport: true
+        - file: ./workers/recycler
+          imports:
+            - IdleRecycler
+            - RecycleReason
+          reExport: true
+        - file: ./workers/affinity
+          imports:
+            - WorkerAffinity
+            - AffinityStrategy
+          reExport: true
+        - file: ./workers/WorkerCache
+          imports:
+            - WorkerCache
+          reExport: true
+        - file: ./platform/message-batcher
+          imports:
+            - MessageBatcher
+            - AdaptiveBatcher
+          reExport: true
+        - file: ./platform/channel-factory
+          imports:
+            - ChannelType
+            - canUseSharedMemory
+            - createChannel
+            - MessagePassingChannel
+          reExport: true
+        - file: ./platform/structured-clone
+          imports:
+            - optimizeForTransfer
+            - hasTransferableContent
+            - createOptimizedTransfer
+            - CloneStrategy
+          reExport: true
+        - file: ./platform/result-stream
+          imports:
+            - ResultStreamSender
+            - ResultStreamReceiver
+            - StreamState
+            - SharedMemoryResultStream
+          reExport: true
+        - file: ./platform/transfer-detection
+          imports:
+            - isTransferable
+            - detectTransferables
+            - getTransferableType
+            - validateTransferables
+            - TransferableType
+          reExport: true
+        - file: ./core/batch-serializer
+          imports:
+            - serializeBatch
+            - deserializeBatch
+            - serializeTaskResult
+            - deserializeTaskResults
+            - generateBatchId
+            - serializeFunction
+            - estimateBatchSize
+            - collectTransferables
+            - createBatchAggregator
+          reExport: true
+        - file: ./wasm/simd-processor
+          imports:
+            - getSIMDProcessor
+            - canUseSIMD
+            - simdMapF32
+            - simdReduceF32
+            - simdDotProduct
+            - resetSIMDProcessor
+          reExport: true
+        - file: ./core/main-thread-executor
+          imports:
+            - MainThreadExecutor
+            - hasWorkerSupport
+            - createPoolWithFallback
+            - mainThreadExecutor
+          reExport: true
+        - file: ./core/session-manager
+          imports:
+            - SessionManager
+          reExport: true
+        - file: ./core/AdvancedPool
+          imports:
+            - AdvancedPool
+            - advancedPool
+            - cpuIntensivePool
+            - ioIntensivePool
+            - mixedWorkloadPool
+          reExport: true
+        - file: ./core/worker-choice-strategies
+          imports:
+            - RoundRobinStrategy
+            - LeastBusyStrategy
+            - LeastUsedStrategy
+            - FairShareStrategy
+            - WeightedRoundRobinStrategy
+            - InterleavedWeightedRoundRobinStrategy
+            - WorkerChoiceStrategyManager
+            - createStrategy
+          reExport: true
+        - file: ./core/work-stealing
+          imports:
+            - WorkStealingDeque
+            - WorkStealingScheduler
+            - rebalanceTasks
+          reExport: true
+        - file: ./core/task-affinity
+          imports:
+            - TaskAffinityRouter
+            - createAffinityKey
+            - objectAffinityKey
+          reExport: true
+        - file: ./core/parallel-processing
+          imports:
+            - createParallelReduce
+            - createParallelForEach
+            - createParallelFilter
+            - createParallelSome
+            - createParallelEvery
+            - createParallelFind
+            - createParallelFindIndex
+          reExport: true
+        - file: ./types/error-codes
+          imports:
+            - WorkerErrorCode
+            - ProtocolErrorCode
+            - TaskErrorCode
+            - ResourceErrorCode
+            - CommunicationErrorCode
+            - getErrorMessage
+            - isWorkerError
+            - isProtocolError
+            - isTaskError
+            - isResourceError
+            - isCommunicationError
+            - getErrorCategory
+            - isRetryableError
+            - isFatalError
+            - ErrorMessages
+          reExport: true
+        - file: ./types/messages
+          imports:
+            - PROTOCOL_VERSION
+            - MIN_PROTOCOL_VERSION
+            - MessagePriority
+            - TERMINATE_METHOD_ID
+            - CLEANUP_METHOD_ID
+            - HEARTBEAT_METHOD_ID
+            - isTaskRequest
+            - isCleanupRequest
+            - isTaskSuccessResponse
+            - isTaskErrorResponse
+            - isWorkerEvent
+            - isCleanupResponse
+            - isHeartbeatRequest
+            - isHeartbeatResponse
+            - createMessage
+            - isValidProtocolVersion
+            - getMessagePriority
+            - compareByPriority
+          reExport: true
+        - file: ./core/heartbeat
+          imports:
+            - HeartbeatMonitor
+            - createHeartbeatRequest
+            - createHeartbeatResponse
+            - handleHeartbeatInWorker
+            - HeartbeatErrorCodes
+          reExport: true
+        - file: ./assembly/stubs/binary-protocol
+          imports:
+            - MAGIC
+            - VERSION
+            - MSG_TASK_REQUEST
+            - MSG_TASK_RESPONSE
+            - MSG_TASK_ERROR
+            - MSG_HEARTBEAT_REQ
+            - MSG_HEARTBEAT_RES
+            - MSG_BATCH
+            - FLAG_HAS_TRANSFER
+            - FLAG_COMPRESSED
+            - PRIORITY_LOW
+            - PRIORITY_NORMAL
+            - PRIORITY_HIGH
+            - PRIORITY_CRITICAL
+            - ERR_METHOD_NOT_FOUND
+            - ERR_TIMEOUT
+            - ERR_CANCELLED
+            - resetSequence
+            - nextSequence
+            - writeHeader
+            - readHeader
+            - encodeTaskRequest
+            - decodeTaskRequest
+            - encodeTaskResponse
+            - encodeErrorResponse
+            - decodeErrorResponse
+            - encodeHeartbeatRequest
+            - encodeHeartbeatResponse
+            - decodeHeartbeatResponse
+            - encodeBatchHeader
+            - validateHeader
+            - getPayload
+            - getMessageType
+            - getMessageId
+            - getMessagePriority
+            - getMessageSequence
+            - hasTransferFlag
+            - isCompressed
+            - getHeaderSize
+            - calculateChecksum
+          reExport: true
+      exports:
+        - workerEmit
+        - Transfer
+        - platform
+        - isMainThread
+        - cpus
+        - isNode
+        - getPlatformInfo
+        - hasWorkerThreads
+        - hasSharedArrayBufferEnv
+        - hasAtomicsEnv
+        - isBun
+        - bunVersion
+        - recommendedWorkerType
+        - getWorkerTypeSupport
+        - isWorkerTypeSupported
+        - CircularBuffer
+        - GrowableCircularBuffer
+        - TimeWindowBuffer
+        - FIFOQueue
+        - LIFOQueue
+        - transferFloat64
+        - transferFloat32
+        - transferInt32
+        - transferUint32
+        - transferInt16
+        - transferUint16
+        - transferInt8
+        - transferUint8
+        - transferUint8Clamped
+        - transferBigInt64
+        - transferBigUint64
+        - transferTypedArray
+        - transferArrayBuffer
+        - transferArrayBuffers
+        - transferObject
+        - transferImageData
+        - "// Feature detection\r\n  canUseWasm"
+        - canUseSharedMemory
+        - canUseWasmThreads
+        - getFeatureStatus
+        - clearFeatureCache
+        - detectWASMFeatures
+        - getRecommendedQueueType
+        - warnIfWASMUnavailable
+        - hasWebAssembly
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - hasWASMThreads
+        - isSecureContext
+        - getFeatureReport
+        - "// WASM Bridge\r\n  WasmBridge"
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - loadWasm
+        - loadWasmFromBytes
+        - loadWasmSync
+        - "// WASM Queue\r\n  WASMTaskQueue"
+        - WasmTaskQueue
+        - createWASMQueue
+        - "// Embedded WASM\r\n  setEmbeddedWasm"
+        - hasEmbeddedWasm
+        - getEmbeddedWasmBytes
+        - loadEmbeddedWasm
+        - loadEmbeddedWasmSync
+        - WasmFeatures
+        - "// Worker Template\r\n  initWasmWorker"
+        - initWasmWorkerSync
+        - getWasmBridge
+        - getWasmExports
+        - getSharedBuffer
+        - isWasmInitialized
+        - isUsingSharedMemory
+        - wasmMethod
+        - wasmMethodWithInit
+        - createWasmWorker
+        - WorkerpoolError
+        - CancellationError
+        - TimeoutError
+        - TerminationError
+        - QueueFullError
+        - QueueEmptyError
+        - WasmNotAvailableError
+        - SharedMemoryNotAvailableError
+        - WasmInitializationError
+        - WasmNotInitializedError
+        - WasmMemoryError
+        - TypeMismatchError
+        - ValidationError
+        - WorkerCreationError
+        - NoWorkersAvailableError
+        - MethodNotFoundError
+        - getErrorTypeName
+        - wrapError
+        - assertType
+        - TypeGuards
+        - LogLevel
+        - LogCategory
+        - enableDebug
+        - disableDebug
+        - getDebugConfig
+        - isDebugEnabled
+        - isCategoryEnabled
+        - poolLog
+        - workerLog
+        - taskLog
+        - queueLog
+        - wasmLog
+        - transferLog
+        - perfLog
+        - perfStart
+        - perfEnd
+        - getPerfEntries
+        - clearPerfEntries
+        - getPerfSummary
+        - traced
+        - logDispatch
+        - logQueueOp
+        - logWorkerEvent
+        - logPoolEvent
+        - defineWorkerMethods
+        - createTypedProxy
+        - typedMethod
+        - asyncMethod
+        - syncMethod
+        - isMethodName
+        - validateWorkerMethods
+        - createMethodValidator
+        - PoolEnhanced
+        - getSharedPool
+        - terminateSharedPool
+        - hasSharedPool
+        - capabilities
+        - getCapabilities
+        - getCachedCapabilities
+        - clearCapabilitiesCache
+        - canUseOptimalTransfer
+        - canUseZeroCopy
+        - getCapabilityReport
+        - resolveWorkerUrl
+        - createWorkerBlobUrl
+        - revokeWorkerBlobUrl
+        - getCurrentModuleUrl
+        - createWorkerDataUrl
+        - supportsWorkerModules
+        - getWorkerConfig
+        - serializeBinary
+        - deserializeBinary
+        - shouldUseBinarySerialization
+        - estimateBinarySize
+        - MetricsCollector
+        - AdaptiveScaler
+        - ScaleAction
+        - HealthMonitor
+        - HealthStatus
+        - IdleRecycler
+        - RecycleReason
+        - WorkerAffinity
+        - AffinityStrategy
+        - WorkerCache
+        - MessageBatcher
+        - AdaptiveBatcher
+        - ChannelType
+        - createChannel
+        - MessagePassingChannel
+        - optimizeForTransfer
+        - hasTransferableContent
+        - createOptimizedTransfer
+        - CloneStrategy
+        - ResultStreamSender
+        - ResultStreamReceiver
+        - StreamState
+        - SharedMemoryResultStream
+        - isTransferable
+        - detectTransferables
+        - getTransferableType
+        - validateTransferables
+        - TransferableType
+        - serializeBatch
+        - deserializeBatch
+        - serializeTaskResult
+        - deserializeTaskResults
+        - generateBatchId
+        - serializeFunction
+        - estimateBatchSize
+        - collectTransferables
+        - createBatchAggregator
+        - getSIMDProcessor
+        - canUseSIMD
+        - simdMapF32
+        - simdReduceF32
+        - simdDotProduct
+        - resetSIMDProcessor
+        - MainThreadExecutor
+        - hasWorkerSupport
+        - createPoolWithFallback
+        - mainThreadExecutor
+        - SessionManager
+        - AdvancedPool
+        - advancedPool
+        - cpuIntensivePool
+        - ioIntensivePool
+        - mixedWorkloadPool
+        - RoundRobinStrategy
+        - LeastBusyStrategy
+        - LeastUsedStrategy
+        - FairShareStrategy
+        - WeightedRoundRobinStrategy
+        - InterleavedWeightedRoundRobinStrategy
+        - WorkerChoiceStrategyManager
+        - createStrategy
+        - WorkStealingDeque
+        - WorkStealingScheduler
+        - rebalanceTasks
+        - TaskAffinityRouter
+        - createAffinityKey
+        - objectAffinityKey
+        - createParallelReduce
+        - createParallelForEach
+        - createParallelFilter
+        - createParallelSome
+        - createParallelEvery
+        - createParallelFind
+        - createParallelFindIndex
+        - WorkerErrorCode
+        - ProtocolErrorCode
+        - TaskErrorCode
+        - ResourceErrorCode
+        - CommunicationErrorCode
+        - getErrorMessage
+        - isWorkerError
+        - isProtocolError
+        - isTaskError
+        - isResourceError
+        - isCommunicationError
+        - getErrorCategory
+        - isRetryableError
+        - isFatalError
+        - ErrorMessages
+        - PROTOCOL_VERSION
+        - MIN_PROTOCOL_VERSION
+        - MessagePriority
+        - TERMINATE_METHOD_ID
+        - CLEANUP_METHOD_ID
+        - HEARTBEAT_METHOD_ID
+        - isTaskRequest
+        - isCleanupRequest
+        - isTaskSuccessResponse
+        - isTaskErrorResponse
+        - isWorkerEvent
+        - isCleanupResponse
+        - isHeartbeatRequest
+        - isHeartbeatResponse
+        - createMessage
+        - isValidProtocolVersion
+        - getMessagePriority
+        - compareByPriority
+        - HeartbeatMonitor
+        - createHeartbeatRequest
+        - createHeartbeatResponse
+        - handleHeartbeatInWorker
+        - HeartbeatErrorCodes
+        - MAGIC
+        - VERSION
+        - MSG_TASK_REQUEST
+        - MSG_TASK_RESPONSE
+        - MSG_TASK_ERROR
+        - MSG_HEARTBEAT_REQ
+        - MSG_HEARTBEAT_RES
+        - MSG_BATCH
+        - FLAG_HAS_TRANSFER
+        - FLAG_COMPRESSED
+        - PRIORITY_LOW
+        - PRIORITY_NORMAL
+        - PRIORITY_HIGH
+        - PRIORITY_CRITICAL
+        - ERR_METHOD_NOT_FOUND
+        - ERR_TIMEOUT
+        - ERR_CANCELLED
+        - resetSequence
+        - nextSequence
+        - writeHeader
+        - readHeader
+        - encodeTaskRequest
+        - decodeTaskRequest
+        - encodeTaskResponse
+        - encodeErrorResponse
+        - decodeErrorResponse
+        - encodeHeartbeatRequest
+        - encodeHeartbeatResponse
+        - decodeHeartbeatResponse
+        - encodeBatchHeader
+        - validateHeader
+        - getPayload
+        - getMessageType
+        - getMessageId
+        - getMessageSequence
+        - hasTransferFlag
+        - isCompressed
+        - getHeaderSize
+        - calculateChecksum
+        - Promise
+        - BUILD_TYPE
+        - pool
+        - worker
+        - workerEmitEvent
+        - enhancedPool
+        - optimalPool
+        - getRuntimeInfo
+        - hasWasmSupport
+        - hasFullWasmSupport
+      reExported:
+        - transferFloat64
+        - transferFloat32
+        - transferInt32
+        - transferUint32
+        - transferInt16
+        - transferUint16
+        - transferInt8
+        - transferUint8
+        - transferUint8Clamped
+        - transferBigInt64
+        - transferBigUint64
+        - transferTypedArray
+        - transferArrayBuffer
+        - transferArrayBuffers
+        - transferObject
+        - transferImageData
+        - "// Feature detection\r\n  canUseWasm"
+        - canUseSharedMemory
+        - canUseWasmThreads
+        - getFeatureStatus
+        - clearFeatureCache
+        - detectWASMFeatures
+        - getRecommendedQueueType
+        - warnIfWASMUnavailable
+        - hasWebAssembly
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - hasWASMThreads
+        - isSecureContext
+        - getFeatureReport
+        - "// WASM Bridge\r\n  WasmBridge"
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - loadWasm
+        - loadWasmFromBytes
+        - loadWasmSync
+        - "// WASM Queue\r\n  WASMTaskQueue"
+        - WasmTaskQueue
+        - createWASMQueue
+        - "// Embedded WASM\r\n  setEmbeddedWasm"
+        - hasEmbeddedWasm
+        - getEmbeddedWasmBytes
+        - loadEmbeddedWasm
+        - loadEmbeddedWasmSync
+        - WasmFeatures
+        - "// Worker Template\r\n  initWasmWorker"
+        - initWasmWorkerSync
+        - getWasmBridge
+        - getWasmExports
+        - getSharedBuffer
+        - isWasmInitialized
+        - isUsingSharedMemory
+        - wasmMethod
+        - wasmMethodWithInit
+        - createWasmWorker
+        - WorkerpoolError
+        - CancellationError
+        - TimeoutError
+        - TerminationError
+        - QueueFullError
+        - QueueEmptyError
+        - WasmNotAvailableError
+        - SharedMemoryNotAvailableError
+        - WasmInitializationError
+        - WasmNotInitializedError
+        - WasmMemoryError
+        - TypeMismatchError
+        - ValidationError
+        - WorkerCreationError
+        - NoWorkersAvailableError
+        - MethodNotFoundError
+        - getErrorTypeName
+        - wrapError
+        - assertType
+        - TypeGuards
+        - LogLevel
+        - LogCategory
+        - enableDebug
+        - disableDebug
+        - getDebugConfig
+        - isDebugEnabled
+        - isCategoryEnabled
+        - poolLog
+        - workerLog
+        - taskLog
+        - queueLog
+        - wasmLog
+        - transferLog
+        - perfLog
+        - perfStart
+        - perfEnd
+        - getPerfEntries
+        - clearPerfEntries
+        - getPerfSummary
+        - traced
+        - logDispatch
+        - logQueueOp
+        - logWorkerEvent
+        - logPoolEvent
+        - defineWorkerMethods
+        - createTypedProxy
+        - typedMethod
+        - asyncMethod
+        - syncMethod
+        - isMethodName
+        - validateWorkerMethods
+        - createMethodValidator
+        - PoolEnhanced
+        - getSharedPool
+        - terminateSharedPool
+        - hasSharedPool
+        - capabilities
+        - getCapabilities
+        - getCachedCapabilities
+        - clearCapabilitiesCache
+        - canUseOptimalTransfer
+        - canUseZeroCopy
+        - getCapabilityReport
+        - resolveWorkerUrl
+        - createWorkerBlobUrl
+        - revokeWorkerBlobUrl
+        - getCurrentModuleUrl
+        - createWorkerDataUrl
+        - supportsWorkerModules
+        - getWorkerConfig
+        - serializeBinary
+        - deserializeBinary
+        - shouldUseBinarySerialization
+        - estimateBinarySize
+        - MetricsCollector
+        - AdaptiveScaler
+        - ScaleAction
+        - HealthMonitor
+        - HealthStatus
+        - IdleRecycler
+        - RecycleReason
+        - WorkerAffinity
+        - AffinityStrategy
+        - WorkerCache
+        - MessageBatcher
+        - AdaptiveBatcher
+        - ChannelType
+        - createChannel
+        - MessagePassingChannel
+        - optimizeForTransfer
+        - hasTransferableContent
+        - createOptimizedTransfer
+        - CloneStrategy
+        - ResultStreamSender
+        - ResultStreamReceiver
+        - StreamState
+        - SharedMemoryResultStream
+        - isTransferable
+        - detectTransferables
+        - getTransferableType
+        - validateTransferables
+        - TransferableType
+        - serializeBatch
+        - deserializeBatch
+        - serializeTaskResult
+        - deserializeTaskResults
+        - generateBatchId
+        - serializeFunction
+        - estimateBatchSize
+        - collectTransferables
+        - createBatchAggregator
+        - getSIMDProcessor
+        - canUseSIMD
+        - simdMapF32
+        - simdReduceF32
+        - simdDotProduct
+        - resetSIMDProcessor
+        - MainThreadExecutor
+        - hasWorkerSupport
+        - createPoolWithFallback
+        - mainThreadExecutor
+        - SessionManager
+        - AdvancedPool
+        - advancedPool
+        - cpuIntensivePool
+        - ioIntensivePool
+        - mixedWorkloadPool
+        - RoundRobinStrategy
+        - LeastBusyStrategy
+        - LeastUsedStrategy
+        - FairShareStrategy
+        - WeightedRoundRobinStrategy
+        - InterleavedWeightedRoundRobinStrategy
+        - WorkerChoiceStrategyManager
+        - createStrategy
+        - WorkStealingDeque
+        - WorkStealingScheduler
+        - rebalanceTasks
+        - TaskAffinityRouter
+        - createAffinityKey
+        - objectAffinityKey
+        - createParallelReduce
+        - createParallelForEach
+        - createParallelFilter
+        - createParallelSome
+        - createParallelEvery
+        - createParallelFind
+        - createParallelFindIndex
+        - WorkerErrorCode
+        - ProtocolErrorCode
+        - TaskErrorCode
+        - ResourceErrorCode
+        - CommunicationErrorCode
+        - getErrorMessage
+        - isWorkerError
+        - isProtocolError
+        - isTaskError
+        - isResourceError
+        - isCommunicationError
+        - getErrorCategory
+        - isRetryableError
+        - isFatalError
+        - ErrorMessages
+        - PROTOCOL_VERSION
+        - MIN_PROTOCOL_VERSION
+        - MessagePriority
+        - TERMINATE_METHOD_ID
+        - CLEANUP_METHOD_ID
+        - HEARTBEAT_METHOD_ID
+        - isTaskRequest
+        - isCleanupRequest
+        - isTaskSuccessResponse
+        - isTaskErrorResponse
+        - isWorkerEvent
+        - isCleanupResponse
+        - isHeartbeatRequest
+        - isHeartbeatResponse
+        - createMessage
+        - isValidProtocolVersion
+        - getMessagePriority
+        - compareByPriority
+        - HeartbeatMonitor
+        - createHeartbeatRequest
+        - createHeartbeatResponse
+        - handleHeartbeatInWorker
+        - HeartbeatErrorCodes
+        - MAGIC
+        - VERSION
+        - MSG_TASK_REQUEST
+        - MSG_TASK_RESPONSE
+        - MSG_TASK_ERROR
+        - MSG_HEARTBEAT_REQ
+        - MSG_HEARTBEAT_RES
+        - MSG_BATCH
+        - FLAG_HAS_TRANSFER
+        - FLAG_COMPRESSED
+        - PRIORITY_LOW
+        - PRIORITY_NORMAL
+        - PRIORITY_HIGH
+        - PRIORITY_CRITICAL
+        - ERR_METHOD_NOT_FOUND
+        - ERR_TIMEOUT
+        - ERR_CANCELLED
+        - resetSequence
+        - nextSequence
+        - writeHeader
+        - readHeader
+        - encodeTaskRequest
+        - decodeTaskRequest
+        - encodeTaskResponse
+        - encodeErrorResponse
+        - decodeErrorResponse
+        - encodeHeartbeatRequest
+        - encodeHeartbeatResponse
+        - decodeHeartbeatResponse
+        - encodeBatchHeader
+        - validateHeader
+        - getPayload
+        - getMessageType
+        - getMessageId
+        - getMessageSequence
+        - hasTransferFlag
+        - isCompressed
+        - getHeaderSize
+        - calculateChecksum
+      functions:
+        - pool
+        - worker
+        - workerEmitEvent
+        - enhancedPool
+        - optimalPool
+        - getRuntimeInfo
+        - hasWasmSupport
+        - hasFullWasmSupport
+      constants:
+        - Promise
+        - VERSION
+        - BUILD_TYPE
+    src/ts/generated/embeddedWasm.ts:
+      description: Auto-generated embedded WASM module
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - EMBEDDED_WASM_BASE64
+        - EMBEDDED_WASM_SIZE
+        - decodeEmbeddedWasm
+        - getEmbeddedWasmBuffer
+      functions:
+        - decodeEmbeddedWasm
+        - getEmbeddedWasmBuffer
+      constants:
+        - EMBEDDED_WASM_BASE64
+        - EMBEDDED_WASM_SIZE
+    src/ts/generated/wasmTypes.ts:
+      description: Auto-generated WASM type definitions
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - WASM_EXPORTS
+      interfaces:
+        - WasmModuleExports
+      constants:
+        - WASM_EXPORTS
+    src/ts/index.ts:
+      description: workerpool - A thread pool library for Node.js and the browser
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./platform/environment
+          imports:
+            - platform
+            - isMainThread
+            - cpus
+            - isNode
+            - getPlatformInfo
+            - hasWorkerThreads
+            - hasSharedArrayBuffer
+            - hasAtomics
+            - isBun
+            - bunVersion
+            - recommendedWorkerType
+            - getWorkerTypeSupport
+            - isWorkerTypeSupported
+        - file: ./types/internal
+          imports:
+            - PlatformInfo
+            - WorkerTypeSupport
+          typeOnly: true
+        - file: ./core/Pool
+          imports:
+            - Pool
+            - PoolEnhanced
+            - TerminateError
+            - getSharedPool
+            - terminateSharedPool
+            - hasSharedPool
+        - file: ./core/Pool
+          imports:
+            - EnhancedPoolOptions
+            - EnhancedExecOptions
+            - EnhancedPoolStats
+            - PoolEvents
+            - PoolEventListener
+            - CircuitBreakerOptions
+            - RetryOptions
+            - MemoryOptions
+            - HealthCheckOptions
+          typeOnly: true
+        - file: ./core/Promise
+          imports:
+            - WorkerpoolPromise
+            - CancellationError
+            - TimeoutError
+        - file: ./platform/transfer
+          imports:
+            - Transfer
+        - file: ./workers/worker
+          imports:
+            - add
+            - emit
+        - file: ./platform/capabilities
+          imports:
+            - capabilities
+            - getCapabilities
+            - canUseOptimalTransfer
+            - canUseZeroCopy
+            - getCapabilityReport
+        - file: ./platform/worker-url
+          imports:
+            - resolveWorkerUrl
+            - createWorkerBlobUrl
+            - revokeWorkerBlobUrl
+            - getWorkerConfig
+            - supportsWorkerModules
+        - file: ./core/binary-serializer
+          imports:
+            - serializeBinary
+            - deserializeBinary
+            - shouldUseBinarySerialization
+            - estimateBinarySize
+        - file: ./core/circular-buffer
+          imports:
+            - CircularBuffer
+            - GrowableCircularBuffer
+            - TimeWindowBuffer
+        - file: ./core/TaskQueue
+          imports:
+            - FIFOQueue
+            - LIFOQueue
+        - file: ./platform/transfer-detection
+          imports:
+            - isTransferable
+            - detectTransferables
+            - getTransferableType
+            - validateTransferables
+            - TransferableType
+        - file: ./core/metrics
+          imports:
+            - MetricsCollector
+        - file: ./core/parallel-processing
+          imports:
+            - createParallelReduce
+            - createParallelForEach
+            - createParallelFilter
+            - createParallelSome
+            - createParallelEvery
+            - createParallelFind
+            - createParallelFindIndex
+            - createParallelCount
+            - createParallelPartition
+            - createParallelIncludes
+            - createParallelIndexOf
+            - createParallelGroupBy
+            - createParallelFlatMap
+            - createParallelUnique
+            - createParallelReduceRight
+        - file: ./core/main-thread-executor
+          imports:
+            - MainThreadExecutor
+            - hasWorkerSupport
+            - createPoolWithFallback
+            - mainThreadExecutor
+        - file: ./core/session-manager
+          imports:
+            - SessionManager
+        - file: ./core/AdvancedPool
+          imports:
+            - AdvancedPool
+            - advancedPool
+            - cpuIntensivePool
+            - ioIntensivePool
+            - mixedWorkloadPool
+        - file: ./core/worker-choice-strategies
+          imports:
+            - RoundRobinStrategy
+            - LeastBusyStrategy
+            - LeastUsedStrategy
+            - FairShareStrategy
+            - WeightedRoundRobinStrategy
+            - InterleavedWeightedRoundRobinStrategy
+            - WorkerChoiceStrategyManager
+            - createStrategy
+        - file: ./core/work-stealing
+          imports:
+            - WorkStealingDeque
+            - WorkStealingScheduler
+            - rebalanceTasks
+        - file: ./core/task-affinity
+          imports:
+            - TaskAffinityRouter
+            - createAffinityKey
+            - objectAffinityKey
+        - file: ./types/index
+          imports:
+            - PoolOptions
+            - ExecOptions
+            - PoolStats
+            - WorkerProxy
+          typeOnly: true
+        - file: ./platform/capabilities
+          imports:
+            - Capabilities
+          typeOnly: true
+        - file: ./core/binary-serializer
+          imports:
+            - BinarySerializedData
+          typeOnly: true
+        - file: ./platform/worker-url
+          imports:
+            - WorkerConfig
+            - WorkerConfigOptions
+          typeOnly: true
+        - file: ./core/circular-buffer
+          imports:
+            - TimestampedValue
+          typeOnly: true
+        - file: ./core/metrics
+          imports:
+            - PoolMetrics
+            - LatencyHistogram
+            - WorkerUtilization
+            - QueueMetrics
+            - ErrorMetrics
+            - MetricsCollectorOptions
+          typeOnly: true
+        - file: ./core/main-thread-executor
+          imports:
+            - MainThreadExecutorOptions
+          typeOnly: true
+        - file: ./types/parallel
+          imports:
+            - ParallelOptions
+            - ReduceOptions
+            - FindOptions
+            - PredicateOptions
+            - FilterResult
+            - FindResult
+            - ReduceResult
+            - PredicateResult
+            - ForEachResult
+            - ParallelPromise
+            - MapperFn
+            - ReducerFn
+            - CombinerFn
+            - PredicateFn
+            - ConsumerFn
+            - KeySelectorFn
+            - FlatMapFn
+            - EqualityFn
+            - UniqueOptions
+            - GroupByOptions
+            - FlatMapOptions
+            - CountResult
+            - PartitionResult
+            - GroupByResult
+            - UniqueResult
+          typeOnly: true
+        - file: ./types/session
+          imports:
+            - Session
+            - SessionOptions
+            - SessionStats
+            - SessionState
+            - SessionExecOptions
+            - WorkerSessionAPI
+          typeOnly: true
+        - file: ./core/AdvancedPool
+          imports:
+            - AdvancedPoolOptions
+            - AdvancedExecOptions
+            - AdvancedPoolStats
+          typeOnly: true
+        - file: ./core/worker-choice-strategies
+          imports:
+            - WorkerChoiceStrategy
+            - WorkerSelectionOptions
+            - WorkerSelectionResult
+            - WorkerStats
+          typeOnly: true
+        - file: ./core/work-stealing
+          imports:
+            - StealableTask
+            - StealingPolicy
+            - WorkStealingStats
+            - WorkStealingDequeStats
+            - TaskSubmitOptions
+          typeOnly: true
+        - file: ./core/task-affinity
+          imports:
+            - AffinityKey
+            - RoutingDecision
+            - RoutingReason
+            - AffinityRouterOptions
+            - AffinityRouterStats
+            - WorkerProfile
+            - TaskTypeProfile
+            - RoutingOptions
+          typeOnly: true
+        - file: ./workers/worker
+          imports:
+            - WorkerRegisterOptions
+          typeOnly: true
+        - file: ./core/WorkerHandler
+          imports:
+            - WorkerType
+          typeOnly: true
+      exports:
+        - WorkerpoolPromise
+        - CancellationError
+        - TimeoutError
+        - Transfer
+        - platform
+        - isMainThread
+        - cpus
+        - isNode
+        - getPlatformInfo
+        - hasWorkerThreads
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - isBun
+        - bunVersion
+        - recommendedWorkerType
+        - getWorkerTypeSupport
+        - isWorkerTypeSupported
+        - TerminateError
+        - Pool
+        - PoolEnhanced
+        - getSharedPool
+        - terminateSharedPool
+        - hasSharedPool
+        - capabilities
+        - getCapabilities
+        - canUseOptimalTransfer
+        - canUseZeroCopy
+        - getCapabilityReport
+        - resolveWorkerUrl
+        - createWorkerBlobUrl
+        - revokeWorkerBlobUrl
+        - getWorkerConfig
+        - supportsWorkerModules
+        - serializeBinary
+        - deserializeBinary
+        - shouldUseBinarySerialization
+        - estimateBinarySize
+        - isTransferable
+        - detectTransferables
+        - getTransferableType
+        - validateTransferables
+        - CircularBuffer
+        - GrowableCircularBuffer
+        - TimeWindowBuffer
+        - FIFOQueue
+        - LIFOQueue
+        - MetricsCollector
+        - MainThreadExecutor
+        - hasWorkerSupport
+        - createPoolWithFallback
+        - mainThreadExecutor
+        - SessionManager
+        - AdvancedPool
+        - advancedPool
+        - cpuIntensivePool
+        - ioIntensivePool
+        - mixedWorkloadPool
+        - RoundRobinStrategy
+        - LeastBusyStrategy
+        - LeastUsedStrategy
+        - FairShareStrategy
+        - WeightedRoundRobinStrategy
+        - InterleavedWeightedRoundRobinStrategy
+        - WorkerChoiceStrategyManager
+        - createStrategy
+        - WorkStealingDeque
+        - WorkStealingScheduler
+        - rebalanceTasks
+        - TaskAffinityRouter
+        - createAffinityKey
+        - objectAffinityKey
+        - createParallelReduce
+        - createParallelForEach
+        - createParallelFilter
+        - createParallelSome
+        - createParallelEvery
+        - createParallelFind
+        - createParallelFindIndex
+        - createParallelCount
+        - createParallelPartition
+        - createParallelIncludes
+        - createParallelIndexOf
+        - createParallelGroupBy
+        - createParallelFlatMap
+        - createParallelUnique
+        - createParallelReduceRight
+        - VERSION
+        - BUILD_TYPE
+        - pool
+        - worker
+        - workerEmit
+        - enhancedPool
+        - optimalPool
+        - getRuntimeInfo
+      functions:
+        - pool
+        - worker
+        - workerEmit
+        - enhancedPool
+        - optimalPool
+        - getRuntimeInfo
+      constants:
+        - VERSION
+        - BUILD_TYPE
+    src/ts/minimal.ts:
+      description: Workerpool Minimal Build Entry Point
+      externalDependencies:
+        - package: workerpool/minimal
+          imports:
+            - pool
+            - worker
+            - Transfer
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./core/Pool
+          imports:
+            - Pool
+        - file: ./workers/worker
+          imports:
+            - add
+            - emit
+        - file: ./core/Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ./platform/transfer
+          imports:
+            - Transfer
+        - file: ./platform/environment
+          imports:
+            - platform
+            - isMainThread
+            - cpus
+            - isNode
+            - getPlatformInfo
+            - hasWorkerThreads
+            - hasSharedArrayBuffer
+            - hasAtomics
+            - isBun
+            - bunVersion
+            - recommendedWorkerType
+            - getWorkerTypeSupport
+            - isWorkerTypeSupported
+        - file: ./core/circular-buffer
+          imports:
+            - CircularBuffer
+            - GrowableCircularBuffer
+            - TimeWindowBuffer
+        - file: ./core/TaskQueue
+          imports:
+            - FIFOQueue
+            - LIFOQueue
+        - file: ./core/main-thread-executor
+          imports:
+            - MainThreadExecutor
+            - hasWorkerSupport
+            - createPoolWithFallback
+            - mainThreadExecutor
+        - file: ./errors
+          imports:
+            - CancellationError
+            - TimeoutError
+            - TerminationError
+          reExport: true
+      exports:
+        - Transfer
+        - platform
+        - isMainThread
+        - cpus
+        - isNode
+        - getPlatformInfo
+        - hasWorkerThreads
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - isBun
+        - bunVersion
+        - recommendedWorkerType
+        - getWorkerTypeSupport
+        - isWorkerTypeSupported
+        - CircularBuffer
+        - GrowableCircularBuffer
+        - TimeWindowBuffer
+        - FIFOQueue
+        - LIFOQueue
+        - MainThreadExecutor
+        - hasWorkerSupport
+        - createPoolWithFallback
+        - mainThreadExecutor
+        - CancellationError
+        - TimeoutError
+        - TerminationError
+        - Pool
+        - Promise
+        - VERSION
+        - BUILD_TYPE
+        - pool
+        - worker
+        - workerEmit
+      reExported:
+        - CancellationError
+        - TimeoutError
+        - TerminationError
+      functions:
+        - pool
+        - worker
+        - workerEmit
+      constants:
+        - Promise
+        - VERSION
+        - BUILD_TYPE
+    src/ts/platform/capabilities.ts:
+      description: Capabilities Detection API
+      externalDependencies:
+        - package: "@danielsimonjr/workerpool"
+          imports:
+            - capabilities
+            - getCapabilities
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./environment
+          imports:
+            - platform
+            - cpus
+            - hasWorkerThreads
+            - isBun
+            - bunVersion
+            - recommendedWorkerType
+            - getWorkerTypeSupport
+            - WorkerType
+        - file: ../types/internal
+          imports:
+            - WorkerTypeSupport
+          typeOnly: true
+        - file: ../wasm/feature-detection
+          imports:
+            - hasWebAssembly
+            - hasSharedArrayBuffer
+            - hasAtomics
+            - hasWASMThreads
+            - isSecureContext
+            - canUseWasmThreads
+      exports:
+        - capabilities
+        - getCapabilities
+        - getCachedCapabilities
+        - clearCapabilitiesCache
+        - canUseOptimalTransfer
+        - canUseZeroCopy
+        - getCapabilityReport
+      interfaces:
+        - Capabilities
+      functions:
+        - getCapabilities
+        - getCachedCapabilities
+        - clearCapabilitiesCache
+        - canUseOptimalTransfer
+        - canUseZeroCopy
+        - getCapabilityReport
+      constants:
+        - capabilities
+    src/ts/platform/channel-factory.ts:
+      description: Channel Factory
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./environment
+          imports:
+            - hasSharedArrayBuffer
+            - hasAtomics
+            - platform
+        - file: ./shared-memory
+          imports:
+            - SharedMemoryChannel
+            - SharedMemoryChannelOptions
+      exports:
+        - canUseSharedMemory
+        - getSharedMemoryUnavailableReason
+        - createChannel
+        - createMessageChannel
+        - createSharedMemoryChannel
+        - createChannelPair
+        - MessagePassingChannel
+        - SharedMemoryChannelWrapper
+        - InstrumentedChannel
+        - ChannelType
+      classes:
+        - MessagePassingChannel
+        - SharedMemoryChannelWrapper
+        - InstrumentedChannel
+      interfaces:
+        - IChannel
+        - SendResult
+        - ChannelFactoryOptions
+        - ChannelPair
+        - ChannelStats
+      functions:
+        - canUseSharedMemory
+        - getSharedMemoryUnavailableReason
+        - createChannel
+        - createMessageChannel
+        - createSharedMemoryChannel
+        - createChannelPair
+      enums:
+        - ChannelType
+    src/ts/platform/environment.ts:
+      description: Platform detection utilities for workerpool
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/internal
+          imports:
+            - PlatformInfo
+            - WorkerTypeSupport
+          typeOnly: true
+      exports:
+        - platform
+        - isBun
+        - bunVersion
+        - isMainThread
+        - cpus
+        - hasWorkerThreads
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - recommendedWorkerType
+        - isNode
+        - getWorkerTypeSupport
+        - isWorkerTypeSupported
+        - getPlatformInfo
+      functions:
+        - isNode
+        - getWorkerTypeSupport
+        - isWorkerTypeSupported
+        - getPlatformInfo
+      constants:
+        - platform
+        - isBun
+        - bunVersion
+        - isMainThread
+        - cpus
+        - hasWorkerThreads
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - recommendedWorkerType
+    src/ts/platform/message-batcher.ts:
+      description: Message Batcher
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - MessageBatcher
+        - MessageUnbatcher
+        - AdaptiveBatcher
+      classes:
+        - MessageBatcher
+        - MessageUnbatcher
+        - AdaptiveBatcher
+      interfaces:
+        - BatcherConfig
+        - BatchedMessage
+        - MessageBatch
+        - BatchStats
+    src/ts/platform/result-stream.ts:
+      description: Result Streaming
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./environment
+          imports:
+            - hasSharedArrayBuffer
+            - hasAtomics
+      exports:
+        - ResultStreamSender
+        - ResultStreamReceiver
+        - SharedMemoryResultStream
+        - StreamState
+      classes:
+        - ResultStreamSender
+        - ResultStreamReceiver
+        - SharedMemoryResultStream
+      interfaces:
+        - StreamChunk
+        - StreamProgress
+        - StreamCallbacks
+        - StreamConfig
+      enums:
+        - StreamState
+    src/ts/platform/shared-memory.ts:
+      description: SharedMemoryChannel - Lock-free bi-directional communication using SharedArrayBuffer
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./environment
+          imports:
+            - hasSharedArrayBuffer
+            - hasAtomics
+      exports:
+        - SharedMemoryChannel
+      classes:
+        - SharedMemoryChannel
+      interfaces:
+        - SharedMemoryChannelOptions
+        - SendResult
+    src/ts/platform/structured-clone.ts:
+      description: Structured Clone Optimization
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./transfer
+          imports:
+            - Transfer
+      exports:
+        - optimizeForTransfer
+        - hasTransferableContent
+        - createOptimizedTransfer
+        - CloneStrategy
+      interfaces:
+        - CloneOptimization
+        - CloneOptions
+      functions:
+        - optimizeForTransfer
+        - hasTransferableContent
+        - createOptimizedTransfer
+      enums:
+        - CloneStrategy
+    src/ts/platform/transfer-detection.ts:
+      description: Transfer Detection
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - isTransferable
+        - getTransferableType
+        - getTransferableSize
+        - detectTransferables
+        - createTransferList
+        - hasTransferables
+        - validateTransferables
+        - getTransferHint
+      interfaces:
+        - DetectedTransferable
+        - DetectionResult
+        - DetectionConfig
+        - ValidationResult
+        - TransferHint
+      functions:
+        - isTransferable
+        - getTransferableType
+        - getTransferableSize
+        - detectTransferables
+        - createTransferList
+        - hasTransferables
+        - validateTransferables
+        - getTransferHint
+    src/ts/platform/transfer.ts:
+      description: Transfer - Helper class for transferring data with zero-copy semantics
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/index
+          imports:
+            - TransferDescriptor
+          typeOnly: true
+      exports:
+        - transferFloat64
+        - transferFloat32
+        - transferInt32
+        - transferUint32
+        - transferInt16
+        - transferUint16
+        - transferInt8
+        - transferUint8
+        - transferUint8Clamped
+        - transferBigInt64
+        - transferBigUint64
+        - transferTypedArray
+        - transferArrayBuffer
+        - transferArrayBuffers
+        - transferObject
+        - transferImageData
+        - Transfer
+      classes:
+        - Transfer
+      functions:
+        - transferFloat64
+        - transferFloat32
+        - transferInt32
+        - transferUint32
+        - transferInt16
+        - transferUint16
+        - transferInt8
+        - transferUint8
+        - transferUint8Clamped
+        - transferBigInt64
+        - transferBigUint64
+        - transferTypedArray
+        - transferArrayBuffer
+        - transferArrayBuffers
+        - transferObject
+        - transferImageData
+    src/ts/platform/worker-url.ts:
+      description: Worker URL Resolution Utilities
+      externalDependencies:
+        - package: "@danielsimonjr/workerpool"
+          imports:
+            - resolveWorkerUrl
+        - package: workerpool
+          imports:
+            - workerpool
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./environment
+          imports:
+            - platform
+      exports:
+        - resolveWorkerUrl
+        - createWorkerBlobUrl
+        - revokeWorkerBlobUrl
+        - getCurrentModuleUrl
+        - createWorkerDataUrl
+        - supportsWorkerModules
+        - getWorkerConfig
+      interfaces:
+        - WorkerConfig
+        - WorkerConfigOptions
+      functions:
+        - resolveWorkerUrl
+        - createWorkerBlobUrl
+        - revokeWorkerBlobUrl
+        - getCurrentModuleUrl
+        - createWorkerDataUrl
+        - supportsWorkerModules
+        - getWorkerConfig
+    src/ts/types/core.ts:
+      description: Core Type Definitions
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports: []
+      interfaces:
+        - ExecOptions
+        - WorkerpoolPromise
+    src/ts/types/error-codes.ts:
+      description: Standardized Error Codes
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - ErrorMessages
+        - getErrorMessage
+        - isWorkerError
+        - isProtocolError
+        - isTaskError
+        - isResourceError
+        - isCommunicationError
+        - getErrorCategory
+        - isRetryableError
+        - isFatalError
+        - WorkerErrorCode
+        - ProtocolErrorCode
+        - TaskErrorCode
+        - ResourceErrorCode
+        - CommunicationErrorCode
+      functions:
+        - getErrorMessage
+        - isWorkerError
+        - isProtocolError
+        - isTaskError
+        - isResourceError
+        - isCommunicationError
+        - getErrorCategory
+        - isRetryableError
+        - isFatalError
+      enums:
+        - WorkerErrorCode
+        - ProtocolErrorCode
+        - TaskErrorCode
+        - ResourceErrorCode
+        - CommunicationErrorCode
+      constants:
+        - ErrorMessages
+    src/ts/types/index.ts:
+      description: workerpool TypeScript Type Definitions
+      externalDependencies: []
+      nodeDependencies:
+        - module: child_process
+          imports:
+            - ForkOptions
+        - module: worker_threads
+          imports:
+            - WorkerOptions
+      internalDependencies:
+        - file: ./core
+          imports:
+            - ExecOptions
+            - WorkerpoolPromise
+          typeOnly: true
+        - file: ./core
+          imports:
+            - "*"
+          reExport: true
+        - file: ./internal
+          imports:
+            - "*"
+          reExport: true
+        - file: ./messages
+          imports:
+            - "*"
+          reExport: true
+        - file: ./worker-methods
+          imports:
+            - "*"
+          reExport: true
+        - file: ./parallel
+          imports:
+            - "*"
+          reExport: true
+        - file: ./session
+          imports:
+            - "*"
+          reExport: true
+        - file: ./error-codes
+          imports:
+            - "*"
+          reExport: true
+      exports: []
+      reExported:
+        - "* from ./core"
+        - "* from ./internal"
+        - "* from ./messages"
+        - "* from ./worker-methods"
+        - "* from ./parallel"
+        - "* from ./session"
+        - "* from ./error-codes"
+      interfaces:
+        - WebWorkerOptions
+        - WorkerArg
+        - TaskQueue
+        - PoolOptions
+        - PoolStats
+        - WorkerRegisterOptions
+        - Resolver
+        - Task
+        - TransferDescriptor
+        - AffinityHint
+        - ExecOptionsWithAffinity
+        - PoolOptionsExtended
+        - PoolMetricsSnapshot
+        - BatchOptions
+        - BatchProgress
+        - BatchTaskResult
+        - BatchResult
+        - BatchTask
+        - MapOptions
+        - MapProgress
+        - BatchPromise
+    src/ts/types/internal.ts:
+      description: workerpool Internal Type Definitions
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./messages
+          imports:
+            - SerializedError
+          typeOnly: true
+      exports:
+        - WorkerState
+      interfaces:
+        - InternalTask
+        - WorkerInfo
+        - StringifiedFunction
+        - DebugPortInfo
+        - WorkerTypeSupport
+        - PlatformInfo
+      enums:
+        - WorkerState
+    src/ts/types/messages.ts:
+      description: workerpool IPC Message Protocol Types
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./error-codes
+          imports:
+            - ErrorCode
+          typeOnly: true
+      exports:
+        - PROTOCOL_VERSION
+        - MIN_PROTOCOL_VERSION
+        - TERMINATE_METHOD_ID
+        - CLEANUP_METHOD_ID
+        - HEARTBEAT_METHOD_ID
+        - isTaskRequest
+        - isCleanupRequest
+        - isTaskSuccessResponse
+        - isTaskErrorResponse
+        - isWorkerEvent
+        - isCleanupResponse
+        - isHeartbeatRequest
+        - isHeartbeatResponse
+        - createMessage
+        - isValidProtocolVersion
+        - getMessagePriority
+        - compareByPriority
+        - MessagePriority
+      interfaces:
+        - SerializedError
+        - MessageHeader
+        - TaskRequest
+        - CleanupRequest
+        - HeartbeatRequest
+        - HeartbeatResponse
+        - TaskSuccessResponse
+        - TaskErrorResponse
+        - CleanupResponse
+        - WorkerEvent
+      functions:
+        - isTaskRequest
+        - isCleanupRequest
+        - isTaskSuccessResponse
+        - isTaskErrorResponse
+        - isWorkerEvent
+        - isCleanupResponse
+        - isHeartbeatRequest
+        - isHeartbeatResponse
+        - createMessage
+        - isValidProtocolVersion
+        - getMessagePriority
+        - compareByPriority
+      enums:
+        - MessagePriority
+      constants:
+        - PROTOCOL_VERSION
+        - MIN_PROTOCOL_VERSION
+        - TERMINATE_METHOD_ID
+        - CLEANUP_METHOD_ID
+        - HEARTBEAT_METHOD_ID
+    src/ts/types/parallel.ts:
+      description: Parallel Processing Types
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./core
+          imports:
+            - ExecOptions
+            - WorkerpoolPromise
+          typeOnly: true
+        - file: ./index
+          imports:
+            - BatchOptions
+            - BatchProgress
+          typeOnly: true
+      exports: []
+      interfaces:
+        - ParallelOptions
+        - ReduceOptions
+        - FindOptions
+        - PredicateOptions
+        - UniqueOptions
+        - GroupByOptions
+        - FlatMapOptions
+        - FilterResult
+        - FindResult
+        - ReduceResult
+        - PredicateResult
+        - ForEachResult
+        - CountResult
+        - PartitionResult
+        - GroupByResult
+        - UniqueResult
+        - ParallelPromise
+        - ParallelArrayOperations
+    src/ts/types/session.ts:
+      description: Session Types
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./core
+          imports:
+            - ExecOptions
+            - WorkerpoolPromise
+          typeOnly: true
+      exports: []
+      interfaces:
+        - SessionOptions
+        - SessionExecOptions
+        - SessionState
+        - SessionStats
+        - Session
+        - SessionManager
+        - WorkerSessionAPI
+    src/ts/types/worker-methods.ts:
+      description: Type-Safe Worker Method Definitions
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./core
+          imports:
+            - WorkerpoolPromise
+            - ExecOptions
+          typeOnly: true
+        - file: ./worker
+          imports:
+            - WorkerMethods
+          typeOnly: true
+      exports:
+        - defineWorkerMethods
+        - createTypedProxy
+        - isMethodName
+        - typedMethod
+        - asyncMethod
+        - syncMethod
+        - validateWorkerMethods
+        - createMethodValidator
+      functions:
+        - defineWorkerMethods
+        - createTypedProxy
+        - isMethodName
+        - typedMethod
+        - asyncMethod
+        - syncMethod
+        - validateWorkerMethods
+        - createMethodValidator
+    src/ts/wasm/EmbeddedWasmLoader.ts:
+      description: Embedded WASM Loader
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./WasmLoader
+          imports:
+            - WasmExports
+            - WasmLoadOptions
+            - WasmLoadResult
+      exports:
+        - WasmFeatures
+        - setEmbeddedWasm
+        - hasEmbeddedWasm
+        - getEmbeddedWasmBytes
+        - isSharedMemorySupported
+        - loadEmbeddedWasm
+        - loadEmbeddedWasmSync
+        - loadWasmFromBytes
+        - loadWasmFromBytesSync
+        - calculateMemoryPages
+      functions:
+        - setEmbeddedWasm
+        - hasEmbeddedWasm
+        - getEmbeddedWasmBytes
+        - isSharedMemorySupported
+        - loadEmbeddedWasm
+        - loadEmbeddedWasmSync
+        - loadWasmFromBytes
+        - loadWasmFromBytesSync
+        - calculateMemoryPages
+      constants:
+        - WasmFeatures
+    src/ts/wasm/feature-detection.ts:
+      description: WASM Feature Detection
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - canUseWasm
+        - canUseSharedMemory
+        - canUseWasmThreads
+        - getFeatureStatus
+        - clearFeatureCache
+        - hasWebAssembly
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - hasWASMThreads
+        - detectWASMFeatures
+        - getRecommendedQueueType
+        - warnIfWASMUnavailable
+        - isSecureContext
+        - getFeatureReport
+      interfaces:
+        - WASMFeatureStatus
+      functions:
+        - canUseWasm
+        - canUseSharedMemory
+        - canUseWasmThreads
+        - getFeatureStatus
+        - clearFeatureCache
+        - hasWebAssembly
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - hasWASMThreads
+        - detectWASMFeatures
+        - getRecommendedQueueType
+        - warnIfWASMUnavailable
+        - isSecureContext
+        - getFeatureReport
+    src/ts/wasm/index.ts:
+      description: WASM Module Public API
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./WasmBridge
+          imports:
+            - WasmBridge
+            - isSharedMemorySupported
+            - calculateMemoryPages
+            - loadWasm
+            - loadWasmFromBytes
+            - loadWasmSync
+          reExport: true
+        - file: ./WasmTaskQueue
+          imports:
+            - WASMTaskQueue
+            - WasmTaskQueue
+            - createWASMQueue
+          reExport: true
+        - file: ./feature-detection
+          imports:
+            - "// Primary synchronous checks\r\n  canUseWasm"
+            - canUseSharedMemory
+            - canUseWasmThreads
+            - getFeatureStatus
+            - clearFeatureCache
+            - "// Low-level detection\r\n  detectWASMFeatures"
+            - getRecommendedQueueType
+            - warnIfWASMUnavailable
+            - hasWebAssembly
+            - hasSharedArrayBuffer
+            - hasAtomics
+            - hasWASMThreads
+            - isSecureContext
+            - getFeatureReport
+          reExport: true
+        - file: ./EmbeddedWasmLoader
+          imports:
+            - setEmbeddedWasm
+            - hasEmbeddedWasm
+            - getEmbeddedWasmBytes
+            - loadEmbeddedWasm
+            - loadEmbeddedWasmSync
+            - WasmFeatures
+          reExport: true
+        - file: ./WasmWorkerTemplate
+          imports:
+            - initWasmWorker
+            - initWasmWorkerSync
+            - getWasmBridge
+            - getWasmExports
+            - getSharedBuffer
+            - isWasmInitialized
+            - isUsingSharedMemory
+            - wasmMethod
+            - wasmMethodWithInit
+            - createWasmWorker
+          reExport: true
+      exports:
+        - WasmBridge
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - loadWasm
+        - loadWasmFromBytes
+        - loadWasmSync
+        - WASMTaskQueue
+        - WasmTaskQueue
+        - createWASMQueue
+        - "// Primary synchronous checks\r\n  canUseWasm"
+        - canUseSharedMemory
+        - canUseWasmThreads
+        - getFeatureStatus
+        - clearFeatureCache
+        - "// Low-level detection\r\n  detectWASMFeatures"
+        - getRecommendedQueueType
+        - warnIfWASMUnavailable
+        - hasWebAssembly
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - hasWASMThreads
+        - isSecureContext
+        - getFeatureReport
+        - setEmbeddedWasm
+        - hasEmbeddedWasm
+        - getEmbeddedWasmBytes
+        - loadEmbeddedWasm
+        - loadEmbeddedWasmSync
+        - WasmFeatures
+        - initWasmWorker
+        - initWasmWorkerSync
+        - getWasmBridge
+        - getWasmExports
+        - getSharedBuffer
+        - isWasmInitialized
+        - isUsingSharedMemory
+        - wasmMethod
+        - wasmMethodWithInit
+        - createWasmWorker
+      reExported:
+        - WasmBridge
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - loadWasm
+        - loadWasmFromBytes
+        - loadWasmSync
+        - WASMTaskQueue
+        - WasmTaskQueue
+        - createWASMQueue
+        - "// Primary synchronous checks\r\n  canUseWasm"
+        - canUseSharedMemory
+        - canUseWasmThreads
+        - getFeatureStatus
+        - clearFeatureCache
+        - "// Low-level detection\r\n  detectWASMFeatures"
+        - getRecommendedQueueType
+        - warnIfWASMUnavailable
+        - hasWebAssembly
+        - hasSharedArrayBuffer
+        - hasAtomics
+        - hasWASMThreads
+        - isSecureContext
+        - getFeatureReport
+        - setEmbeddedWasm
+        - hasEmbeddedWasm
+        - getEmbeddedWasmBytes
+        - loadEmbeddedWasm
+        - loadEmbeddedWasmSync
+        - WasmFeatures
+        - initWasmWorker
+        - initWasmWorkerSync
+        - getWasmBridge
+        - getWasmExports
+        - getSharedBuffer
+        - isWasmInitialized
+        - isUsingSharedMemory
+        - wasmMethod
+        - wasmMethodWithInit
+        - createWasmWorker
+    src/ts/wasm/simd-processor.ts:
+      description: SIMD Processor JavaScript Bridge
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./feature-detection
+          imports:
+            - canUseWasm
+      exports:
+        - getSIMDProcessor
+        - canUseSIMD
+        - simdMapF32
+        - simdReduceF32
+        - simdDotProduct
+        - resetSIMDProcessor
+      interfaces:
+        - SIMDProcessor
+      functions:
+        - getSIMDProcessor
+        - canUseSIMD
+        - simdMapF32
+        - simdReduceF32
+        - simdDotProduct
+        - resetSIMDProcessor
+    src/ts/wasm/WasmBridge.ts:
+      description: WASM Bridge Utilities
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./WasmLoader
+          imports:
+            - WasmExports
+            - WasmLoadResult
+            - loadWasm
+            - loadWasmFromBytes
+            - loadWasmSync
+            - isSharedMemorySupported
+            - calculateMemoryPages
+      exports:
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - loadWasm
+        - loadWasmFromBytes
+        - loadWasmSync
+        - WasmBridge
+      classes:
+        - WasmBridge
+      interfaces:
+        - TaskMetadata
+        - QueueEntry
+        - QueueStats
+    src/ts/wasm/WasmLoader.ts:
+      description: WASM Module Loader
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - loadWasm
+        - loadWasmFromBytes
+        - loadWasmSync
+      interfaces:
+        - WasmExports
+        - WasmLoadOptions
+        - WasmLoadResult
+      functions:
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - loadWasm
+        - loadWasmFromBytes
+        - loadWasmSync
+    src/ts/wasm/WasmTaskQueue.ts:
+      description: WASM-backed Task Queue
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/index
+          imports:
+            - Task
+            - TaskQueue
+          typeOnly: true
+        - file: ./WasmBridge
+          imports:
+            - WasmBridge
+            - isSharedMemorySupported
+            - loadWasmFromBytes
+            - loadWasmSync
+      exports:
+        - WASMTaskQueue
+        - createWASMQueue
+      classes:
+        - WASMTaskQueue
+      interfaces:
+        - WASMTaskQueueOptions
+      functions:
+        - createWASMQueue
+    src/ts/wasm/WasmWorkerTemplate.ts:
+      description: WASM Worker Template
+      externalDependencies:
+        - package: workerpool/wasm
+          imports:
+            - initWasmWorker
+            - getWasmExports
+      nodeDependencies: []
+      internalDependencies:
+        - file: ./WasmBridge
+          imports:
+            - WasmBridge
+            - isSharedMemorySupported
+            - calculateMemoryPages
+        - file: ./WasmLoader
+          imports:
+            - WasmExports
+            - WasmLoadOptions
+          typeOnly: true
+        - file: ./feature-detection
+          imports:
+            - canUseWasm
+            - canUseSharedMemory
+            - canUseWasmThreads
+            - getFeatureStatus
+      exports:
+        - canUseWasm
+        - canUseSharedMemory
+        - canUseWasmThreads
+        - getFeatureStatus
+        - isSharedMemorySupported
+        - calculateMemoryPages
+        - initWasmWorker
+        - initWasmWorkerSync
+        - getWasmBridge
+        - getWasmExports
+        - getSharedBuffer
+        - isWasmInitialized
+        - isUsingSharedMemory
+        - wasmMethod
+        - wasmMethodWithInit
+        - createWasmWorker
+      interfaces:
+        - WasmWorkerInitOptions
+        - WasmWorkerConfig
+      functions:
+        - initWasmWorker
+        - initWasmWorkerSync
+        - getWasmBridge
+        - getWasmExports
+        - getSharedBuffer
+        - isWasmInitialized
+        - isUsingSharedMemory
+        - wasmMethod
+        - wasmMethodWithInit
+        - createWasmWorker
+    src/ts/workers/adaptive-scaler.ts:
+      description: AdaptiveScaler - Dynamic worker scaling based on load
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../core/metrics
+          imports:
+            - PoolMetrics
+          typeOnly: true
+      exports:
+        - AdaptiveScaler
+        - ScaleAction
+      classes:
+        - AdaptiveScaler
+      interfaces:
+        - ScaleDecision
+        - ScalingThresholds
+        - AdaptiveScalerOptions
+      enums:
+        - ScaleAction
+    src/ts/workers/affinity.ts:
+      description: WorkerAffinity - Task-to-worker affinity for cache locality
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies: []
+      exports:
+        - WorkerAffinity
+        - AffinityStrategy
+      classes:
+        - WorkerAffinity
+      interfaces:
+        - AffinityHint
+        - AffinityMapping
+        - WorkerAffinityOptions
+        - AffinityStats
+      enums:
+        - AffinityStrategy
+    src/ts/workers/health-monitor.ts:
+      description: HealthMonitor - Worker health monitoring and automatic recovery
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/internal
+          imports:
+            - WorkerInfo
+            - WorkerState
+          typeOnly: true
+      exports:
+        - HealthMonitor
+        - HealthStatus
+      classes:
+        - HealthMonitor
+      interfaces:
+        - WorkerHealthCheck
+        - HealthMonitorOptions
+      enums:
+        - HealthStatus
+    src/ts/workers/recycler.ts:
+      description: IdleRecycler - Worker recycling based on idle time and task count
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../types/internal
+          imports:
+            - WorkerInfo
+          typeOnly: true
+      exports:
+        - IdleRecycler
+        - RecycleReason
+      classes:
+        - IdleRecycler
+      interfaces:
+        - RecycleCandidate
+        - IdleRecyclerOptions
+      enums:
+        - RecycleReason
+    src/ts/workers/worker.ts:
+      description: Worker Script - Runs inside worker process/thread
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../platform/transfer
+          imports:
+            - Transfer
+        - file: ../core/Promise
+          imports:
+            - WorkerpoolPromise
+        - file: ../types/messages
+          imports:
+            - SerializedError
+          typeOnly: true
+      exports:
+        - add
+        - emit
+      interfaces:
+        - WorkerRegisterOptions
+        - PublicWorkerAPI
+      constants:
+        - add
+        - emit
+    src/ts/workers/WorkerCache.ts:
+      description: WorkerCache - Pre-warmed worker pool for instant task dispatch
+      externalDependencies: []
+      nodeDependencies: []
+      internalDependencies:
+        - file: ../core/WorkerHandler
+          imports:
+            - WorkerHandlerOptions
+          typeOnly: true
+        - file: ../types/internal
+          imports:
+            - WorkerState
+            - WorkerInfo
+      exports:
+        - WorkerCache
+      classes:
+        - WorkerCache
+      interfaces:
+        - CachedWorker
+        - WorkerCacheOptions
+        - WorkerCacheStats
+dependencyGraph:
+  circularDependencies:
+    runtime: []
+    typeOnly:
+      - - src/ts/types/index.ts
+        - src/ts/types/parallel.ts
+        - src/ts/types/index.ts
+    total: 1
+    runtimeCount: 0
+    typeOnlyCount: 1
+  layers:
+    - name: Ts
+      files:
+        - src/ts/assembly/atomics.ts
+        - src/ts/assembly/binary-protocol.ts
+        - src/ts/assembly/circular-buffer.ts
+        - src/ts/assembly/errors.ts
+        - src/ts/assembly/hash-map.ts
+        - src/ts/assembly/histogram.ts
+        - src/ts/assembly/index.ts
+        - src/ts/assembly/k-way-merge.ts
+        - src/ts/assembly/memory.ts
+        - src/ts/assembly/priority-queue.ts
+        - src/ts/assembly/ring-buffer.ts
+        - src/ts/assembly/simd-batch.ts
+        - src/ts/assembly/stats.ts
+        - src/ts/assembly/stubs/atomics.ts
+        - src/ts/assembly/stubs/binary-protocol.ts
+        - src/ts/assembly/stubs/circular-buffer.ts
+        - src/ts/assembly/stubs/errors.ts
+        - src/ts/assembly/stubs/hash-map.ts
+        - src/ts/assembly/stubs/histogram.ts
+        - src/ts/assembly/stubs/index.ts
+        - src/ts/assembly/stubs/k-way-merge.ts
+        - src/ts/assembly/stubs/memory.ts
+        - src/ts/assembly/stubs/priority-queue.ts
+        - src/ts/assembly/stubs/ring-buffer.ts
+        - src/ts/assembly/stubs/simd-batch.ts
+        - src/ts/assembly/stubs/stats.ts
+        - src/ts/assembly/stubs/task-slots.ts
+        - src/ts/assembly/task-slots.ts
+        - src/ts/core/AdvancedPool.ts
+        - src/ts/core/auto-transfer.ts
+        - src/ts/core/batch-executor.ts
+        - src/ts/core/batch-serializer.ts
+        - src/ts/core/binary-serializer.ts
+        - src/ts/core/circular-buffer.ts
+        - src/ts/core/debug-port-allocator.ts
+        - src/ts/core/function-cache.ts
+        - src/ts/core/heartbeat.ts
+        - src/ts/core/k-way-merge.ts
+        - src/ts/core/main-thread-executor.ts
+        - src/ts/core/metrics.ts
+        - src/ts/core/parallel-processing.ts
+        - src/ts/core/Pool.ts
+        - src/ts/core/Promise.ts
+        - src/ts/core/session-manager.ts
+        - src/ts/core/simd-processor.ts
+        - src/ts/core/task-affinity.ts
+        - src/ts/core/TaskQueue.ts
+        - src/ts/core/validateOptions.ts
+        - src/ts/core/work-stealing.ts
+        - src/ts/core/worker-bitmap.ts
+        - src/ts/core/worker-choice-strategies.ts
+        - src/ts/core/WorkerHandler.ts
+        - src/ts/debug.ts
+        - src/ts/errors.ts
+        - src/ts/full.ts
+        - src/ts/generated/embeddedWasm.ts
+        - src/ts/generated/wasmTypes.ts
+        - src/ts/index.ts
+        - src/ts/minimal.ts
+        - src/ts/platform/capabilities.ts
+        - src/ts/platform/channel-factory.ts
+        - src/ts/platform/environment.ts
+        - src/ts/platform/message-batcher.ts
+        - src/ts/platform/result-stream.ts
+        - src/ts/platform/shared-memory.ts
+        - src/ts/platform/structured-clone.ts
+        - src/ts/platform/transfer-detection.ts
+        - src/ts/platform/transfer.ts
+        - src/ts/platform/worker-url.ts
+        - src/ts/types/core.ts
+        - src/ts/types/error-codes.ts
+        - src/ts/types/index.ts
+        - src/ts/types/internal.ts
+        - src/ts/types/messages.ts
+        - src/ts/types/parallel.ts
+        - src/ts/types/session.ts
+        - src/ts/types/worker-methods.ts
+        - src/ts/wasm/EmbeddedWasmLoader.ts
+        - src/ts/wasm/feature-detection.ts
+        - src/ts/wasm/index.ts
+        - src/ts/wasm/simd-processor.ts
+        - src/ts/wasm/WasmBridge.ts
+        - src/ts/wasm/WasmLoader.ts
+        - src/ts/wasm/WasmTaskQueue.ts
+        - src/ts/wasm/WasmWorkerTemplate.ts
+        - src/ts/workers/adaptive-scaler.ts
+        - src/ts/workers/affinity.ts
+        - src/ts/workers/health-monitor.ts
+        - src/ts/workers/recycler.ts
+        - src/ts/workers/worker.ts
+        - src/ts/workers/WorkerCache.ts
+statistics:
+  totalTypeScriptFiles: 91
+  totalModules: 1
+  totalLinesOfCode: 38167
+  totalExports: 1453
+  totalClasses: 66
+  totalInterfaces: 170
+  totalFunctions: 708
+  totalTypeGuards: 54
+  totalEnums: 17
+  totalConstants: 188
+  totalReExports: 349
+  totalTypeOnlyImports: 57
+  runtimeCircularDeps: 0
+  typeOnlyCircularDeps: 1
+  unusedFilesCount: 12
+  unusedExportsCount: 123

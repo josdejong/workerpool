@@ -98,7 +98,9 @@
     "clean": "rm -rf dist/*.wasm dist/*.wat dist/*.wasm.map",
     "clean:all": "rm -rf dist node_modules/.cache",
     "validate:wasm": "node scripts/validate-wasm.mjs",
-    "prepublishOnly": "npm run test && npm run build:all"
+    "prepublishOnly": "npm run test && npm run build:all",
+    "deps": "npx tsx tools/create-dependency-graph/create-dependency-graph.ts",
+    "deps:compress": "npx tsx tools/compress-for-context/compress-for-context.ts"
   },
   "devDependencies": {
     "@babel/core": "7.28.5",

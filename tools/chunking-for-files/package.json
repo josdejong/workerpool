@@ -1,0 +1,23 @@
+{
+  "name": "chunker",
+  "version": "1.0.0",
+  "description": "Split and merge large files for editing within context limits",
+  "main": "index.ts",
+  "bin": {
+    "chunker": "./index.ts"
+  },
+  "scripts": {
+    "build": "bun build index.ts --compile --outfile chunker.exe",
+    "start": "bun run index.ts"
+  },
+  "keywords": [
+    "markdown",
+    "chunker",
+    "split",
+    "merge",
+    "llm",
+    "context"
+  ],
+  "author": "DeepThinking MCP",
+  "license": "MIT"
+}

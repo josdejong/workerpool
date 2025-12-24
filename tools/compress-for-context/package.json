@@ -1,0 +1,20 @@
+{
+  "name": "@mcp-servers/tools",
+  "version": "1.0.0",
+  "description": "Shared tools for MCP servers",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "compress": "node dist/compress-for-context.js"
+  },
+  "bin": {
+    "compress-for-context": "./dist/compress-for-context.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.2",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
