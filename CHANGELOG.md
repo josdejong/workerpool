@@ -325,6 +325,20 @@ This is a fork of [josdejong/workerpool](https://github.com/josdejong/workerpool
 - Removed duplicate QueueFactory.ts (TaskQueue.ts provides createQueue())
 - Full bundle size increased from ~15KB to ~34KB due to integrated modules
 
+### Documentation
+- **README.md Comprehensive Update**:
+  - Added TypeScript and Bun compatibility badges
+  - Reorganized Features into categories: Core, TypeScript/WASM, Advanced Scheduling, Worker Management, Parallel Operations, Platform Support
+  - Added yarn and pnpm installation commands
+  - Added TypeScript import examples and ES Modules usage
+  - Added bundler configuration references (Webpack, Vite, esbuild)
+  - Reorganized Examples into tables: Basic, Advanced, Browser
+  - Added Future Enhancements roadmap section
+  - Converted Related Libraries to descriptive table format
+  - Added comprehensive Build Commands table with output structure
+  - Added Test Commands table with Bun testing section
+  - Total README size increased from 1007 to 1188 lines (+18%)
+
 ### Fixed
 - Worker path resolution in TypeScript WorkerHandler (was looking for wrong path)
 - Circular dependency between types/index.ts and types/worker-methods.ts (extracted shared types to types/core.ts)

@@ -3,25 +3,58 @@
 [![NPM Version](https://img.shields.io/npm/v/workerpool)](https://www.npmjs.com/package/workerpool)
 [![NPM Downloads](https://img.shields.io/npm/dm/workerpool)](https://npm-compare.com/workerpool/#timeRange=FIVE_YEARS)
 [![NPM License](https://img.shields.io/npm/l/workerpool)](https://github.com/josdejong/workerpool/blob/master/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
+[![Bun Compatible](https://img.shields.io/badge/Bun-Compatible-f9f1e1)](https://bun.sh/)
 
-**workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** basically implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern). There is a pool of workers to execute tasks. New tasks are put in a queue. A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise based proxy, as if they are available straight in the main application.
+**workerpool** offers an easy way to create a pool of workers for both dynamically offloading computations as well as managing a pool of dedicated workers. **workerpool** implements a [thread pool pattern](http://en.wikipedia.org/wiki/Thread_pool_pattern) with support for advanced scheduling, WASM-accelerated task queues, and intelligent load balancing.
 
-**workerpool** runs on Node.js and in the browser.
+There is a pool of workers to execute tasks. New tasks are put in a queue (FIFO, LIFO, or priority-based). A worker executes one task at a time, and once finished, picks a new task from the queue. Workers can be accessed via a natural, promise-based proxy, as if they are available straight in the main application.
+
+**workerpool** runs on **Node.js**, **Bun**, and in the **browser**.
+
 
 ## Features
 
-- Easy to use
+### Core Features
+- Easy to use with promise-based API
 - Runs in the browser, Node.js, and **Bun**
 - Dynamically offload functions to a worker
 - Access workers via a proxy
 - Cancel running tasks
 - Set a timeout on tasks
-- Handles crashed workers
-- Small: 9 kB minified and gzipped (JS build)
-- Supports transferable objects (only for web workers and worker_threads)
-- **TypeScript + WASM build** with up to 4.5x faster pool creation and 1.6x faster queue throughput
-- **AdvancedPool** with intelligent worker scheduling (worker choice strategies, work stealing, task affinity)
-- **Bun compatible** with automatic runtime detection and optimal configuration
+- Handles crashed workers with automatic recovery
+- Small: **9 kB** minified and gzipped (JS build)
+- Supports transferable objects (web workers and worker_threads)
+
+### TypeScript + WASM Build
+- **Type-safe API** with full TypeScript support
+- **Lock-free WASM task queues** for up to 4.5x faster pool creation
+- **1.6x faster queue throughput** with AssemblyScript-compiled WebAssembly
+- Multiple entry points: `workerpool/minimal` (~5KB), `workerpool/modern` (~20KB), `workerpool/full` (~34KB)
+
+### Advanced Scheduling (AdvancedPool)
+- **6 worker choice strategies**: round-robin, least-busy, least-used, fair-share, weighted-round-robin, interleaved-weighted-round-robin
+- **Work-stealing scheduler** with per-worker deques for automatic load balancing
+- **Task affinity routing** for cache locality optimization
+- **Adaptive scaling** based on queue depth, latency, and utilization
+
+### Worker Management
+- **Health monitoring** with heartbeat detection and automatic recovery
+- **Worker recycling** based on idle time or task count
+- **Pre-warmed worker cache** for instant task dispatch
+- **Circuit breaker** pattern for error recovery
+
+### Parallel Array Operations
+- `map`, `reduce`, `filter`, `forEach`, `some`, `every`
+- `count`, `partition`, `groupBy`, `flatMap`, `unique`
+- `includes`, `indexOf`, `find`, `findIndex`, `reduceRight`
+- All operations support cancellation and chunked execution
+
+### Platform Support
+- **Bun compatible** with automatic runtime detection
+- **SharedArrayBuffer** support for lock-free communication
+- **SIMD acceleration** for numeric batch processing
+
 
 ## Why
 
@@ -40,29 +73,78 @@ Therefore, CPU intensive tasks should be offloaded from the main event loop onto
 
 Install via npm:
 
-    npm install workerpool
+```bash
+npm install workerpool
+```
+
+Or with yarn:
+
+```bash
+yarn add workerpool
+```
+
+Or with pnpm:
+
+```bash
+pnpm add workerpool
+```
+
 
 ## Load
 
-To load workerpool in a node.js application (both main application as well as workers):
+### Node.js (CommonJS)
 
 ```js
 const workerpool = require('workerpool');
 ```
 
-To load workerpool in the browser:
+### Node.js (ES Modules)
+
+```js
+import * as workerpool from 'workerpool';
+
+// Or import specific entry points
+import * as workerpool from 'workerpool/modern';  // TypeScript build
+import * as workerpool from 'workerpool/minimal'; // Lightweight (~5KB)
+import * as workerpool from 'workerpool/full';    // All features + WASM
+```
+
+### TypeScript
+
+```typescript
+import { pool, worker, Transfer, Pool } from 'workerpool/modern';
+
+// Create a typed pool
+const myPool: Pool = pool('./worker.js');
+```
+
+### Browser (Script Tag)
 
 ```html
 <script src="workerpool.js"></script>
 ```
 
-To load workerpool in a web worker in the browser:
+### Browser (ES Modules)
+
+```html
+<script type="module">
+  import * as workerpool from './dist/workerpool.js';
+</script>
+```
+
+### Web Worker
 
 ```js
 importScripts('workerpool.js');
 ```
 
-Setting up the workerpool with React or webpack5 requires additional configuration steps, as outlined in the [webpack5 section](examples%2Fwebpack5%2FREADME.md).
+### Bundlers (Webpack, Vite, esbuild)
+
+Setting up workerpool with React, webpack5, or Vite requires additional configuration steps. See the examples directory:
+- [webpack5 example](examples/webpack5/README.md)
+- [Vite example](examples/vite/README.md)
+- [esbuild example](examples/esbuild/README.md)
+
 
 ## Bun Support
 
@@ -211,6 +293,39 @@ define(['workerpool/dist/workerpool'], function (workerpool) {
 Examples are available in the examples directory:
 
 [https://github.com/josdejong/workerpool/tree/master/examples](https://github.com/josdejong/workerpool/tree/master/examples)
+
+### Basic Examples
+| Example | Description |
+|---------|-------------|
+| [abort.js](examples/abort.js) | Task cancellation and cleanup |
+| [async.js](examples/async.js) | Async/await usage patterns |
+| [dedicatedWorker.js](examples/dedicatedWorker.js) | Worker script with registered methods |
+| [dynamicOptions.js](examples/dynamicOptions.js) | Runtime configuration |
+| [offloadFunctions.js](examples/offloadFunctions.js) | Dynamic function offloading |
+| [priorityQueue.js](examples/priorityQueue.js) | Priority queue usage |
+| [proxy.js](examples/proxy.js) | Proxy pattern for clean method calls |
+| [transferableObjects.js](examples/transferableObjects.js) | Zero-copy ArrayBuffer transfer |
+
+### Advanced Examples
+| Example | Description |
+|---------|-------------|
+| [advancedPool.js](examples/advancedPool.js) | AdvancedPool with worker choice strategies |
+| [workStealing.js](examples/workStealing.js) | Work-stealing scheduler |
+| [taskAffinity.js](examples/taskAffinity.js) | Task affinity for cache locality |
+| [sharedPool.js](examples/sharedPool.js) | Shared pool singleton pattern |
+| [sessions.js](examples/sessions.js) | Stateful session management |
+| [metrics.js](examples/metrics.js) | Performance metrics collection |
+| [parallelOperations.js](examples/parallelOperations.js) | Parallel array operations |
+
+### Browser Examples
+| Example | Description |
+|---------|-------------|
+| [browser/](examples/browser/) | HTML/JS browser examples |
+| [webpack5/](examples/webpack5/) | Webpack 5 integration |
+| [vite/](examples/vite/) | Vite + TypeScript + React |
+| [esbuild/](examples/esbuild/) | esbuild bundler integration |
+| [embeddedWorker/](examples/embeddedWorker/) | Embedded worker blob URL |
+
 
 ## API
 
@@ -892,26 +1007,42 @@ import {
 
 ## Roadmap
 
+### Completed Features
+
 - ~~Implement functions for parallel processing: `map`, `reduce`, `forEach`,
   `filter`, `some`, `every`, `count`, `partition`, `groupBy`, `flatMap`,
-  `unique`, `includes`, `indexOf`, `reduceRight`~~ ✅ **Completed** - Available in TypeScript API (`workerpool/modern`)
+  `unique`, `includes`, `indexOf`, `reduceRight`~~ **Completed** - Available in TypeScript API (`workerpool/modern`)
 - ~~Implement graceful degradation on old browsers not supporting webworkers:
-  fallback to processing tasks in the main application.~~ ✅ **Completed** - `MainThreadExecutor` and `createPoolWithFallback()`
+  fallback to processing tasks in the main application.~~ **Completed** - `MainThreadExecutor` and `createPoolWithFallback()`
 - ~~Implement session support: be able to handle a series of related tasks by a
-  single worker, which can keep a state for the session.~~ ✅ **Completed** - `SessionManager` with `pool.createSession()`
+  single worker, which can keep a state for the session.~~ **Completed** - `SessionManager` with `pool.createSession()`
 
-## Related libraries
+### Future Enhancements
 
-- https://github.com/andywer/threads.js
-- https://github.com/piscinajs/piscina
-- https://github.com/learnboost/cluster
-- https://github.com/adambom/parallel.js
-- https://github.com/padolsey/operative
-- https://github.com/calvinmetcalf/catiline
-- https://github.com/Unitech/pm2
-- https://github.com/godaddy/node-cluster-service
-- https://github.com/ramesaliyev/EasyWebWorker
-- https://github.com/rvagg/node-worker-farm
+Ideas under consideration for future releases:
+
+- **Streaming results** - Stream large results back incrementally instead of all at once
+- **Worker affinity groups** - Named groups of workers with specialized configurations
+- **Distributed pools** - Coordinate pools across multiple machines via network
+- **GPU compute** - WebGPU/CUDA integration for parallel numeric computation
+- **Automatic function splitting** - Analyze and split large functions across workers
+
+
+## Related Libraries
+
+| Library | Description |
+|---------|-------------|
+| [threads.js](https://github.com/andywer/threads.js) | Worker threads and thread pools with TypeScript support |
+| [piscina](https://github.com/piscinajs/piscina) | High-performance Node.js worker thread pool |
+| [cluster](https://github.com/learnboost/cluster) | Extensible multi-core server manager for Node.js |
+| [parallel.js](https://github.com/adambom/parallel.js) | Multi-core processing using web workers |
+| [operative](https://github.com/padolsey/operative) | Inline web workers for seamless operation |
+| [catiline](https://github.com/calvinmetcalf/catiline) | JavaScript library for workers with fallback to iframes |
+| [pm2](https://github.com/Unitech/pm2) | Production process manager for Node.js applications |
+| [node-cluster-service](https://github.com/godaddy/node-cluster-service) | Turn your single process code into a cluster service |
+| [EasyWebWorker](https://github.com/nicholaslaw/EasyWebWorker) | Simple web worker abstraction |
+| [node-worker-farm](https://github.com/rvagg/node-worker-farm) | Distribute processing over a pool of workers |
+
 
 ## Build
 
@@ -942,6 +1073,18 @@ Outputs: `dist/ts/index.js`, `dist/ts/full.js`, `dist/ts/minimal.js`, `dist/work
 
 The TypeScript+WASM build provides up to 34% better performance for concurrent workloads thanks to WASM-accelerated task queues.
 
+### All Build Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run build` | Build JavaScript version (default) |
+| `npm run build:js` | Build JavaScript bundles only |
+| `npm run build:wasm` | Build TypeScript + WASM version |
+| `npm run build:wasm:debug` | Build WASM with debug info |
+| `npm run build:wasm:embed` | Build WASM with embedded bindings |
+| `npm run build:all` | Build everything (JS + WASM + types) |
+| `npm run build:types` | Generate TypeScript type definitions |
+
 ### Benchmarking
 
 Compare performance between the two builds:
@@ -950,14 +1093,20 @@ Compare performance between the two builds:
 node benchmark.mjs
 ```
 
-### Legacy Build
+### Output Structure
 
-The default build command builds the JavaScript version:
+```
+dist/
+├── workerpool.js       # UMD bundle (JavaScript)
+├── workerpool.min.js   # Minified UMD bundle
+├── worker.js           # Worker script (JavaScript)
+└── ts/
+    ├── index.js        # Default TypeScript entry
+    ├── minimal.js      # Minimal build (~5KB)
+    ├── full.js         # Full build (~34KB)
+    └── workerpool.wasm # WebAssembly module
+```
 
-    npm run build
-
-This will build the library workerpool.js and workerpool.min.js from the source
-files and put them in the folder dist.
 
 ## Test
 
@@ -969,13 +1118,46 @@ Then, the tests can be executed:
 
     npm test
 
-To test code coverage of the tests:
+### Test Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm test` | Run all tests (builds first) |
+| `npm run test:types` | Test TypeScript type definitions |
+| `npm run test:js` | Run JavaScript tests only |
+| `npm run test:ts` | Run TypeScript tests only |
+| `npm run coverage` | Generate test coverage report |
+
+### Running Single Test Files
+
+```bash
+# Run a specific JavaScript test
+npm run build && mocha test/Pool.test.js
+
+# Run a specific TypeScript test
+npm run build && mocha test/ts/Pool.test.ts
+```
+
+### Code Coverage
+
+To test code coverage:
 
     npm run coverage
 
 To see the coverage results, open the generated report in your browser:
 
     ./coverage/index.html
+
+### Testing on Bun
+
+The TypeScript build is fully tested on Bun:
+
+```bash
+bun test
+```
+
+All 533 TypeScript tests pass on Bun runtime.
+
 
 ## Publish
 
