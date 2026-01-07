@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## 2025-11-19, version 10.0.1
+
+- Fix: #523 make `WorkerHandler` resilient against errors without `message` 
+  property.
+
 ## 2025-10-21, version 10.0.0
 
 BREAKING CHANGES:
