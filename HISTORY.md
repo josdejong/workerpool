@@ -2,6 +2,10 @@
 https://github.com/josdejong/workerpool
 
 
+## 2026-04-16, version 10.0.2
+
+- Fix: #542 clean up listeners when abort triggers. Thanks @joshLong145.
+
 ## 2025-11-19, version 10.0.1
 
 - Fix: #523 make `WorkerHandler` resilient against errors without `message` 
