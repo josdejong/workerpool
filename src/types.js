@@ -8,6 +8,10 @@
  */
 
 /**
+ * @typedef {Worker | import('worker_threads').Worker | import('child_process').ChildProcess} WorkerInstance
+ */
+
+/**
  * @typedef {Object} Resolver
  * @property {Promise} promise - The promise object
  * @property {Function} resolve - Function to resolve the promise
@@ -56,6 +60,7 @@
  * @property {import('worker_threads').WorkerOptions} [workerThreadOpts] Object`. For `worker` worker type. An object passed to [worker_threads.options](https://nodejs.org/api/worker_threads.html#new-workerfilename-options).
  * @property {boolean} [emitStdStreams] Capture stdout and stderr from the worker and emit them via the `stdout` and `stderr` events. Not supported by the `web` worker type.
  * @property { (arg: WorkerArg) => WorkerArg | undefined } [onCreateWorker] A callback that is called whenever a worker is being created. It can be used to allocate resources for each worker for example. Optionally, this callback can return an object containing one or more of the `WorkerArg` properties. The provided properties will be used to override the Pool properties for the worker being created.
+ * @property { (worker: WorkerInstance) => void } [onCreatedWorker] A callback that is called whenever a worker is created. The callback is passed as argument the worker instance, which can be used to access properties like `pid` (for `process` type) or `threadId` (for `thread` type). This is useful for resource management, such as applying CPU limits to worker processes.
  * @property { (arg: WorkerArg) => void } [onTerminateWorker] A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated.
  */
 

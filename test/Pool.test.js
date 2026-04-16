@@ -1904,4 +1904,97 @@ describe('Pool', function () {
       after(() => { delete Object.prototype.env });
     });
   });
+  describe('onCreatedWorker callback', function() {
+    var WorkerThreads = tryRequire('worker_threads');
+
+    it('should call onCreatedWorker with worker instance for process type', function () {
+      var onCreatedWorkerCalled = false;
+      var workerPid = null;
+
+      var pool = createPool({
+        workerType: 'process',
+        onCreatedWorker: (worker) => {
+          onCreatedWorkerCalled = true;
+          workerPid = worker.pid;
+        }
+      });
+
+      return pool.exec(add, [3, 4])
+        .then((result) => {
+          assert.strictEqual(result, 7);
+          assert.strictEqual(onCreatedWorkerCalled, true);
+          assert.strictEqual(typeof workerPid, 'number');
+        });
+    });
+
+    if (WorkerThreads) {
+      it('should call onCreatedWorker with worker instance for thread type', function () {
+        var onCreatedWorkerCalled = false;
+        var threadId = null;
+
+        var pool = createPool({
+          workerType: 'thread',
+          onCreatedWorker: (worker) => {
+            onCreatedWorkerCalled = true;
+            threadId = worker.threadId;
+          }
+        });
+
+        return pool.exec(add, [3, 4])
+          .then((result) => {
+            assert.strictEqual(result, 7);
+            assert.strictEqual(onCreatedWorkerCalled, true);
+            assert.strictEqual(typeof threadId, 'number');
+          });
+      });
+    }
+
+    it('should call onCreatedWorker for each worker created', function () {
+      var workerPids = [];
+
+      var pool = createPool({
+        workerType: 'process',
+        maxWorkers: 4,
+        onCreatedWorker: (worker) => {
+          workerPids.push(worker.pid);
+        }
+      });
+
+      return Promise.all([
+        pool.exec(add, [1, 2]),
+        pool.exec(add, [3, 4]),
+        pool.exec(add, [5, 6])
+      ]).then((results) => {
+        assert.deepStrictEqual(results, [3, 7, 11]);
+        assert.strictEqual(workerPids.length, 3);
+        var uniquePids = [...new Set(workerPids)];
+        assert.strictEqual(uniquePids.length, 3);
+      });
+    });
+
+    it('should call onCreatedWorker after onCreateWorker but before task completion', function () {
+      var callOrder = [];
+
+      var pool = createPool({
+        workerType: 'process',
+        onCreateWorker: (_opts) => {
+          callOrder.push('onCreateWorker');
+        },
+        onCreatedWorker: () => {
+          callOrder.push('onCreatedWorker');
+        }
+      });
+
+      function trackedAdd(a, b) {
+        return a + b;
+      }
+
+      return pool.exec(trackedAdd, [3, 4])
+        .then((result) => {
+          callOrder.push('taskComplete');
+          assert.strictEqual(result, 7);
+          assert.deepStrictEqual(callOrder, ['onCreateWorker', 'onCreatedWorker', 'taskComplete']);
+        });
+    });
+  });
 });

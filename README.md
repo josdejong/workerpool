@@ -214,6 +214,8 @@ The following options are available:
   - `workerOpts: Object`: the `workerOpts` option of this pool
   - `script: string`: the `script` option of this pool
     Optionally, this callback can return an object containing one or more of the above properties. The provided properties will be used to override the Pool properties for the worker being created.
+- `onCreatedWorker: Function`. A callback that is called whenever a worker is created. The callback is passed as argument the worker instance, which can be used to access properties like `pid` (for `process` type) or `threadId` (for `thread` type). This is useful for resource management, such as applying CPU limits to worker processes.
+  - `worker`: The created worker instance (`Web Worker`, `worker_threads.Worker`, or `ChildProcess` depending on the `workerType`).
 - `onTerminateWorker: Function`. A callback that is called whenever a worker is being terminated. It can be used to release resources that might have been allocated for this specific worker. The callback is passed as argument an object as described for `onCreateWorker`, with each property sets with the value for the worker being terminated.
 - `emitStdStreams: boolean`. For `process` or `thread` worker type. If `true`, the worker will emit `stdout` and `stderr` events instead of passing it through to the parent streams. Default value is `false`.
 
