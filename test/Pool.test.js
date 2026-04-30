@@ -685,6 +685,41 @@ describe('Pool', function () {
 
     // TODO: test whether a task in the queue can be neatly cancelled
 
+  it('should not assign new tasks to a worker whose previous task was cancelled', function (done) {
+    // Regression test: when a task is cancelled, WorkerHandler moves it to
+    // `tracking` and schedules a force-terminate after `workerTerminateTimeout`.
+    // During that window the worker must not pick up new tasks — otherwise
+    // the forced termination would reject them with "Worker terminated"
+    // even though they had nothing to do with the original cancellation.
+    var pool = createPool({maxWorkers: 1, workerTerminateTimeout: 50});
+
+    function forever() {
+      while (1 > 0) {} // runs forever (so cancel must force-terminate)
+    }
+
+    function add(a, b) {
+      return a + b;
+    }
+
+    var p1 = pool.exec(forever).catch(function (err) {
+      assert(err instanceof Promise.CancellationError);
+    });
+
+    // Cancel after the worker has actually started running `forever`.
+    setTimeout(function () {
+      p1.cancel();
+
+      // Queue a follow-up task immediately to ensure that it queues until
+      // the worker finishes cleaning up the cancelled task.
+      pool.exec(add, [3, 4])
+        .then(function (result) {
+          assert.strictEqual(result, 7);
+          done();
+        })
+        .catch(done);
+    }, 25);
+  });
+
   it('should timeout a task', function () {
     var pool = createPool({maxWorkers: 10});
 
@@ -1576,10 +1611,10 @@ describe('Pool', function () {
           let stats = pool.stats();
           assert.strictEqual(workerCount, 1);
           assert.strictEqual(stats.totalWorkers, 1);
-          assert.strictEqual(stats.idleWorkers, 1);
-          assert.strictEqual(stats.busyWorkers, 0);
-        }).then(function() { 
-          return pool.exec(add, [1, 2]) 
+          // Still busy - cleanup is in progress.
+          assert.strictEqual(stats.busyWorkers, 1);
+        }).then(function() {
+          return pool.exec(add, [1, 2])
         }).then(function() {
           var stats = pool.stats();
           assert.strictEqual(workerCount, 1);
@@ -1616,10 +1651,10 @@ describe('Pool', function () {
             let stats = pool.stats();
             assert.strictEqual(workerCount, 1);
             assert.strictEqual(stats.totalWorkers, 1);
-            assert.strictEqual(stats.idleWorkers, 1);
-            assert.strictEqual(stats.busyWorkers, 0);
-          }).then(function() { 
-            return pool.exec(add, [1, 2]) 
+            // Still busy - cleanup is in progress on the worker.
+            assert.strictEqual(stats.busyWorkers, 1);
+          }).then(function() {
+            return pool.exec(add, [1, 2])
           }).then(function() {
             var stats = pool.stats();
             assert.strictEqual(workerCount, 1);
