@@ -477,8 +477,8 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
         * We need this timeout in either case of a Timeout or Cancellation Error as if
         * the worker does not send a message we still need to give a window of time for a response.
         * 
-        * The workerTermniateTimeout is used here if this promise is rejected the worker cleanup
-        * operations will occure.
+        * The workerTerminateTimeout is used here if this promise is rejected the worker cleanup
+        * operations will occur.
       */
       me.tracking[id].timeoutId = setTimeout(function() {
           me.tracking[id].resolver.reject(error);
@@ -496,7 +496,14 @@ WorkerHandler.prototype.exec = function(method, params, resolver, options) {
  * @return {boolean} Returns true if the worker is busy
  */
 WorkerHandler.prototype.busy = function () {
-  return this.cleaning || Object.keys(this.processing).length > 0;
+  // A worker with entries in `tracking` has a cancelled or timed-out task whose
+  // cleanup may force-terminate the worker after `workerTerminateTimeout`. New
+  // tasks must not be assigned to it during that window — if they were, the
+  // forced terminate would reject them with "Worker terminated" even though
+  // they were unrelated to the original cancellation.
+  return this.cleaning
+    || Object.keys(this.processing).length > 0
+    || Object.keys(this.tracking).length > 0;
 };
 
 /**
@@ -625,7 +632,7 @@ WorkerHandler.prototype.terminateAndNotify = function (force, timeout) {
 };
 
 /**
-* Wrapper error type to denote that a TimeoutError has already been proceesed
+* Wrapper error type to denote that a TimeoutError has already been processed
 * and we should skip cleanup operations
 * @param {Promise.TimeoutError} timeoutError
 */
