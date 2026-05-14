@@ -55,6 +55,8 @@ function Pool(script, options) {
   /** @readonly */
   this.onCreateWorker = options.onCreateWorker || (() => null);
   /** @readonly */
+  this.onCreatedWorker = options.onCreatedWorker || (() => null);
+  /** @readonly */
   this.onTerminateWorker = options.onTerminateWorker || (() => null);
 
   /** @readonly */
@@ -430,8 +432,8 @@ Pool.prototype._createWorkerHandler = function () {
       workerThreadOpts: this.workerThreadOpts,
       script: this.script,
     }) || {};
-
-  return new WorkerHandler(overriddenParams.script || this.script, {
+    
+  const workerHandler = new WorkerHandler(overriddenParams.script || this.script, {
     forkArgs: overriddenParams.forkArgs || this.forkArgs,
     forkOpts: overriddenParams.forkOpts || this.forkOpts,
     workerOpts: overriddenParams.workerOpts || this.workerOpts,
@@ -444,6 +446,10 @@ Pool.prototype._createWorkerHandler = function () {
     workerTerminateTimeout: this.workerTerminateTimeout,
     emitStdStreams: this.emitStdStreams,
   });
+
+  this.onCreatedWorker(workerHandler.worker);
+
+  return workerHandler;
 };
 
 /**
