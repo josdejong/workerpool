@@ -188,7 +188,7 @@ describe('Pool', function () {
       assert(terminatedWorkers.includes('env_value2'), 'terminatedWorkers should include the value with counter = 2');
     });
   });
-  
+
   it('supports stdout/stderr capture via fork', function(done) {
     var pool = createPool(__dirname + '/workers/console.js', {workerType: 'process', emitStdStreams: true});
 
@@ -1558,7 +1558,7 @@ describe('Pool', function () {
     });
   });
 
-  
+
   describe('abort handler', () => {
   it('should not terminate worker if abort listener is defined dedicated worker with Timeout', function () {
       var workerCount = 0;
@@ -1568,7 +1568,7 @@ describe('Pool', function () {
           workerCount += 1;
         }
       });
-      
+
       return pool.exec('asyncTimeout', [])
         .timeout(200)
         .catch(function (err) {
@@ -1578,8 +1578,8 @@ describe('Pool', function () {
           assert.strictEqual(stats.totalWorkers, 1);
           assert.strictEqual(stats.idleWorkers, 1);
           assert.strictEqual(stats.busyWorkers, 0);
-        }).then(function() { 
-          return pool.exec(add, [1, 2]) 
+        }).then(function() {
+          return pool.exec(add, [1, 2])
         }).then(function() {
           var stats = pool.stats();
           assert.strictEqual(workerCount, 1);
@@ -1598,12 +1598,12 @@ describe('Pool', function () {
           workerCount += 1;
         },
       });
-      
+
       let task = pool.exec('asyncTimeout', [],  {});
 
       // Wrap in a new promise which waits 50ms
       // in order to allow the function executing in the
-      // worker to 
+      // worker to execute to termination
       return new Promise(function(resolve) {
         setTimeout(function() {
           resolve();
@@ -1618,8 +1618,8 @@ describe('Pool', function () {
             assert.strictEqual(stats.totalWorkers, 1);
             assert.strictEqual(stats.idleWorkers, 1);
             assert.strictEqual(stats.busyWorkers, 0);
-          }).then(function() { 
-            return pool.exec(add, [1, 2]) 
+          }).then(function() {
+            return pool.exec(add, [1, 2])
           }).then(function() {
             var stats = pool.stats();
             assert.strictEqual(workerCount, 1);
@@ -1645,7 +1645,7 @@ describe('Pool', function () {
         return new Promise(function () {
           let timeout = setTimeout(function() {
               resolve();
-          }, 5000); 
+          }, 5000);
           me.worker.addAbortListener(function () {
             return new Promise(function (resolve) {
               clearTimeout(timeout);
@@ -1673,7 +1673,7 @@ describe('Pool', function () {
           assert.strictEqual(stats.idleWorkers, 1);
           assert.strictEqual(stats.busyWorkers, 0);
 
-        }); 
+        });
       });
     });
 
@@ -1691,7 +1691,7 @@ describe('Pool', function () {
         return new Promise(function (_resolve, reject) {
           let timeout = setTimeout(function() {
               reject(new Error("should not be thrown"));
-          }, 5000); 
+          }, 5000);
           me.worker.addAbortListener(function () {
             return new Promise(function (resolve) {
               clearTimeout(timeout);
@@ -1723,7 +1723,7 @@ describe('Pool', function () {
             assert.strictEqual(stats.idleWorkers, 1);
             assert.strictEqual(stats.busyWorkers, 0);
 
-          }); 
+          });
         });
       });
 
@@ -1782,14 +1782,14 @@ describe('Pool', function () {
           done();
         }
       });
-    
+
       const task = pool.exec('asyncAbortHandlerNeverResolves', [])
 
       const _ = new Promise(function(resolve) {
         setTimeout(function() {
           resolve();
         }, 50);
-      }).then(function() { 
+      }).then(function() {
         return task.cancel()
         .catch(function (err) {
           assert(err instanceof Promise.TimeoutError);
@@ -1818,7 +1818,7 @@ describe('Pool', function () {
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
         workerType: 'process',
-        emitStdStreams: true, 
+        emitStdStreams: true,
         workerTerminateTimeout: 1000,
       });
 
@@ -1835,7 +1835,7 @@ describe('Pool', function () {
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
         workerType: 'process',
-        emitStdStreams: true, 
+        emitStdStreams: true,
         workerTerminateTimeout: 1000,
       });
 

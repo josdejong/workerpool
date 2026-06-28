@@ -16,7 +16,7 @@ var Promise = require('./Promise').Promise;
 var TERMINATE_METHOD_ID = '__workerpool-terminate__';
 
 /**
- * Special message by parent which causes a child process worker to perform cleaup
+ * Special message by parent which causes a child process worker to perform cleanup
  * steps before determining if the child process worker should be terminated.
 */
 var CLEANUP_METHOD_ID = '__workerpool-cleanup__';
@@ -35,7 +35,7 @@ var worker = {
 // works in both node.js and the browser
 var publicWorker = {
   /**
-   * Registers listeners which will trigger when a task is timed out or cancled. If all listeners resolve, the worker executing the given task will not be terminated.
+   * Registers listeners which will trigger when a task is timed out or canceled. If all listeners resolve, the worker executing the given task will not be terminated.
    * *Note*: If there is a blocking operation within a listener, the worker will be terminated.
    * @param {() => Promise<void>} listener
   */
@@ -217,11 +217,11 @@ worker.cleanup = function(requestId) {
   let timerId;
   const timeoutPromise = new Promise((_resolve, reject) => {
     timerId = setTimeout(function () {
-      reject(new Error('Timeout occured waiting for abort handler, killing worker'));
+      reject(new Error('Timeout occurred waiting for abort handler, killing worker'));
     }, worker.abortListenerTimeout);
   });
 
-  // Once a promise settles we need to clear the timeout to prevet fulfulling the promise twice
+  // Once a promise settles we need to clear the timeout to prevent fulfilling the promise twice
   const settlePromise = Promise.all(promises).then(function() {
     clearTimeout(timerId);
     _abort();
