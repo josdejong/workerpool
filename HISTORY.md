@@ -2,7 +2,7 @@
 https://github.com/josdejong/workerpool
 
 
-## not yet published, version 10.0.3
+## 2026-07-01, version 10.0.3
 
 - Fix: #548 treat worker as busy while cleaning up canceled task (#549). 
   Thanks @joshkel.
