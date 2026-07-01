@@ -2,6 +2,11 @@
 https://github.com/josdejong/workerpool
 
 
+## not yet published, version 10.0.3
+
+- Fix: #548 treat worker as busy while cleaning up canceled task (#549). 
+  Thanks @joshkel.
+
 ## 2026-04-16, version 10.0.2
 
 - Fix: #542 clean up listeners when abort triggers. Thanks @joshLong145.
