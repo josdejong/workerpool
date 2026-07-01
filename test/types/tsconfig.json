@@ -9,7 +9,8 @@
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
     "noEmit": true,
   },
   "files": [

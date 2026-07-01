@@ -10,7 +10,9 @@
     "emitDeclarationOnly": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "rootDir":  "./src",
     "outDir": "./types"
   },
   "files": [
