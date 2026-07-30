@@ -885,11 +885,11 @@ describe('Pool', function () {
       });
     });
 
-    it('should take number of cpus minus one as default maxWorkers', function () {
+    it('should take the available parallelism minus one as default maxWorkers', function () {
       var pool = createPool();
 
-      var cpus = require('os').cpus();
-      assert.strictEqual(pool.maxWorkers, cpus.length - 1);
+      var parallelism = require('os').availableParallelism();
+      assert.strictEqual(pool.maxWorkers, parallelism - 1);
 
       return pool.terminate();
     });
@@ -908,19 +908,19 @@ describe('Pool', function () {
       }, TypeError);
     });
 
-    it('should create number of cpus minus one when minWorkers set to \'max\'', function () {
+    it('should create available parallelism minus one when minWorkers set to \'max\'', function () {
       var pool = createPool({minWorkers:'max'});
 
-      var cpus = require('os').cpus();
-      assert.strictEqual(pool.workers.length, cpus.length - 1);
+      var parallelism = require('os').availableParallelism();
+      assert.strictEqual(pool.workers.length, parallelism - 1);
 
       return pool.terminate();
     });
 
     it('should increase maxWorkers to match minWorkers', function () {
-      var cpus = require('os').cpus();
-      var count = cpus.length + 2;
-      var tasksCount = cpus.length * 2;
+      var parallelism = require('os').availableParallelism();
+      var count = parallelism + 2;
+      var tasksCount = parallelism * 2;
       var pool = createPool({minWorkers: count});
 
       var tasks = []

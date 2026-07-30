@@ -26,5 +26,5 @@ module.exports.isMainThread = module.exports.platform === 'node'
 // determines the number of cpus available
 module.exports.cpus = module.exports.platform === 'browser'
   ? self.navigator.hardwareConcurrency
-  : require('os').cpus().length;
+  : require('os').availableParallelism();
 
