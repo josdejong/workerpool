@@ -127,9 +127,14 @@ worker.methods = {};
  * @param {Array} [args]  Function arguments
  * @returns {*}
  */
-worker.methods.run = function run(fn, args) {
+worker.methods.run = function run(fn, args, fnName) {
   var f = new Function('return (' + fn + ').apply(this, arguments);');
   f.worker = publicWorker;
+  Object.defineProperty(f, "name", {
+    value: fnName || "user defined function",
+    configurable: true,
+  });
+
   return f.apply(f, args);
 };
 
