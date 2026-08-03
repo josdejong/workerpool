@@ -166,7 +166,7 @@ Pool.prototype.exec = function (method, params, options) {
     return resolver.promise;
   } else if (typeof method === "function") {
     // send stringified function and function arguments to worker
-    return this.exec("run", [String(method), params], options);
+    return this.exec("run", [String(method), params, method.name], options);
   } else {
     throw new TypeError('Function or string expected as argument "method"');
   }
