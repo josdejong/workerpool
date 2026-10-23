@@ -33,6 +33,76 @@ describe ('Promise', function () {
     });
   });
 
+  describe('settlement', function () {
+    ['resolve', 'reject'].forEach(function (method) {
+      it('should settle finally attached before ' + method, function () {
+        var deferred = Promise.defer();
+        var expected = method === 'resolve' ? 42 : new Error('original rejection');
+        var finallyCalls = 0;
+        var observed;
+        var outcome;
+        var chained = deferred.promise.finally(function () {
+          finallyCalls++;
+        });
+
+        chained.then(function (value) {
+          observed = value;
+          outcome = 'resolve';
+        }, function (error) {
+          observed = error;
+          outcome = 'reject';
+        });
+        deferred[method](expected);
+
+        assert.strictEqual(finallyCalls, 1);
+        assert.strictEqual(observed, expected);
+        assert.strictEqual(outcome, method);
+        assert.strictEqual(chained.pending, false);
+      });
+
+      it('should run handlers attached during ' + method, function () {
+        var deferred = Promise.defer();
+        var expected = method === 'resolve' ? 42 : new Error('original rejection');
+        var observed;
+        var addHandler = function () {
+          deferred.promise.then(function (value) {
+            observed = value;
+          }, function (error) {
+            observed = error;
+          });
+        };
+
+        deferred.promise.then(addHandler, addHandler);
+        deferred[method](expected);
+
+        assert.strictEqual(observed, expected);
+      });
+
+      it('should ignore another settlement during ' + method, function () {
+        var deferred = Promise.defer();
+        var expected = method === 'resolve' ? 42 : new Error('original rejection');
+        var otherMethod = method === 'resolve' ? 'reject' : 'resolve';
+        var observed;
+        var settleAgain = function () {
+          deferred[otherMethod]('another settlement');
+        };
+
+        deferred.promise.then(settleAgain, settleAgain);
+        deferred[method](expected);
+        deferred.promise.then(function (value) {
+          observed = value;
+        }, function (error) {
+          observed = error;
+        });
+
+        assert.strictEqual(observed, expected);
+        assert.strictEqual(deferred.promise.resolved, method === 'resolve');
+        assert.strictEqual(deferred.promise.rejected, method === 'reject');
+        assert.strictEqual(deferred.promise.pending, false);
+      });
+    });
+  });
+
   describe('then', function () {
     it('should call onSuccess when resolved', function (done) {
       new Promise(function (resolve, reject) {
