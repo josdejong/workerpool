@@ -81,15 +81,16 @@ function Promise(handler, parent) {
     me.rejected = false;
     me.pending = false;
 
-    _onSuccess.forEach(function (fn) {
-      fn(result);
-    });
-
     _process = function (onSuccess, onFail) {
       onSuccess(result);
     };
 
     _resolve = _reject = function () { };
+
+    // Callbacks can attach handlers or try to settle this promise again.
+    _onSuccess.forEach(function (fn) {
+      fn(result);
+    });
 
     return me;
   };
@@ -105,15 +106,15 @@ function Promise(handler, parent) {
     me.rejected = true;
     me.pending = false;
 
-    _onFail.forEach(function (fn) {
-      fn(error);
-    });
-
     _process = function (onSuccess, onFail) {
       onFail(error);
     };
 
     _resolve = _reject = function () { }
+
+    _onFail.forEach(function (fn) {
+      fn(error);
+    });
 
     return me;
   };
