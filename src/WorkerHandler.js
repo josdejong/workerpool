@@ -354,6 +354,8 @@ function WorkerHandler(script, _options) {
     onError(new TerminateError('Workerpool Worker error: ' + message, error))
   });
   this.worker.on('exit', function (exitCode, signalCode) {
+    me.exited = true;
+
     var message = 'Workerpool Worker terminated Unexpectedly\n';
 
     message += '    exitCode: `' + exitCode + '`\n';
@@ -373,6 +375,7 @@ function WorkerHandler(script, _options) {
   this.tracking = Object.create(null); // queue with tasks being monitored for cleanup status
   this.terminating = false;
   this.terminated = false;
+  this.exited = false;
   this.cleaning = false;
   this.terminationHandler = null;
   this.lastId = 0;
@@ -561,6 +564,13 @@ WorkerHandler.prototype.terminate = function (force, callback) {
       if (typeof this.worker.kill === 'function') {
         if (this.worker.killed) {
           cleanup(new Error('worker already killed!'));
+          return;
+        }
+
+        if (this.exited) {
+          // the worker already exited by itself (for example when an abort
+          // listener failed), so there will be no 'exit' event to wait for
+          cleanup();
           return;
         }
 

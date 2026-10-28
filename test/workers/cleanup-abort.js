@@ -33,6 +33,15 @@ function asyncAbortHandlerNeverResolves() {
   });
 }
 
+function asyncAbortHandlerRejects() {
+  var me = this;
+  return new Promise(function () {
+    me.worker.addAbortListener(async function () {
+      throw new Error('cannot abort');
+    });
+  });
+}
+
 function stdoutStreamOnAbort() {
   var me = this;
   return new Promise(function (resolve) {
@@ -61,6 +70,7 @@ workerpool.worker(
   {
     asyncTimeout: asyncTimeout,
     asyncAbortHandlerNeverResolves: asyncAbortHandlerNeverResolves,
+    asyncAbortHandlerRejects: asyncAbortHandlerRejects,
     stdoutStreamOnAbort: stdoutStreamOnAbort,
     eventEmitOnAbort: eventEmitOnAbort,
   },

@@ -1849,6 +1849,39 @@ describe('Pool', function () {
       });
     });
 
+    ['process', 'thread'].forEach(function (workerType) {
+      it('should replace a ' + workerType + ' worker that exited because its abort handler rejected', function () {
+        var workerCount = 0;
+        var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
+          maxWorkers: 1,
+          workerType: workerType,
+          workerTerminateTimeout: 200,
+          onCreateWorker: function() {
+            workerCount += 1;
+          }
+        });
+
+        const task = pool.exec('asyncAbortHandlerRejects', []);
+
+        return new Promise(function(resolve) {
+          setTimeout(resolve, 50);
+        }).then(function() {
+          return task.cancel().catch(function (err) {
+            assert(err instanceof Promise.CancellationError);
+          });
+        }).then(function() {
+          return pool.exec(add, [1, 2]);
+        }).then(function(result) {
+          assert.strictEqual(result, 3);
+          assert.strictEqual(workerCount, 2);
+
+          var stats = pool.stats();
+          assert.strictEqual(stats.totalWorkers, 1);
+          assert.strictEqual(stats.busyWorkers, 0);
+        });
+      });
+    });
+
     it('should trigger event stdout in abort handler', function (done) {
       var pool = createPool(__dirname + '/workers/cleanup-abort.js', {
         maxWorkers: 1,
