@@ -81,6 +81,45 @@ pool.exec(add, [1, 2]).then((c: number) => c);
 pool.exec<typeof add>("add", [1, 2], { on: payload => console.log(payload) }).then((c: number) => c);
 pool.exec(hello, []).then((s: string) => s);
 
+// Tests for issue #485: pool.exec return type with sync, async, and Promise-returning functions
+function getNumber(): number {
+    return 42;
+}
+
+async function getBlob(): Promise<Blob> {
+    return new Blob(["hello"]);
+}
+
+async function doWork(): Promise<void> {}
+
+function getCustomPromise(): wp.Promise<string> {
+    return new wp.Promise<string>((resolve: (value: string) => void) => resolve("custom"));
+}
+
+// Case A: Synchronous return
+const resSyncDirect: wp.Promise<number> = pool.exec(getNumber, []);
+const resSyncNamed: wp.Promise<number> = pool.exec<typeof getNumber>("getNumber", []);
+resSyncDirect.then((n: number) => n);
+resSyncNamed.then((n: number) => n);
+
+// Case B: Asynchronous return (issue #485)
+const resAsyncDirect: wp.Promise<Blob> = pool.exec(getBlob, []);
+const resAsyncNamed: wp.Promise<Blob> = pool.exec<typeof getBlob>("getBlob", []);
+resAsyncDirect.then((blob: Blob) => blob);
+resAsyncNamed.then((blob: Blob) => blob);
+
+// Case C: Promise<void>
+const resVoidDirect: wp.Promise<void> = pool.exec(doWork, []);
+const resVoidNamed: wp.Promise<void> = pool.exec<typeof doWork>("doWork", []);
+resVoidDirect.then((v: void) => v);
+resVoidNamed.then((v: void) => v);
+
+// Case D: Custom workerpool Promise
+const resCustomDirect: wp.Promise<string> = pool.exec(getCustomPromise, []);
+const resCustomNamed: wp.Promise<string> = pool.exec<typeof getCustomPromise>("getCustomPromise", []);
+resCustomDirect.then((s: string) => s);
+resCustomNamed.then((s: string) => s);
+
 const workers = { add, hello };
 type IWorkers = typeof workers;
 pool.proxy<IWorkers>().then((proxy: wp.Proxy<IWorkers>) => {
