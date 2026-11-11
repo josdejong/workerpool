@@ -119,7 +119,7 @@ function Pool(script, options) {
  *                                    workers built-in function `run(fn, args)`.
  * @param {Parameters<T> | null} [params]  Function arguments applied when calling the function
  * @param {import('./types.js').ExecOptions} [options]  Options
- * @return {Promise<ReturnType<T>>}
+ * @return {Promise<Awaited<ReturnType<T>>>}
  */
 Pool.prototype.exec = function (method, params, options) {
   // validate type of arguments
